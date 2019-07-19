@@ -9,7 +9,7 @@ using Bp.Mes;
 
 namespace Sorter
 {
-    public class AssemblyRobot
+    public class AssemblyRobot : IAssemblyRobot1
     {
         private readonly MotionController _mc;
 

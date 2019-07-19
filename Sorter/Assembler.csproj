@@ -56,6 +56,7 @@
     <Compile Include="Assembler\AssemblyRobot.cs" />
     <Compile Include="BasicFunction.cs" />
     <Compile Include="Assembler\GlueRobot.cs" />
+    <Compile Include="IRobot.cs" />
     <Compile Include="Motion\IMotionController.cs" />
     <Compile Include="Run\ConfigManager.cs" />
     <Compile Include="Vision\CaptureData.cs" />
