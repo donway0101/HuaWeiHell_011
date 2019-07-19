@@ -58,12 +58,17 @@ namespace Sorter
         /// </summary>
         public void Start()
         {
-            Mc.HomeAllMotors(10, false, true);
-            //Mc.HomeAllMotors(5, true, true);
+            //Fast home to go near home sensor.
+            Mc.HomeAllMotors(50, true);
+            Mc.HomeAllMotors(3, true);
         }
 
         public CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
+        /// <summary>
+        /// Todo cancellation.
+        /// </summary>
+        /// <returns></returns>
         public Task<WaitBlock> VRobotTest()
         {
             return Task.Run(async () =>

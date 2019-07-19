@@ -458,11 +458,6 @@ namespace Sorter
             }
         }
 
-        private void button3_Click_1(object sender, EventArgs e)
-        {
-            _manualMotion.EnableAll();
-        }
-
         private void buttonXJogMinus_MouseDown(object sender, MouseEventArgs e)
         {
             try

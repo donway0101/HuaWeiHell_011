@@ -15,7 +15,7 @@ namespace Sorter
     /// Driver fault
     /// 
     /// </summary>
-    public partial class MotionController
+    public partial class MotionController : IMotionController
     {
         #region Motor
         public Motor MotorVX = new Motor();
@@ -62,13 +62,23 @@ namespace Sorter
             AxisSetup();
         }
 
-        private void AxisSetup(double homeSpeed = 5)
+        public void SetSpeed(double speed)
+        {
+            foreach (var mtr in Motors)
+            {
+                mtr.Velocity = speed;
+            }
+        }
+
+        private void AxisSetup(double homeSpeed = 5.0)
         {
             double allowedError = 0.6;
-            double FindLimitSpeed = 5;
-            double FindHomeSpeed = 5;
+            double defaultFindLimitSpeed = homeSpeed;
+            double defaultFindHomeSpeed = homeSpeed;
             double defaultHomeOffset = 0;
 
+            //Todo region.
+            #region LY
             MotorLY.Id = Axis.LY;
             MotorLY.EncCtsPerRound = 1000.0;
             MotorLY.BallScrewLead = 1.0;
@@ -85,9 +95,11 @@ namespace Sorter
             MotorLY.HomeOffset = defaultHomeOffset;
             MotorLY.Direction = 1.0;
             MotorLY.CriticalErrIdle = allowedError;
-            MotorLY.HomeLimitSpeed = FindLimitSpeed;
-            MotorLY.HomeIndexSpeed = FindHomeSpeed;
+            MotorLY.HomeLimitSpeed = defaultFindLimitSpeed;
+            MotorLY.HomeIndexSpeed = defaultFindHomeSpeed;
+            #endregion
 
+            #region LX
             MotorLX.Id = Axis.LX;
             MotorLX.EncCtsPerRound = 1000.0;
             MotorLX.BallScrewLead = 1.0;
@@ -104,9 +116,11 @@ namespace Sorter
             MotorLX.HomeOffset = defaultHomeOffset;
             MotorLX.Direction = 1.0;
             MotorLX.CriticalErrIdle = allowedError;
-            MotorLX.HomeLimitSpeed= FindLimitSpeed;
-            MotorLX.HomeIndexSpeed = FindHomeSpeed;
+            MotorLX.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorLX.HomeIndexSpeed = defaultFindHomeSpeed;
+            #endregion
 
+            #region LZ
             MotorLZ.Id = Axis.LZ;
             MotorLZ.EncCtsPerRound = 10000.0;
             MotorLZ.BallScrewLead = 10.0;
@@ -123,9 +137,11 @@ namespace Sorter
             MotorLZ.HomeOffset = defaultHomeOffset;
             MotorLZ.Direction = -1.0;
             MotorLZ.CriticalErrIdle = allowedError;
-            MotorLZ.HomeLimitSpeed= FindLimitSpeed;
-            MotorLZ.HomeIndexSpeed = FindHomeSpeed;
+            MotorLZ.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorLZ.HomeIndexSpeed = defaultFindHomeSpeed;
+            #endregion
 
+            #region LTray
             MotorLTrayLoad.Id = Axis.LTrayLoad;
             MotorLTrayLoad.EncCtsPerRound = 10000.0;
             MotorLTrayLoad.BallScrewLead = 5.0;
@@ -142,8 +158,9 @@ namespace Sorter
             MotorLTrayLoad.HomeOffset = -3.0;
             MotorLTrayLoad.Direction = 1.0;
             MotorLTrayLoad.CriticalErrIdle = allowedError;
-            MotorLTrayLoad.HomeLimitSpeed= FindLimitSpeed;
-            MotorLTrayLoad.HomeIndexSpeed = FindHomeSpeed;
+            MotorLTrayLoad.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorLTrayLoad.HomeIndexSpeed = defaultFindHomeSpeed;
+            #endregion
 
             MotorLTrayUnload.Id = Axis.LTrayUnload;
             MotorLTrayUnload.EncCtsPerRound = 10000.0;
@@ -161,8 +178,8 @@ namespace Sorter
             MotorLTrayUnload.HomeOffset = -3.0;
             MotorLTrayUnload.Direction = 1.0;
             MotorLTrayUnload.CriticalErrIdle = allowedError;
-            MotorLTrayUnload.HomeLimitSpeed= FindLimitSpeed;
-            MotorLTrayUnload.HomeIndexSpeed = FindHomeSpeed;
+            MotorLTrayUnload.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorLTrayUnload.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorVY.Id = Axis.VY;
             MotorVY.EncCtsPerRound = 1000.0;
@@ -180,8 +197,8 @@ namespace Sorter
             MotorVY.HomeOffset = defaultHomeOffset;
             MotorVY.Direction = -1.0;
             MotorVY.CriticalErrIdle = allowedError;
-            MotorVY.HomeLimitSpeed= FindLimitSpeed;
-            MotorVY.HomeIndexSpeed = FindHomeSpeed;
+            MotorVY.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorVY.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorVX.Id = Axis.VX;
             MotorVX.EncCtsPerRound = 1000.0;
@@ -199,8 +216,8 @@ namespace Sorter
             MotorVX.HomeOffset = defaultHomeOffset;
             MotorVX.Direction = 1.0;
             MotorVX.CriticalErrIdle = allowedError;
-            MotorVX.HomeLimitSpeed= FindLimitSpeed;
-            MotorVX.HomeIndexSpeed = FindHomeSpeed;
+            MotorVX.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorVX.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorVZ.Id = Axis.VZ;
             MotorVZ.EncCtsPerRound = 10000.0;
@@ -218,8 +235,8 @@ namespace Sorter
             MotorVZ.HomeOffset = defaultHomeOffset;
             MotorVZ.Direction = -1.0;
             MotorVZ.CriticalErrIdle = allowedError;
-            MotorVZ.HomeLimitSpeed= FindLimitSpeed;
-            MotorVZ.HomeIndexSpeed = FindHomeSpeed;
+            MotorVZ.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorVZ.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorVRotateLoad.Id = Axis.VRotateLoad;
             MotorVRotateLoad.EncCtsPerRound = 71.0;
@@ -257,8 +274,8 @@ namespace Sorter
             MotorVRotateUnload.HomeOffset = -60.0;
             MotorVRotateUnload.Direction = -1.0;
             MotorVRotateUnload.CriticalErrIdle = allowedError;
-            MotorVRotateUnload.HomeLimitSpeed = FindLimitSpeed;
-            MotorVRotateUnload.HomeIndexSpeed = FindHomeSpeed;
+            MotorVRotateUnload.HomeLimitSpeed = defaultFindLimitSpeed;
+            MotorVRotateUnload.HomeIndexSpeed = defaultFindHomeSpeed;
             MotorVRotateUnload.CloseLoop = false;
 
             MotorVTrayLoad.Id = Axis.VTrayLoad;
@@ -277,8 +294,8 @@ namespace Sorter
             MotorVTrayLoad.HomeOffset = -3.0;
             MotorVTrayLoad.Direction = 1.0;
             MotorVTrayLoad.CriticalErrIdle = allowedError;
-            MotorVTrayLoad.HomeLimitSpeed= FindLimitSpeed;
-            MotorVTrayLoad.HomeIndexSpeed = FindHomeSpeed;
+            MotorVTrayLoad.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorVTrayLoad.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorVTrayUnload.Id = Axis.VTrayUnload;
             MotorVTrayUnload.EncCtsPerRound = 10000.0;
@@ -296,8 +313,8 @@ namespace Sorter
             MotorVTrayUnload.HomeOffset = -3.0;
             MotorVTrayUnload.Direction = 1.0;
             MotorVTrayUnload.CriticalErrIdle = allowedError;
-            MotorVTrayUnload.HomeLimitSpeed= FindLimitSpeed;
-            MotorVTrayUnload.HomeIndexSpeed = FindHomeSpeed;           
+            MotorVTrayUnload.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorVTrayUnload.HomeIndexSpeed = defaultFindHomeSpeed;           
 
             MotorGluePointY.Id = Axis.GluePointY;
             MotorGluePointY.EncCtsPerRound = 1000.0;
@@ -315,8 +332,8 @@ namespace Sorter
             MotorGluePointY.HomeOffset = defaultHomeOffset;
             MotorGluePointY.Direction = -1.0;
             MotorGluePointY.CriticalErrIdle = allowedError;
-            MotorGluePointY.HomeLimitSpeed= FindLimitSpeed;
-            MotorGluePointY.HomeIndexSpeed = FindHomeSpeed;
+            MotorGluePointY.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorGluePointY.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorGluePointX.Id = Axis.GluePointX;
             MotorGluePointX.EncCtsPerRound = 1000.0;
@@ -334,8 +351,8 @@ namespace Sorter
             MotorGluePointX.HomeOffset = defaultHomeOffset;
             MotorGluePointX.Direction = -1.0;
             MotorGluePointX.CriticalErrIdle = allowedError;
-            MotorGluePointX.HomeLimitSpeed= FindLimitSpeed;
-            MotorGluePointX.HomeIndexSpeed = FindHomeSpeed;
+            MotorGluePointX.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorGluePointX.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorGluePointZ.Id = Axis.GluePointZ;
             MotorGluePointZ.EncCtsPerRound = 10000.0;
@@ -353,8 +370,8 @@ namespace Sorter
             MotorGluePointZ.HomeOffset = defaultHomeOffset;
             MotorGluePointZ.Direction = -1.0;
             MotorGluePointZ.CriticalErrIdle = allowedError;
-            MotorGluePointZ.HomeLimitSpeed= FindLimitSpeed;
-            MotorGluePointZ.HomeIndexSpeed = FindHomeSpeed;
+            MotorGluePointZ.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorGluePointZ.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorGlueLineY.Id = Axis.GlueLineY;
             MotorGlueLineY.EncCtsPerRound = 1000.0;
@@ -372,8 +389,8 @@ namespace Sorter
             MotorGlueLineY.HomeOffset = defaultHomeOffset;
             MotorGlueLineY.Direction = 1.0;
             MotorGlueLineY.CriticalErrIdle = allowedError;
-            MotorGlueLineY.HomeLimitSpeed= FindLimitSpeed;
-            MotorGlueLineY.HomeIndexSpeed = FindHomeSpeed;
+            MotorGlueLineY.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorGlueLineY.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorGlueLineX.Id = Axis.GlueLineX;
             MotorGlueLineX.EncCtsPerRound = 1000.0;
@@ -391,8 +408,8 @@ namespace Sorter
             MotorGlueLineX.HomeOffset = defaultHomeOffset;
             MotorGlueLineX.Direction = -1.0;
             MotorGlueLineX.CriticalErrIdle = allowedError;
-            MotorGlueLineX.HomeLimitSpeed= FindLimitSpeed;
-            MotorGlueLineX.HomeIndexSpeed = FindHomeSpeed;
+            MotorGlueLineX.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorGlueLineX.HomeIndexSpeed = defaultFindHomeSpeed;
 
             MotorGlueLineZ.Id = Axis.GlueLineZ;
             MotorGlueLineZ.EncCtsPerRound = 10000.0;
@@ -410,8 +427,8 @@ namespace Sorter
             MotorGlueLineZ.HomeOffset = defaultHomeOffset;
             MotorGlueLineZ.Direction = -1.0;
             MotorGlueLineZ.CriticalErrIdle = allowedError;
-            MotorGlueLineZ.HomeLimitSpeed= FindLimitSpeed;
-            MotorGlueLineZ.HomeIndexSpeed = FindHomeSpeed;
+            MotorGlueLineZ.HomeLimitSpeed= defaultFindLimitSpeed;
+            MotorGlueLineZ.HomeIndexSpeed = defaultFindHomeSpeed;
 
             #region MotorLRotateLoad
             MotorLRotateLoad.Id = Axis.LRotateLoad;
@@ -431,7 +448,7 @@ namespace Sorter
             MotorLRotateLoad.Direction = -1.0;
             MotorLRotateLoad.CriticalErrIdle = allowedError;
             MotorLRotateLoad.HomeLimitSpeed = 60.0;
-            MotorLRotateLoad.HomeIndexSpeed = FindHomeSpeed;
+            MotorLRotateLoad.HomeIndexSpeed = defaultFindHomeSpeed;
             MotorLRotateLoad.CloseLoop = false;
             #endregion
 
@@ -505,7 +522,7 @@ namespace Sorter
 
             foreach (var mtr in Motors)
             {
-                ZeroPosition(mtr);
+                //ZeroPosition(mtr); Zero after motor enabled.
                 SetErrorBand(mtr);
             }
         }
@@ -540,7 +557,6 @@ namespace Sorter
 
         #region Helper
 
-
         /// <summary>
         /// Todo throw a class Error.
         /// </summary>
@@ -561,6 +577,12 @@ namespace Sorter
             return (int)(motor.Direction * distance * motor.EncoderFactor);
         }
 
+        /// <summary>
+        /// Todo test acc.
+        /// </summary>
+        /// <param name="motor"></param>
+        /// <param name="userAcc"></param>
+        /// <returns></returns>
         private double ConvertToPulseAcc(Motor motor, double userAcc)
         {
             // User unit mm/sec^2;
@@ -643,14 +665,15 @@ namespace Sorter
         }
 
         /// <summary>
-        /// Home by limit and index, set home offset, will it goes back?
+        /// By default, linear motor need second home.
         /// </summary>
-        public void Home(Motor motor, bool sencondHome = false) 
+        public void Home(Motor motor, bool needSencondHome = true) 
         {
-            if (sencondHome)
+            if (needSencondHome == false)
             {
                 return;
             }
+
             ClearFault(motor, false);
             Enable(motor);
             CheckEnabledAndNotMoving(motor);
@@ -685,7 +708,7 @@ namespace Sorter
             return homeStatus.run == 0;
         }
 
-        public void WaitTillHomeEnd(Motor motor, bool zeroPos = false, int timeout = 60)
+        public void WaitTillHomeEnd(Motor motor,int timeout = 60)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -702,98 +725,64 @@ namespace Sorter
                 homeEnd = IsHoming(motor);
                 Delay(20);
                 CheckDriverAlarm(motor);
-            }
-
-            if (zeroPos)
-            {
-                Delay(1000);
-                ZeroPosition(motor);
-            }
-            
+            }           
         }
 
-        public void HomeAllMotors(double speed = 10, bool secondHome = false, bool homeGlueStation = true)
+        public void HomeAllMotors(double speed = 10.0, bool IsFirstHome = true)
         {
+            //Set home speed here.
             AxisSetup(speed);
-            EnableAll();
-            Delay(1000);
+
+            Enable(MotorLZ);
+            Enable(MotorVZ);
+            Enable(MotorGlueLineZ);
+            Enable(MotorGluePointZ);
             ZeroAllPositions();
-            Delay(1000);
 
             Home(MotorLZ);
             Home(MotorVZ);
-
-            if (homeGlueStation)
-            {
-                Home(MotorGlueLineZ);
-                Home(MotorGluePointZ);
-            }
+            Home(MotorGlueLineZ);
+            Home(MotorGluePointZ);
 
             WaitTillHomeEnd(MotorLZ);
             WaitTillHomeEnd(MotorVZ);
+            WaitTillHomeEnd(MotorGlueLineZ);
+            WaitTillHomeEnd(MotorGluePointZ);
 
-            if (homeGlueStation)
-            {
-                WaitTillHomeEnd(MotorGlueLineZ);
-                WaitTillHomeEnd(MotorGluePointZ);
-            }
+            Home(MotorWorkTable, IsFirstHome);
+            Home(MotorLRotateLoad, IsFirstHome);
+            Home(MotorVRotateLoad, IsFirstHome);
+            Home(MotorVRotateUnload, IsFirstHome);
 
-            Home(MotorWorkTable, secondHome);
-
-            Home(MotorLRotateLoad, secondHome);
-            Home(MotorVRotateLoad, secondHome);
-            Home(MotorVRotateUnload, secondHome);
+            EnableAll();
+            ZeroAllPositions();
 
             Home(MotorLX);
             Home(MotorVX);
-
-            if (homeGlueStation)
-            {
-                Home(MotorGlueLineX);
-                Home(MotorGluePointX);
-            }
+            Home(MotorGlueLineX);
+            Home(MotorGluePointX);
 
             WaitTillHomeEnd(MotorLX);
             WaitTillHomeEnd(MotorVX);
-
-            if (homeGlueStation)
-            {
-                WaitTillHomeEnd(MotorGlueLineX);
-                WaitTillHomeEnd(MotorGluePointX);
-            }
-
+            WaitTillHomeEnd(MotorGlueLineX);
+            WaitTillHomeEnd(MotorGluePointX);
 
             Home(MotorLY);
             Home(MotorVY);
-
-            if (homeGlueStation)
-            {
-                Home(MotorGlueLineY);
-                Home(MotorGluePointY);
-            }
-
+            Home(MotorGlueLineY);
+            Home(MotorGluePointY);
             WaitTillHomeEnd(MotorLY);
             WaitTillHomeEnd(MotorVY);
-
-            if (homeGlueStation)
-            {
-                WaitTillHomeEnd(MotorGlueLineY);
-                WaitTillHomeEnd(MotorGluePointY);
-            }
+            WaitTillHomeEnd(MotorGlueLineY);
+            WaitTillHomeEnd(MotorGluePointY);
 
             WaitTillHomeEnd(MotorLRotateLoad);
             WaitTillHomeEnd(MotorVRotateLoad);
             WaitTillHomeEnd(MotorVRotateUnload);
-
             WaitTillHomeEnd(MotorWorkTable);
 
-            Delay(2000);
-
-            ZeroAllPositions();
-
-            //Todo check cylinders and home tray motor.
+            ZeroAllPositions(2000);
         }
-
 
         public void MoveAwayFromLimit(Motor motor, double distance = 20)
         {
@@ -851,8 +840,12 @@ namespace Sorter
             Run(mc.GTN_ZeroPos(ca.Core, ca.Axis, 1), "Zero Position exception:" + motor.Id);
         }
 
-        public void ZeroAllPositions()
+        /// <summary>
+        /// Delay 500ms and zero all enconders.
+        /// </summary>
+        public void ZeroAllPositions(int delayMs = 1000)
         {
+            Delay(delayMs);
             foreach (var mtr in Motors)
             {
                 ZeroPosition(mtr);
@@ -946,6 +939,10 @@ namespace Sorter
         {
             foreach (var mtr in Motors)
             {
+                if (GetState(mtr, MotorState.Enabled))
+                {
+                    continue;
+                }
                 Enable(mtr);
             }
         }

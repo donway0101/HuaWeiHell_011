@@ -24,4 +24,63 @@ namespace Sorter
         public short Core;
         public short Pin;
     }
+
+
+    public enum Axis
+    {
+        VY = 209,
+        VX = 210,
+        VZ = 105,
+        VRotateLoad = 211,
+        VRotateUnload = 212,
+        VTrayLoad = 101,
+        VTrayUnload = 104,
+        GluePointY = 205,
+        GluePointX = 204,
+        GluePointZ = 206,
+        GlueLineY = 202,
+        GlueLineX = 201,
+        GlueLineZ = 203,
+        LY = 207,
+        LX = 208,
+        LZ = 106,
+        LRotateLoad = 107,
+        LTrayLoad = 108,
+        LTrayUnload = 110,
+        WorkTable = 111,
+
+        VConveyorUnload = 103,
+        VConveyorLoad = 102,
+
+    }
+
+    public enum MotorState
+    {
+        // Zero based, bit position.
+        ServoAlarm = 1,
+        FollowingError = 4,
+        PositiveLimit = 5,
+        NegativeLimit = 6,
+        Enabled = 9,
+        Moving = 10,
+        InPosition = 11,
+    }
+
+    public enum MoveDirection
+    {
+        Negative = -1,
+        Positive = 1,
+    }
+
+    public enum EdgeCapture
+    {
+        Falling = 0,
+        Rising = 1,
+    }
+
+    public enum OutputState
+    {
+        On = 0,
+        Off = 1,
+    }
 }
