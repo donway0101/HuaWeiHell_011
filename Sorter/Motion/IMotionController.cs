@@ -18,7 +18,7 @@ namespace Sorter
         bool GetInput(Input input);
         double GetReferencePosition(Motor motor);
         void Home(Motor motor, bool sencondHome = false);
-        void HomeAllMotors(double speed = 10, bool secondHome = false, bool homeGlueStation = true);
+        void HomeAllMotors(double speed = 10, bool firstHome = false);
         bool IsDriverAlarmed(Motor motor);
         bool IsEnabled(Motor motor);
         bool IsHittingLimit(Motor motor);

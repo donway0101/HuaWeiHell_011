@@ -9,7 +9,7 @@ using Bp.Mes;
 
 namespace Sorter
 {
-    public class AssemblyRobot : IAssemblyRobot1
+    public class AssemblyRobot
     {
         private readonly MotionController _mc;
 
@@ -18,6 +18,7 @@ namespace Sorter
         private readonly RoundTable _table;
 
         private readonly CapturePosition[] _capturePositions;
+
         public Motor MotorX { get; set; }
         public Motor MotorY { get; set; }
         public Motor MotorZ { get; set; }
@@ -111,7 +112,7 @@ namespace Sorter
 
             MoveToTarget(holderPose, ProcedureId.Load);
 
-            VacuumSucker(HolderId.L, VacuumState.On, VacuumArea.Center);
+            VacuumSucker(FixtureId.L, VacuumState.On, VacuumArea.Center);
             VacuumSucker(VacuumState.Off, ProcedureId.Load);
 
             LoadTray.CurrentPart = LoadTray.GetNextPart(part);
@@ -128,7 +129,7 @@ namespace Sorter
             MoveToTarget(unloadPose, ProcedureId.Unload);
 
             VacuumSucker(VacuumState.On, ProcedureId.Unload);
-            VacuumSucker(HolderId.V, VacuumState.Off, VacuumArea.Circle);
+            VacuumSucker(FixtureId.V, VacuumState.Off, VacuumArea.Circle);
             MoveZToSafeHeight();
 
             //Load another hand
@@ -137,7 +138,7 @@ namespace Sorter
             var loadPose = Helper.ConvertAxisOffsetToPose(holderLoadOffset);
             loadPose.Z = VHolderHeight;
             MoveToTarget(loadPose, ProcedureId.Load);
-            VacuumSucker(HolderId.V, VacuumState.On, VacuumArea.Circle);
+            VacuumSucker(FixtureId.V, VacuumState.On, VacuumArea.Circle);
             VacuumSucker(VacuumState.Off, ProcedureId.Load);
             MoveZToSafeHeight();
 
@@ -214,7 +215,7 @@ namespace Sorter
             });
         }
 
-        private void VacuumSucker(HolderId holderId, VacuumState state, VacuumArea area)
+        private void VacuumSucker(FixtureId holderId, VacuumState state, VacuumArea area)
         {
             if (VacuumSimulateMode)
             {
@@ -510,7 +511,7 @@ namespace Sorter
             {
                 _mc.MoveToTarget(MotorY, target.Y);
                 _mc.MoveToTarget(MotorX, target.X);
-                _mc.MoveToTargetRelative(MotorRotateLoad, target.RLoadAngle);
+                _mc.MoveToTargetRelative(MotorRotateLoad, target.A);
                 _mc.WaitTillEnd(MotorX);
                 _mc.WaitTillEnd(MotorY);
                 _mc.WaitTillEnd(MotorRotateLoad);
@@ -523,7 +524,7 @@ namespace Sorter
                 if (GetPosition(MotorY) < SafeYAreaLSmaller &&
                    target.Y > SafeYAreaLSmaller)
                 {
-                    _mc.MoveToTargetRelative(MotorRotateLoad, target.RLoadAngle);
+                    _mc.MoveToTargetRelative(MotorRotateLoad, target.A);
                     _mc.MoveToTargetTillEnd(MotorX, target.X);
                     _mc.MoveToTargetTillEnd(MotorY, target.Y);
                     _mc.WaitTillEnd(MotorRotateLoad);
@@ -536,7 +537,7 @@ namespace Sorter
                     if (GetPosition(MotorX) < SafeXAreaSmaller &&
                         target.X > SafeXAreaSmaller)
                     {
-                        _mc.MoveToTargetRelative(MotorRotateLoad, target.RLoadAngle);
+                        _mc.MoveToTargetRelative(MotorRotateLoad, target.A);
                         _mc.MoveToTargetTillEnd(MotorY, target.Y);
                         _mc.MoveToTargetTillEnd(MotorX, target.X);
                         _mc.WaitTillEnd(MotorRotateLoad);
@@ -560,7 +561,7 @@ namespace Sorter
             {
                 _mc.MoveToTarget(MotorY, target.Y);
                 _mc.MoveToTarget(MotorX, target.X);
-                _mc.MoveToTargetRelative(MotorRotateLoad, target.RLoadAngle);
+                _mc.MoveToTargetRelative(MotorRotateLoad, target.A);
                 _mc.WaitTillEnd(MotorX);
                 _mc.WaitTillEnd(MotorY);
                 _mc.WaitTillEnd(MotorRotateLoad);
@@ -574,7 +575,7 @@ namespace Sorter
                 if (GetPosition(MotorY) > SafeYAreaVBigger &&
                    target.Y < SafeYAreaVBigger)
                 {
-                    _mc.MoveToTargetRelative(MotorRotateLoad, target.RLoadAngle);
+                    _mc.MoveToTargetRelative(MotorRotateLoad, target.A);
                     _mc.MoveToTargetTillEnd(MotorX, target.X);
                     _mc.MoveToTargetTillEnd(MotorY, target.Y);
                     _mc.WaitTillEnd(MotorRotateLoad);
@@ -587,7 +588,7 @@ namespace Sorter
                     if (GetPosition(MotorX) < SafeXAreaSmaller &&
                         target.X > SafeXAreaSmaller)
                     {
-                        _mc.MoveToTargetRelative(MotorRotateLoad, target.RLoadAngle);
+                        _mc.MoveToTargetRelative(MotorRotateLoad, target.A);
                         _mc.MoveToTargetTillEnd(MotorY, target.Y);
                         _mc.MoveToTargetTillEnd(MotorX, target.X);
                         _mc.WaitTillEnd(MotorRotateLoad);

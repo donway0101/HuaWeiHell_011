@@ -70,7 +70,7 @@ namespace Sorter
                 X = offset.XOffset,
                 Y = offset.YOffset,
                 // Z is const,
-                RLoadAngle = offset.ROffset,
+                A = offset.ROffset,
                 RUnloadAngle = offset.ROffset,
             };
         }

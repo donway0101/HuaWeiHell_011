@@ -64,6 +64,8 @@ namespace Bp.Mes
         public double XPosition { get; set; }
         public double YPosition { get; set; }
         public double ZPosition { get; set; }
+        //??? affect json?
+        public double Angle { get; set; }
     }
 
 

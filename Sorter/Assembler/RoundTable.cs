@@ -106,7 +106,7 @@ namespace Sorter
             Holders[0] = lastHolder;
         }
 
-        public void VacuumSucker(HolderId holder, VacuumState state, VacuumArea area = VacuumArea.Circle)
+        public void VacuumSucker(FixtureId holder, VacuumState state, VacuumArea area = VacuumArea.Circle)
         {
             switch (state)
             {
@@ -152,7 +152,7 @@ namespace Sorter
         public Input VaccumInputCircle { get; set; }
     }
 
-    public enum HolderId
+    public enum FixtureId
     {
         V = 0,
         GluePoint = 1,

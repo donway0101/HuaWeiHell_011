@@ -1116,7 +1116,7 @@ namespace Sorter
                 textBox_MoveToTargetY.Text = target.Y.ToString();
                 //textBox_MoveToTargetZ.Text = capturePosition.ZPosition.ToString();
 
-                textBox_MoveToTargetRLoad.Text = target.RLoadAngle.ToString();
+                textBox_MoveToTargetRLoad.Text = target.A.ToString();
                 textBox_MoveToTargetRUnload.Text = target.RUnloadAngle.ToString();
 
                 MessageBox.Show("位置已获取，设定Z的抓料位置之后，点击Move Robot可移动到相机获取的位置.");
@@ -1184,7 +1184,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.V, VacuumState.On);
+                _cc.WorkTable.VacuumSucker(FixtureId.V, VacuumState.On);
             }
             catch (Exception ex)
             {
@@ -1196,7 +1196,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.GluePoint, VacuumState.On);
+                _cc.WorkTable.VacuumSucker(FixtureId.GluePoint, VacuumState.On);
             }
             catch (Exception ex)
             {
@@ -1208,7 +1208,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.GlueLine, VacuumState.On);
+                _cc.WorkTable.VacuumSucker(FixtureId.GlueLine, VacuumState.On);
             }
             catch (Exception ex)
             {
@@ -1220,7 +1220,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.L, VacuumState.On);
+                _cc.WorkTable.VacuumSucker(FixtureId.L, VacuumState.On);
             }
             catch (Exception ex)
             {
@@ -1232,7 +1232,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.Reserve, VacuumState.On);
+                _cc.WorkTable.VacuumSucker(FixtureId.Reserve, VacuumState.On);
             }
             catch (Exception ex)
             {
@@ -1244,7 +1244,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.UVLight, VacuumState.On);
+                _cc.WorkTable.VacuumSucker(FixtureId.UVLight, VacuumState.On);
             }
             catch (Exception ex)
             {
@@ -1256,7 +1256,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.V, VacuumState.Off);
+                _cc.WorkTable.VacuumSucker(FixtureId.V, VacuumState.Off);
             }
             catch (Exception ex)
             {
@@ -1268,7 +1268,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.GluePoint, VacuumState.Off);
+                _cc.WorkTable.VacuumSucker(FixtureId.GluePoint, VacuumState.Off);
             }
             catch (Exception ex)
             {
@@ -1280,7 +1280,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.GlueLine, VacuumState.Off);
+                _cc.WorkTable.VacuumSucker(FixtureId.GlueLine, VacuumState.Off);
             }
             catch (Exception ex)
             {
@@ -1292,7 +1292,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.L, VacuumState.Off);
+                _cc.WorkTable.VacuumSucker(FixtureId.L, VacuumState.Off);
             }
             catch (Exception ex)
             {
@@ -1304,7 +1304,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.Reserve, VacuumState.Off);
+                _cc.WorkTable.VacuumSucker(FixtureId.Reserve, VacuumState.Off);
             }
             catch (Exception ex)
             {
@@ -1316,7 +1316,7 @@ namespace Sorter
         {
             try
             {
-                _cc.WorkTable.VacuumSucker(HolderId.UVLight, VacuumState.Off);
+                _cc.WorkTable.VacuumSucker(FixtureId.UVLight, VacuumState.Off);
             }
             catch (Exception ex)
             {
@@ -1344,7 +1344,7 @@ namespace Sorter
                     X = Convert.ToDouble(textBox_MoveToTargetX.Text),
                     Y = Convert.ToDouble(textBox_MoveToTargetY.Text),
                     Z = Convert.ToDouble(textBox_MoveToTargetZ.Text),
-                    RLoadAngle = Convert.ToDouble(textBox_MoveToTargetRLoad.Text),
+                    A = Convert.ToDouble(textBox_MoveToTargetRLoad.Text),
                     RUnloadAngle = Convert.ToDouble(textBox_MoveToTargetRUnload.Text),
                 };
 
