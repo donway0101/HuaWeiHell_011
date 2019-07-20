@@ -708,8 +708,13 @@ namespace Sorter
             return homeStatus.run == 0;
         }
 
-        public void WaitTillHomeEnd(Motor motor,int timeout = 60)
+        public void WaitTillHomeEnd(Motor motor, bool needSencondHome = true, int timeout = 60)
         {
+            if (needSencondHome == false)
+            {
+                return;
+            }
+
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -732,36 +737,32 @@ namespace Sorter
         {
             //Set home speed here.
             AxisSetup(speed);
+            ZeroAllPositions();
 
             Enable(MotorLZ);
             Enable(MotorVZ);
             Enable(MotorGlueLineZ);
             Enable(MotorGluePointZ);
-            ZeroAllPositions();
-
             Home(MotorLZ);
             Home(MotorVZ);
             Home(MotorGlueLineZ);
             Home(MotorGluePointZ);
-
             WaitTillHomeEnd(MotorLZ);
             WaitTillHomeEnd(MotorVZ);
             WaitTillHomeEnd(MotorGlueLineZ);
             WaitTillHomeEnd(MotorGluePointZ);
 
-            Home(MotorWorkTable, IsFirstHome);
-            Home(MotorLRotateLoad, IsFirstHome);
-            Home(MotorVRotateLoad, IsFirstHome);
-            Home(MotorVRotateUnload, IsFirstHome);
+            Home(MotorWorkTable, !IsFirstHome);
+            Home(MotorLRotateLoad, !IsFirstHome);
+            Home(MotorVRotateLoad, !IsFirstHome);
+            Home(MotorVRotateUnload, !IsFirstHome);
 
             EnableAll();
-            ZeroAllPositions();
 
             Home(MotorLX);
             Home(MotorVX);
             Home(MotorGlueLineX);
             Home(MotorGluePointX);
-
             WaitTillHomeEnd(MotorLX);
             WaitTillHomeEnd(MotorVX);
             WaitTillHomeEnd(MotorGlueLineX);
@@ -776,10 +777,10 @@ namespace Sorter
             WaitTillHomeEnd(MotorGlueLineY);
             WaitTillHomeEnd(MotorGluePointY);
 
-            WaitTillHomeEnd(MotorLRotateLoad);
-            WaitTillHomeEnd(MotorVRotateLoad);
-            WaitTillHomeEnd(MotorVRotateUnload);
-            WaitTillHomeEnd(MotorWorkTable);
+            WaitTillHomeEnd(MotorLRotateLoad, !IsFirstHome);
+            WaitTillHomeEnd(MotorVRotateLoad,!IsFirstHome);
+            WaitTillHomeEnd(MotorVRotateUnload,!IsFirstHome);
+            WaitTillHomeEnd(MotorWorkTable, !IsFirstHome);
 
             ZeroAllPositions(2000);
         }

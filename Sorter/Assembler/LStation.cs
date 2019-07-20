@@ -13,19 +13,23 @@ namespace Sorter
         private readonly VisionServer _vision;
         private readonly RoundTable _table;
 
-        public Motor MotorAngle { get; set; }
+        public Motor MotorA { get; set; }
         public Motor MotorX { get; set; }
         public Motor MotorY { get; set; }
         public Motor MotorZ { get; set; }
-        public double SafeXArea { get; set; }
-        public double SafeYArea { get; set; }
+
+        public double SafeXArea { get; set; } = 100;
+        public double SafeYArea { get; set; } = 100;
+        public double SafeZHeight { get; set; } = -30;
+
         public Tray UnloadTray { get; set; }
         public Tray LoadTray { get; set; }
-        public double LoadTrayHeight { get; set; }
+        public double LoadTrayHeight { get; set; } = -50;
         public double UnloadTrayHeight { get; set; }
-        public double FixtureHeight { get; set; }
-        public bool VacuumSimulateMode { get; set; }
-        public bool VisionSimulateMode { get; set; }
+        public double FixtureHeight { get; set; } = -40;
+
+        public bool VacuumSimulateMode { get; set; } = true;
+        public bool VisionSimulateMode { get; set; } = true;
 
         private CapturePosition[] _capturePositions;
         private CapturePosition[] _capturePositionOffsets;
@@ -47,6 +51,8 @@ namespace Sorter
 
         public CapturePosition GetCapturePositionOffset(CaptureId id)
         {
+            return new CapturePosition();
+            //Todo add offset 
             return Helper.FindCapturePosition(_capturePositionOffsets, id);
         }
 
@@ -98,43 +104,106 @@ namespace Sorter
 
         public void Load(Part part)
         {
-            MoveToTarget(part.CapturePos);
+            MoveToCapture(part.CapturePos);
             var pickPose = GetVisionResult(part.CapturePos);
             MoveToTarget(pickPose);
-            VacuumSucker(VacuumState.On);
-            //MoveZToSafeHeight();
+            Sucker(VacuumState.On);
+            MoveToSafeHeight();
 
-            //MoveToTarget(BottomCapturePostitionLoad, ProcedureId.Load);
-            //GetVisionResult(BottomCapturePostitionLoad);
+            var bottomCamCapturePos = GetCapturePosition(CaptureId.LLoadCompensationBottom);
+            MoveToCapture(bottomCamCapturePos);
+            GetVisionResult(bottomCamCapturePos);
 
-            //MoveToTarget(HolderCapturePostitionLoad, ProcedureId.Load);
-            //var holderOffset = GetVisionResult(HolderCapturePostitionLoad);
+            var fixtureCapturePos = GetCapturePosition(CaptureId.LLoadHolderTop);
+            MoveToCapture(fixtureCapturePos);
+            var placePose = GetVisionResult(fixtureCapturePos);
+            MoveToTarget(placePose);
 
-            //var holderPose = Helper.ConvertAxisOffsetToPose(holderOffset);
-            //holderPose.Z = LHolderHeight;
+            Sucker(FixtureId.L, VacuumState.On, VacuumArea.Center);
+            Sucker(VacuumState.Off);
 
-            //MoveToTarget(holderPose, ProcedureId.Load);
+            LoadTray.CurrentPart = LoadTray.GetNextPart(part);
+            MoveToCapture(LoadTray.CurrentPart.CapturePos);
+        }
 
-            //VacuumSucker(FixtureId.L, VacuumState.On, VacuumArea.Center);
-            //VacuumSucker(VacuumState.Off, ProcedureId.Load);
-
-            //LoadTray.CurrentPart = LoadTray.GetNextPart(part);
-            //MoveToTarget(LoadTray.CurrentPart.CapturePos, ProcedureId.Load);
+        public void MoveToSafeHeight()
+        {
+            if (GetPosition(MotorZ) < SafeZHeight)
+            {
+                _mc.MoveToTargetTillEnd(MotorZ, SafeZHeight);
+            }
         }
 
         public void MoveToCapture(CapturePosition target)
         {
-            throw new NotImplementedException();
+            var tar = Helper.ConvertCapturePositionToPose(target);
+            MoveTo(tar);
+        }
+
+        private void MoveTo(Pose target)
+        {
+            MoveToSafeHeight();
+
+            if (IsLMoveToSameArea(target))
+            {
+                _mc.MoveToTarget(MotorY, target.Y);
+                _mc.MoveToTarget(MotorX, target.X);
+                _mc.MoveToTargetRelative(MotorA, target.A);
+                _mc.WaitTillEnd(MotorA);
+                _mc.WaitTillEnd(MotorX);
+                _mc.WaitTillEnd(MotorY);
+                
+                _mc.MoveToTargetTillEnd(MotorZ, target.Z);
+            }
+            else
+            {
+                //Move from conveyor to table.
+                if (GetPosition(MotorY) < SafeYArea &&
+                   target.Y > SafeYArea)
+                {
+                    _mc.MoveToTargetRelative(MotorA, target.A);
+                    _mc.MoveToTargetTillEnd(MotorX, target.X);
+                    _mc.MoveToTargetTillEnd(MotorY, target.Y);
+                    _mc.WaitTillEnd(MotorA);
+
+                    _mc.MoveToTargetTillEnd(MotorZ, target.Z);
+                }
+                else
+                {
+                    //Move from table to conveyor.
+                    if (GetPosition(MotorX) < SafeXArea &&
+                        target.X > SafeXArea)
+                    {
+                        _mc.MoveToTargetRelative(MotorA, target.A);
+                        _mc.MoveToTargetTillEnd(MotorY, target.Y);
+                        _mc.MoveToTargetTillEnd(MotorX, target.X);
+                        _mc.WaitTillEnd(MotorA);
+
+                        _mc.MoveToTargetTillEnd(MotorZ, target.Z);
+                    }
+                    else
+                    {
+                        throw new Exception("Robot is in unknown position, need to go home first.");
+                    }
+                }
+            }
+        }
+
+        private bool IsLMoveToSameArea(Pose target)
+        {
+            return (GetPosition(MotorY) <= SafeYArea && target.Y <= SafeYArea) ||
+                     (GetPosition(MotorX) <= SafeXArea && target.X <= SafeXArea);
         }
 
         public void MoveToTarget(CapturePosition target)
         {
-            throw new NotImplementedException();
+            var tar = Helper.ConvertCapturePositionToPose(target);
+            MoveTo(tar);
         }
 
         public void MoveToTarget(Pose target)
         {
-            throw new NotImplementedException();
+            MoveTo(target);
         }
 
         public void SetSpeed(double speed)
@@ -144,7 +213,20 @@ namespace Sorter
 
         public void Setup()
         {
-            throw new NotImplementedException();
+            MotorX = _mc.MotorLX;
+            MotorY = _mc.MotorLY;
+            MotorZ = _mc.MotorLZ;
+            MotorA = _mc.MotorLRotateLoad;
+
+            LoadTray = new Tray()
+            {
+                RowCount = 4,
+                ColumneCount = 12,
+                XOffset = 15.0,
+                YOffset = 15.0,
+                CurrentPart = new Part() { CapturePos = GetCapturePosition(CaptureId.LTrayPickTop), },
+                BaseCapturePosition = GetCapturePosition(CaptureId.LTrayPickTop),
+            };
         }
 
         public void Unload(Part part)
@@ -157,14 +239,40 @@ namespace Sorter
             throw new NotImplementedException();
         }
 
-        public void VacuumSucker(VacuumState state)
+        public void Sucker(VacuumState state)
         {
-            throw new NotImplementedException();
+            if (VacuumSimulateMode)
+                return;
+            _mc.LLoadVacuum(state);
+        }
+
+        public void Sucker(FixtureId id, VacuumState state, VacuumArea area)
+        {
+            if (VacuumSimulateMode)
+                return;
+            _table.VacuumSucker(id, state, area);
         }
 
         public Task<WaitBlock> Work()
         {
-            throw new NotImplementedException();
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(1);
+                    Load(LoadTray.CurrentPart);
+                    return new WaitBlock() { Code = 0, Message = "V OK" };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock() { Code = 40001, Message = "V station error: " + ex.Message };
+                }
+            });
+        }
+
+        public double GetPosition(Motor motor)
+        {
+            return _mc.GetPosition(motor);
         }
     }
 }

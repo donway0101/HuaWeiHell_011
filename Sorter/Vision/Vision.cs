@@ -66,6 +66,10 @@ namespace Bp.Mes
         public double ZPosition { get; set; }
         //??? affect json?
         public double Angle { get; set; }
+        /// <summary>
+        /// ="1", First capture, ="2", second capture
+        /// </summary>
+        public string Tag { get; set; } = "1";
     }
 
 

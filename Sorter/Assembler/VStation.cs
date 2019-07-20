@@ -11,7 +11,7 @@ namespace Sorter
     {
 
 
-        public Motor MotorAngle { get; set; }
+        public Motor MotorA { get; set; }
         public Motor MotorX { get; set; }
         public Motor MotorY { get; set; }
         public Motor MotorZ { get; set; }
@@ -23,6 +23,7 @@ namespace Sorter
         public double UnloadTrayHeight { get; set; }
         public bool VacuumSimulateMode { get; set; }
         public bool VisionSimulateMode { get; set; }
+        public double SafeZHeight { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public void Load(Part part)
         {
@@ -59,12 +60,17 @@ namespace Sorter
             throw new NotImplementedException();
         }
 
-        public void VacuumSucker(VacuumState state)
+        public void Sucker(VacuumState state)
         {
             throw new NotImplementedException();
         }
 
         public Task<WaitBlock> Work()
+        {
+            throw new NotImplementedException();
+        }
+
+        public double GetPosition(Motor motor)
         {
             throw new NotImplementedException();
         }

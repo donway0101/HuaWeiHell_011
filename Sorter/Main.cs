@@ -29,7 +29,7 @@ namespace Sorter
 
         private bool _uiStarted;
         private double _manualSpeed = 10;
-        private double _demoSpeed = 10;
+        private double _demoSpeed = 20;
 
         private StationId _selectStation = StationId.L;
         private ProcedureId _selectSuckerVacuum = ProcedureId.Load;
@@ -1137,6 +1137,7 @@ namespace Sorter
             {
                 testTimes = 1;
             }
+
             await Task.Run(async () =>
             {
                 while (testTimes>0)
@@ -1148,21 +1149,28 @@ namespace Sorter
                         //_cc.VRobot.LockTray(ProcedureId.Load);
                         //_cc.VRobot.LockTray(ProcedureId.Unload);
 
-                        var lRobotTest = _cc.LRobot.LWork();
-                        var vRobotTest = _cc.VRobot.VWork();
+                        var lRobotTest = _cc.LRobot1.Work();
+                        //var vRobotTest = _cc.VRobot.VWork();
 
-                        await vRobotTest;
+                        //await vRobotTest;
                         await lRobotTest;
 
-                        if (vRobotTest.Result.Code != 0 || lRobotTest.Result.Code != 0)
+                        if ( lRobotTest.Result.Code != 0)
                         {
                             var msg = "";
-                            msg += vRobotTest.Result.Code.ToString() + vRobotTest.Result.Message.ToString();
                             msg += lRobotTest.Result.Code.ToString() + lRobotTest.Result.Message.ToString();
                             throw new Exception(msg);
                         }
 
-                        _cc.WorkTable.Turns();
+                        //if (vRobotTest.Result.Code != 0 || lRobotTest.Result.Code != 0)
+                        //{
+                        //    var msg = "";
+                        //    msg += vRobotTest.Result.Code.ToString() + vRobotTest.Result.Message.ToString();
+                        //    msg += lRobotTest.Result.Code.ToString() + lRobotTest.Result.Message.ToString();
+                        //    throw new Exception(msg);
+                        //}
+
+                        //_cc.WorkTable.Turns();
                     }
                     catch (Exception ex)
                     {
@@ -1171,6 +1179,7 @@ namespace Sorter
                     }
                 }
             });
+
             buttonDemo.Enabled = true;
         }
 

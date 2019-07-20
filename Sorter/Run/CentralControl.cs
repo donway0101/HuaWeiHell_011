@@ -14,6 +14,7 @@ namespace Sorter
         public RoundTable WorkTable;
         public AssemblyRobot VRobot;
         public AssemblyRobot LRobot;
+        public LStation LRobot1;
         public GlueRobot GlueLineRobot;
         public GlueRobot GluePointRobot;
         public TrayStation VLoadStation;
@@ -41,9 +42,11 @@ namespace Sorter
 
             CapturePositions.LoadCapturePositions();
             LRobot = new AssemblyRobot(Mc, StationId.L, Vision, WorkTable, CapturePositions.CapturePositions);
+            LRobot1 = new LStation(Mc, Vision, WorkTable, CapturePositions.CapturePositions, null); 
             VRobot = new AssemblyRobot(Mc, StationId.V, Vision, WorkTable, CapturePositions.CapturePositions);
             LRobot.Setup();
             VRobot.Setup();
+            LRobot1.Setup();
         }
 
         public void SetSpeed(double speed=10)
@@ -59,8 +62,8 @@ namespace Sorter
         public void Start()
         {
             //Fast home to go near home sensor.
-            Mc.HomeAllMotors(50, true);
-            Mc.HomeAllMotors(3, true);
+            Mc.HomeAllMotors(30, true);
+            Mc.HomeAllMotors(20, false);
         }
 
         public CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
