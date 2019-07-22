@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Sorter
 {
-    public class TrayStation
+    public class TrayStation : IMachineControl
     {
 
         private readonly MotionController _controller;
@@ -178,6 +178,46 @@ namespace Sorter
             LooseTray();
             ConveyorDeliverOut();
             PushIn();
+        }
+
+        public void SetSpeed(double speed = 1)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Setup()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Start()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Stop()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Pause()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Estop()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Delay(int delayMs = 100)
+        {
+            throw new NotImplementedException();
         }
     }
 }

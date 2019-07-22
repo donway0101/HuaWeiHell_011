@@ -116,5 +116,7 @@ namespace Sorter
         VLoadHeadCylinder = 113,
         VUnloadHeadCylinder = 114,
 
+        GluePoint = 206,
+        GlueLine = 207,
     }
 }

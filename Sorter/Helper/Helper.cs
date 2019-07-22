@@ -20,6 +20,19 @@ namespace Sorter
             System.IO.File.AppendAllText(path, posInfo + Environment.NewLine);
         }
 
+        public static OutputState ConvertVacuumStateToOutputState(VacuumState state)
+        {
+            switch (state)
+            {
+                case VacuumState.Off:
+                    return OutputState.Off;
+                case VacuumState.On:
+                    return OutputState.On;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         public static string ReadConfiguration(string path)
         {
             return System.IO.File.ReadAllText(path);
@@ -52,13 +65,35 @@ namespace Sorter
             throw new Exception("FindCapturePosition fail: " + id);
         }
 
-        public static Pose ConvertCapturePositionToPose(CapturePosition capturePosition)
+        public static CapturePosition GetCapturePosition(CapturePosition[] positions, CaptureId id, string tag)
+        {
+            foreach (var pos in positions)
+            {
+                if (pos.CaptureId == id && pos.Tag == tag)
+                {
+                    return pos;
+                }
+            }
+            throw new Exception("FindCapturePosition fail: " + id);
+        }
+
+        public static void CheckTaskResult(Task<WaitBlock> waitBlock)
+        {
+            if (waitBlock.Result.Code != 0)
+            {
+                throw new Exception("Task not finished, Error Code: " + waitBlock.Result.Code + 
+                    waitBlock.Result.Message);
+            }
+        }
+
+        public static Pose ConvertCapturePositionToPose(CapturePosition capPos)
         {
             return new Pose()
             {
-                X = capturePosition.XPosition,
-                Y = capturePosition.YPosition,
-                Z = capturePosition.ZPosition,
+                X = capPos.XPosition,
+                Y = capPos.YPosition,
+                Z = capPos.ZPosition,
+                A = capPos.Angle,
             };
         }
 

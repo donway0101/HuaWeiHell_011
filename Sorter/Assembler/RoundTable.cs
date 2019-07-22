@@ -8,8 +8,9 @@ namespace Sorter
 {
     public class RoundTable
     {
-        public Holder[] Holders { get; set; } = new Holder[6];
         private readonly MotionController _mc;
+
+        public Holder[] Holders { get; set; } = new Holder[6];      
 
         public double HolderAngle { get; set; } = 60.0;
 
@@ -89,6 +90,12 @@ namespace Sorter
             TurnsTableData();
         }
 
+        public void Turns(List<WaitBlock> waitBlocks)
+        {
+
+            Turns();
+        }
+
         private void TurnsTableData()
         {
             //Turns array.
@@ -106,29 +113,29 @@ namespace Sorter
             Holders[0] = lastHolder;
         }
 
-        public void VacuumSucker(FixtureId holder, VacuumState state, VacuumArea area = VacuumArea.Circle)
+        public void Sucker(FixtureId holder, VacuumState state, VacuumArea area = VacuumArea.Circle, bool checkVacuum = true)
         {
             switch (state)
             {
                 case VacuumState.On:
                     if (area== VacuumArea.Circle)
                     {
-                        _mc.VacuumOn(Holders[(int)holder].VaccumOutputCircle, Holders[(int)holder].VaccumInputCircle);
+                        _mc.VacuumOn(Holders[(int)holder].VaccumOutputCircle, Holders[(int)holder].VaccumInputCircle, checkVacuum);
                     }
                     else
                     {
-                        _mc.VacuumOn(Holders[(int)holder].VaccumOutputCenter, Holders[(int)holder].VaccumInputCenter);
+                        _mc.VacuumOn(Holders[(int)holder].VaccumOutputCenter, Holders[(int)holder].VaccumInputCenter, checkVacuum);
                     }
                     break;
 
                 case VacuumState.Off:
                     if (area == VacuumArea.Circle)
                     {
-                        _mc.VacuumOff(Holders[(int)holder].VaccumOutputCircle, Holders[(int)holder].VaccumInputCircle);
+                        _mc.VacuumOff(Holders[(int)holder].VaccumOutputCircle, Holders[(int)holder].VaccumInputCircle, checkVacuum);
                     }
                     else
                     {
-                        _mc.VacuumOff(Holders[(int)holder].VaccumOutputCenter, Holders[(int)holder].VaccumInputCenter);
+                        _mc.VacuumOff(Holders[(int)holder].VaccumOutputCenter, Holders[(int)holder].VaccumInputCenter, checkVacuum);
                     }
                     break;
 

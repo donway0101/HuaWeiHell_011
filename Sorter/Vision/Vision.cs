@@ -11,7 +11,6 @@ namespace Bp.Mes
     /// </summary>
     public enum CaptureId
     {   
-
         /// <summary>
         /// L抓取
         /// </summary>
@@ -50,6 +49,18 @@ namespace Bp.Mes
         /// 成品装配
         /// </summary>
         VTrayPlaceTop = 9,
+
+        GlueLineChina = 10,
+        GlueLineBeforeGlue=11,
+        GlueLineAfterGlue=12,
+        GluePointChina = 13,
+        GluePointBeforeGlue = 14,
+        GluePointAfterGlue = 15,
+
+
+        LBin =99,
+
+        VBin=100,
     }
 
     /// <summary>
@@ -67,7 +78,7 @@ namespace Bp.Mes
         //??? affect json?
         public double Angle { get; set; }
         /// <summary>
-        /// ="1", First capture, ="2", second capture
+        /// ="1", First capture, ="2", second capture, ="3" third tag
         /// </summary>
         public string Tag { get; set; } = "1";
     }
@@ -84,7 +95,21 @@ namespace Bp.Mes
         public CaptureId CaptureId { get; set; } = CaptureId.LTrayPickTop;
         public double XOffset { get; set; } = 1.0;
         public double YOffset { get; set; } = 1.0;
+        public double XOffset1 { get; set; } = 1.0;
+        public double YOffset1 { get; set; } = 1.0;
+        public double XOffset2 { get; set; } = 1.0;
+        public double YOffset2 { get; set; } = 1.0;
         public double ROffset { get; set; } = 1.0;
+
+        public double XGluePoint1 { get; set; } = 1.0;
+        public double YGluePoint1 { get; set; } = 1.0;
+        public double XGluePoint2 { get; set; } = 1.0;
+        public double YGluePoint2 { get; set; } = 1.0;
+        public double XGluePoint3 { get; set; } = 1.0;
+        public double YGluePoint3 { get; set; } = 1.0;
+        public double XGluePoint4 { get; set; } = 1.0;
+        public double YGluePoint4 { get; set; } = 1.0;
+
         public bool ResultOK { get; set; }
 
     }

@@ -35,12 +35,15 @@ namespace Sorter
         VRotateUnload = 212,
         VTrayLoad = 101,
         VTrayUnload = 104,
-        GluePointY = 205,
-        GluePointX = 204,
-        GluePointZ = 206,
-        GlueLineY = 202,
-        GlueLineX = 201,
-        GlueLineZ = 203,
+
+        GlueLineY = 205,
+        GlueLineX = 204,
+        GlueLineZ = 206,
+
+        GluePointY = 202,
+        GluePointX = 201,
+        GluePointZ = 203,
+
         LY = 207,
         LX = 208,
         LZ = 106,
@@ -83,4 +86,26 @@ namespace Sorter
         On = 0,
         Off = 1,
     }
+
+    public enum CoordinateId
+    {
+        None = 0,
+        GluePoint = 1,
+        GlueLine = 2,
+    }
+
+    public class PointPulse
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Z { get; set; }
+    }
+
+    public enum MoveMode
+    {
+        None,
+        Abs = 1,
+        Relative = 2,
+    }
+
 }

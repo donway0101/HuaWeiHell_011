@@ -53,13 +53,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assembler\AssemblyRobot.cs" />
     <Compile Include="BasicFunction.cs" />
     <Compile Include="Assembler\GlueRobot.cs" />
     <Compile Include="Assembler\IRobot.cs" />
     <Compile Include="Assembler\LStation.cs" />
+    <Compile Include="LaserSensor\PressureSensor.cs" />
+    <Compile Include="LaserSensor\SerialCommunicationTemplate.cs" />
     <Compile Include="Motion\IMotionController.cs" />
+    <Compile Include="PressureSensor\PressureSensor.cs" />
     <Compile Include="Run\ConfigManager.cs" />
+    <Compile Include="Run\IMachineControl.cs" />
     <Compile Include="Vision\CaptureData.cs" />
     <Compile Include="FunctionTest\FunctionTest.cs" />
     <Compile Include="Motion\VacuumControl.cs" />
@@ -96,7 +99,6 @@
     <Compile Include="Assembler\TrayStation.cs" />
     <Compile Include="Assembler\UVLight.cs" />
     <Compile Include="Assembler\VisionData.cs" />
-    <Compile Include="StationId.cs" />
     <Compile Include="Vision\Vision.cs" />
     <Compile Include="Assembler\VStation.cs" />
     <EmbeddedResource Include="Main.resx">

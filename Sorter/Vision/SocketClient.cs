@@ -113,6 +113,9 @@ namespace Sorter
                 throw new Exception("Vision server not connected.");
             }
 
+            log.Info("Sending to server:" + Environment.NewLine +
+                Helper.ConvertObjectToString(capturePosition));
+
             AxisOffset offsetResult = null;
             string JsonCommand = Handle.Instance.ObjToJsonstring(capturePosition);
             Send(JsonCommand);
@@ -132,6 +135,15 @@ namespace Sorter
                 Thread.Sleep(50);
             }
 
+            if (offsetResult.ResultOK == false)
+            {
+                log.Info("No Recieved to server of :" + Environment.NewLine +
+                Helper.ConvertObjectToString(capturePosition));
+                throw new Exception("Vision NG at capture position of " + capturePosition.CaptureId);
+            }
+
+            log.Info("Recieved to server:" + Environment.NewLine +
+                Helper.ConvertObjectToString(offsetResult));
             return offsetResult;
         }
 

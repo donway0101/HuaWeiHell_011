@@ -22,7 +22,7 @@ namespace Sorter
                     code = 1;
                     await Task.Delay(10000, cancellationTokenSource.Token);
                     code = 2;
-                    return new WaitBlock() { Code = code};
+                    return new WaitBlock() { };
                 //}
                 //catch (Exception)
                 //{
@@ -30,13 +30,32 @@ namespace Sorter
                 //}
             }, cancellationTokenSource.Token);
         }
+
+        public Task<WaitBlock> TaskTemplate()
+        {
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(10000, cancellationTokenSource.Token);
+                    cancellationTokenSource.Token.ThrowIfCancellationRequested();
+                    await Task.Delay(10000, cancellationTokenSource.Token);
+                    return new WaitBlock() { Code = 0 };
+                }
+                catch (Exception)
+                {
+                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, };
+                }
+            }, cancellationTokenSource.Token);
+        }
+
     }
 
     public class WaitBlock
     {
-        public int Code { get; set; } = 0;
+        public ErrorCode Code { get; set; } = ErrorCode.Sucessful;
 
-        public string Message { get; set; } = "OK";
+        public string Message { get; set; } = "To be complete error message.";
     }
 
 }

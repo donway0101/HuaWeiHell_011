@@ -9,53 +9,73 @@ namespace Sorter
 {
     public partial class MotionController
     {
-        public void VLoadVacuum(VacuumState state)
+        public void VLoadVacuum(VacuumState state, bool checkVacuum = true)
         {
             switch (state)
             {
                 case VacuumState.On:
-                    VacuumOn(Output.VaccumVLoad, Input.VaccumVLoad);
+                    VacuumOn(Output.VaccumVLoad, Input.VaccumVLoad, checkVacuum);
                     break;
                 case VacuumState.Off:
-                    VacuumOff(Output.VaccumVLoad, Input.VaccumVLoad);
+                    VacuumOff(Output.VaccumVLoad, Input.VaccumVLoad, checkVacuum);
                     break;
                 default:
                     break;
             }
         }
 
-        public void VUnloadVacuum(VacuumState state)
+        public void VUnloadVacuum(VacuumState state, bool checkVacuum = true)
         {
             switch (state)
             {
                 case VacuumState.On:
-                    VacuumOn(Output.VaccumVUnload, Input.VaccumVUnload);
+                    VacuumOn(Output.VaccumVUnload, Input.VaccumVUnload, checkVacuum);
                     break;
                 case VacuumState.Off:
-                    VacuumOff(Output.VaccumVUnload, Input.VaccumVUnload);
+                    VacuumOff(Output.VaccumVUnload, Input.VaccumVUnload, checkVacuum);
                     break;
                 default:
                     break;
             }
         }
 
-        public void LLoadVacuum(VacuumState state)
+        public void LLoadVacuum(VacuumState state, bool checkVacuum = true)
         {
             switch (state)
             {
                 case VacuumState.On:
-                    VacuumOn(Output.VaccumLLoad, Input.VaccumLLoad);
+                    VacuumOn(Output.VaccumLLoad, Input.VaccumLLoad, checkVacuum);
                     break;
                 case VacuumState.Off:
-                    VacuumOff(Output.VaccumLLoad, Input.VaccumLLoad);
+                    VacuumOff(Output.VaccumLLoad, Input.VaccumLLoad, checkVacuum);
                     break;
                 default:
                     break;
             }
         }
-        
-        public void VacuumOn(Output output, Input input, int timeoutMs=3000,
-            OutputState outputState = OutputState.On, bool inputState=true)
+
+        public void Vacuum(VacuumState state, Output output, Input input, 
+            bool checkVacuum = true, int delayMs = 500, int timeoutMs = 3000)
+        {
+            SetOutput(output, Helper.ConvertVacuumStateToOutputState(state));
+            bool expectedState = Convert.ToBoolean(state);
+            bool inputState = false;
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            do
+            {
+                if (stopwatch.ElapsedMilliseconds > timeoutMs)
+                {
+                    throw new Exception("Vacuum timeout: " + output);
+                }
+                inputState = checkVacuum ? GetInput(input) : inputState;
+            } while (inputState != expectedState);
+            Delay(delayMs);
+        }
+
+        public void VacuumOn(Output output, Input input, bool checkVacuum = true,
+            int delayMs = 500, int timeoutMs = 3000,
+            OutputState outputState = OutputState.On, bool inputState = true)
         {
             SetOutput(output, outputState);
             bool state;
@@ -65,14 +85,15 @@ namespace Sorter
             {
                 if (stopwatch.ElapsedMilliseconds > timeoutMs)
                 {
-                    throw new Exception("Cylinder Out timeout: " + output);
+                    throw new Exception("Vacuum timeout: " + output);
                 }
-                state = GetInput(input);
-
-            } while (state!=inputState);
+                state = checkVacuum ? GetInput(input) : inputState;
+            } while (state != inputState);
+            Delay(delayMs);
         }
 
-        public void VacuumOff(Output output, Input input, int timeoutMs = 3000,
+        public void VacuumOff(Output output, Input input, bool checkVacuum = true,
+            int delayMs = 500, int timeoutMs = 3000,
            OutputState outputState = OutputState.Off, bool inputState = false)
         {
             SetOutput(output, outputState);
@@ -83,17 +104,18 @@ namespace Sorter
             {
                 if (stopwatch.ElapsedMilliseconds > timeoutMs)
                 {
-                    throw new Exception("Cylinder in timeout: " + output);
+                    throw new Exception("Vacuum timeout: " + output);
                 }
-                state = GetInput(input);
+                state = checkVacuum ? GetInput(input) : inputState;
             } while (state != inputState);
+            Delay(delayMs);
         }
     }
 
     public enum VacuumState
     {
-        On,
-        Off,
+        Off = 0,
+        On = 1,      
     }
 
 

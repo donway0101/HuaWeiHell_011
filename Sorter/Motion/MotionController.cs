@@ -52,7 +52,7 @@ namespace Sorter
 
         public void Connect()
         {
-            Run(mc.GTN_Open(5, 1), "Controller Connect fail");
+            Run(mc.GTN_Open(5, 1), "Controller Connect fail");           
         }      
 
         #region Setup
@@ -76,6 +76,7 @@ namespace Sorter
             double defaultFindLimitSpeed = homeSpeed;
             double defaultFindHomeSpeed = homeSpeed;
             double defaultHomeOffset = 0;
+            double defaultSpeed = 10.0;
 
             //Todo region.
             #region LY
@@ -87,7 +88,7 @@ namespace Sorter
             MotorLY.BallScrewLead;
             MotorLY.Acceleration = 100.0;
             MotorLY.Deceleration = 100.0;
-            MotorLY.Velocity = 5.0;
+            MotorLY.Velocity = defaultSpeed;
             MotorLY.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorLY.HomeSearchDirection = MoveDirection.Negative;
             MotorLY.HomeSearchIndexDirection = MoveDirection.Negative;
@@ -108,7 +109,7 @@ namespace Sorter
             MotorLX.BallScrewLead;
             MotorLX.Acceleration = 100.0;
             MotorLX.Deceleration = 100.0;
-            MotorLX.Velocity = 5.0;
+            MotorLX.Velocity = defaultSpeed;
             MotorLX.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorLX.HomeSearchDirection = MoveDirection.Negative;
             MotorLX.HomeSearchIndexDirection = MoveDirection.Negative;
@@ -129,7 +130,7 @@ namespace Sorter
             MotorLZ.BallScrewLead;
             MotorLZ.Acceleration = 100.0;
             MotorLZ.Deceleration = 100.0;
-            MotorLZ.Velocity = 5.0;
+            MotorLZ.Velocity = defaultSpeed;
             MotorLZ.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorLZ.HomeSearchDirection = MoveDirection.Positive;
             MotorLZ.HomeSearchIndexDirection = MoveDirection.Positive;
@@ -150,7 +151,7 @@ namespace Sorter
             MotorLTrayLoad.BallScrewLead;
             MotorLTrayLoad.Acceleration = 100.0;
             MotorLTrayLoad.Deceleration = 100.0;
-            MotorLTrayLoad.Velocity = 5.0;
+            MotorLTrayLoad.Velocity = defaultSpeed;
             MotorLTrayLoad.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorLTrayLoad.HomeSearchDirection = MoveDirection.Negative;
             MotorLTrayLoad.HomeSearchIndexDirection = MoveDirection.Negative;
@@ -170,7 +171,7 @@ namespace Sorter
             MotorLTrayUnload.BallScrewLead;
             MotorLTrayUnload.Acceleration = 100.0;
             MotorLTrayUnload.Deceleration = 100.0;
-            MotorLTrayUnload.Velocity = 5.0;
+            MotorLTrayUnload.Velocity = defaultSpeed;
             MotorLTrayUnload.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorLTrayUnload.HomeSearchDirection = MoveDirection.Negative;
             MotorLTrayUnload.HomeSearchIndexDirection = MoveDirection.Negative;
@@ -189,7 +190,7 @@ namespace Sorter
             MotorVY.BallScrewLead;
             MotorVY.Acceleration = 100.0;
             MotorVY.Deceleration = 100.0;
-            MotorVY.Velocity = 5.0;
+            MotorVY.Velocity = defaultSpeed;
             MotorVY.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorVY.HomeSearchDirection = MoveDirection.Positive;
             MotorVY.HomeSearchIndexDirection = MoveDirection.Positive;
@@ -208,7 +209,7 @@ namespace Sorter
             MotorVX.BallScrewLead;
             MotorVX.Acceleration = 100.0;
             MotorVX.Deceleration = 100.0;
-            MotorVX.Velocity = 5.0;
+            MotorVX.Velocity = defaultSpeed;
             MotorVX.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorVX.HomeSearchDirection = MoveDirection.Negative;
             MotorVX.HomeSearchIndexDirection = MoveDirection.Negative;
@@ -227,7 +228,7 @@ namespace Sorter
             MotorVZ.BallScrewLead;
             MotorVZ.Acceleration = 100.0;
             MotorVZ.Deceleration = 100.0;
-            MotorVZ.Velocity = 5.0;
+            MotorVZ.Velocity = defaultSpeed;
             MotorVZ.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorVZ.HomeSearchDirection = MoveDirection.Positive;
             MotorVZ.HomeSearchIndexDirection = MoveDirection.Positive;
@@ -286,7 +287,7 @@ namespace Sorter
             MotorVTrayLoad.BallScrewLead;
             MotorVTrayLoad.Acceleration = 100.0;
             MotorVTrayLoad.Deceleration = 100.0;
-            MotorVTrayLoad.Velocity = 5.0;
+            MotorVTrayLoad.Velocity = defaultSpeed;
             MotorVTrayLoad.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorVTrayLoad.HomeSearchDirection = MoveDirection.Negative;
             MotorVTrayLoad.HomeSearchIndexDirection = MoveDirection.Negative;
@@ -305,7 +306,7 @@ namespace Sorter
             MotorVTrayUnload.BallScrewLead;
             MotorVTrayUnload.Acceleration = 100.0;
             MotorVTrayUnload.Deceleration = 100.0;
-            MotorVTrayUnload.Velocity = 5.0;
+            MotorVTrayUnload.Velocity = defaultSpeed;
             MotorVTrayUnload.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorVTrayUnload.HomeSearchDirection = MoveDirection.Negative;
             MotorVTrayUnload.HomeSearchIndexDirection = MoveDirection.Negative;
@@ -324,13 +325,13 @@ namespace Sorter
             MotorGluePointY.BallScrewLead;
             MotorGluePointY.Acceleration = 100.0;
             MotorGluePointY.Deceleration = 100.0;
-            MotorGluePointY.Velocity = 5.0;
+            MotorGluePointY.Velocity = defaultSpeed;
             MotorGluePointY.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
-            MotorGluePointY.HomeSearchDirection = MoveDirection.Positive;
-            MotorGluePointY.HomeSearchIndexDirection = MoveDirection.Positive;
+            MotorGluePointY.HomeSearchDirection = MoveDirection.Negative;
+            MotorGluePointY.HomeSearchIndexDirection = MoveDirection.Negative;
             MotorGluePointY.EdgeCaptureMode = EdgeCapture.Falling;
             MotorGluePointY.HomeOffset = defaultHomeOffset;
-            MotorGluePointY.Direction = -1.0;
+            MotorGluePointY.Direction = 1.0;
             MotorGluePointY.CriticalErrIdle = allowedError;
             MotorGluePointY.HomeLimitSpeed= defaultFindLimitSpeed;
             MotorGluePointY.HomeIndexSpeed = defaultFindHomeSpeed;
@@ -343,7 +344,7 @@ namespace Sorter
             MotorGluePointX.BallScrewLead;
             MotorGluePointX.Acceleration = 100.0;
             MotorGluePointX.Deceleration = 100.0;
-            MotorGluePointX.Velocity = 5.0;
+            MotorGluePointX.Velocity = defaultSpeed;
             MotorGluePointX.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorGluePointX.HomeSearchDirection = MoveDirection.Positive;
             MotorGluePointX.HomeSearchIndexDirection = MoveDirection.Positive;
@@ -362,7 +363,7 @@ namespace Sorter
             MotorGluePointZ.BallScrewLead;
             MotorGluePointZ.Acceleration = 100.0;
             MotorGluePointZ.Deceleration = 100.0;
-            MotorGluePointZ.Velocity = 5.0;
+            MotorGluePointZ.Velocity = defaultSpeed;
             MotorGluePointZ.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorGluePointZ.HomeSearchDirection = MoveDirection.Positive;
             MotorGluePointZ.HomeSearchIndexDirection = MoveDirection.Positive;
@@ -381,13 +382,13 @@ namespace Sorter
             MotorGlueLineY.BallScrewLead;
             MotorGlueLineY.Acceleration = 100.0;
             MotorGlueLineY.Deceleration = 100.0;
-            MotorGlueLineY.Velocity = 5.0;
+            MotorGlueLineY.Velocity = defaultSpeed;
             MotorGlueLineY.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
-            MotorGlueLineY.HomeSearchDirection = MoveDirection.Negative;
-            MotorGlueLineY.HomeSearchIndexDirection = MoveDirection.Negative;
+            MotorGlueLineY.HomeSearchDirection = MoveDirection.Positive;
+            MotorGlueLineY.HomeSearchIndexDirection = MoveDirection.Positive;
             MotorGlueLineY.EdgeCaptureMode = EdgeCapture.Falling;
             MotorGlueLineY.HomeOffset = defaultHomeOffset;
-            MotorGlueLineY.Direction = 1.0;
+            MotorGlueLineY.Direction = -1.0;
             MotorGlueLineY.CriticalErrIdle = allowedError;
             MotorGlueLineY.HomeLimitSpeed= defaultFindLimitSpeed;
             MotorGlueLineY.HomeIndexSpeed = defaultFindHomeSpeed;
@@ -400,7 +401,7 @@ namespace Sorter
             MotorGlueLineX.BallScrewLead;
             MotorGlueLineX.Acceleration = 100.0;
             MotorGlueLineX.Deceleration = 100.0;
-            MotorGlueLineX.Velocity = 5.0;
+            MotorGlueLineX.Velocity = defaultSpeed;
             MotorGlueLineX.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorGlueLineX.HomeSearchDirection = MoveDirection.Positive;
             MotorGlueLineX.HomeSearchIndexDirection = MoveDirection.Positive;
@@ -419,7 +420,7 @@ namespace Sorter
             MotorGlueLineZ.BallScrewLead;
             MotorGlueLineZ.Acceleration = 100.0;
             MotorGlueLineZ.Deceleration = 100.0;
-            MotorGlueLineZ.Velocity = 5.0;
+            MotorGlueLineZ.Velocity = defaultSpeed;
             MotorGlueLineZ.HomeSearchMode = mc.HOME_MODE_LIMIT_HOME;
             MotorGlueLineZ.HomeSearchDirection = MoveDirection.Positive;
             MotorGlueLineZ.HomeSearchIndexDirection = MoveDirection.Positive;
@@ -460,7 +461,7 @@ namespace Sorter
             MotorWorkTable.BallScrewLead;
             MotorWorkTable.Acceleration = 10.0;
             MotorWorkTable.Deceleration = 10.0;
-            MotorWorkTable.Velocity = 30.0;
+            MotorWorkTable.Velocity = 60.0;
             MotorWorkTable.HomeSearchMode = mc.HOME_MODE_HOME;
             MotorWorkTable.HomeSearchDirection = MoveDirection.Positive;
             MotorWorkTable.HomeSearchIndexDirection = MoveDirection.Positive;
@@ -637,9 +638,19 @@ namespace Sorter
             Thread.Sleep(millisecondsTimeout);
         }
 
-        private int ConvertToMask(short axis)
+        private int ConvertToAxisMask(short axis)
         {
             return 1 << (axis - 1);
+        }
+
+        /// <summary>
+        /// Digital output.
+        /// </summary>
+        /// <param name="doVel"></param>
+        /// <returns></returns>
+        private ushort ConvertToDoMask(short doVel)
+        {
+            return Convert.ToUInt16(1 << (doVel - 1));
         }
 
         #endregion      
@@ -661,6 +672,14 @@ namespace Sorter
             if (checkLimit && IsHittingLimit(motor))
             {
                 throw new Exception("Clear fault fail, motor is still inside limit: " + motor.Id);
+            }
+        }
+
+        public void ClearAllFault()
+        {
+            foreach (var mtr in Motors)
+            {
+                ClearFault(mtr);
             }
         }
 
@@ -1001,7 +1020,7 @@ namespace Sorter
                 int[] inputValue = new int[3];
                 Run(mc.GTN_GetDiEx(cp.Core, mc.MC_GPI, out inputValue[0], 2),
                     "Get input value exception: " + input);
-                inputValue[1] = -(inputValue[0] + 1);
+                inputValue[1] = -(inputValue[1] + 1);
                 return Helper.GetBit(inputValue[1], cp.Pin % 32 - 1);
             }
             else
@@ -1076,7 +1095,7 @@ namespace Sorter
             Run(mc.GTN_SetVel(ca.Core, ca.Axis,
                 dire * motor.Direction * ConvertToPulseVel(motor, speed)), 
                 exceptionInfo);
-            Run(mc.GTN_Update(ca.Core, ConvertToMask(ca.Axis)), exceptionInfo);
+            Run(mc.GTN_Update(ca.Core, ConvertToAxisMask(ca.Axis)), exceptionInfo);
         }
 
         public void MoveToTarget(Motor motor, double target)
@@ -1098,7 +1117,7 @@ namespace Sorter
             var vel = ConvertToPulseVel(motor, motor.Velocity);
             Run(mc.GTN_SetVel(ca.Core, ca.Axis, vel), exceptionInfo);
             Run(mc.GTN_SetPos(ca.Core, ca.Axis, ConvertToPulseDistance(motor,target)), exceptionInfo);
-            Run(mc.GTN_Update(ca.Core, ConvertToMask(ca.Axis)), exceptionInfo);
+            Run(mc.GTN_Update(ca.Core, ConvertToAxisMask(ca.Axis)), exceptionInfo);
         }
 
         public void MoveToTargetTillEnd(Motor motor, double target)
@@ -1142,8 +1161,10 @@ namespace Sorter
             bool enabled = false;
             bool driverFault = true;
             double error = 10;
+            bool isMoving = true;
 
-            while (inpos==false || enabled==false || driverFault==true || error > motor.CriticalErrIdle )
+            while (inpos==false || enabled==false || driverFault==true || isMoving==true
+                || error > motor.CriticalErrIdle )
             {
                 if (stopwatch.ElapsedMilliseconds > timeout * 1000)
                 {
@@ -1171,9 +1192,12 @@ namespace Sorter
                 inpos = GetState(motor, MotorState.InPosition);
                 enabled = GetState(motor, MotorState.Enabled);
                 driverFault = GetState(motor, MotorState.ServoAlarm);
+                isMoving = GetState(motor, MotorState.Moving);
 
                 Delay(20);
             }
+
+            Delay(50);
         }
 
         public bool GetState(Motor motor, MotorState state)
@@ -1184,34 +1208,173 @@ namespace Sorter
             return Helper.GetBit(stateValue, (int)state);
         }
 
-        public void SetCoordinateSystem()
+        public void ClearInterpolationBuffer(short core, CoordinateId coordinateId, short fifo = 0)
         {
-            mc.TCrdPrm crdprm1;
+            Run(mc.GTN_Stop(2, 0xff, 0), "Stop all interpolation fail");
+            Run(mc.GTN_CrdClear(core, (short)coordinateId, fifo), 
+                "ClearInterpolationBuffer exception");
+        }
 
-            crdprm1.dimension = 2;//坐标系的维数为4维
-            crdprm1.synVelMax = 500;//最大合成速度为500
-            crdprm1.synAccMax = 100;//最大合成加速度为100
-            crdprm1.evenTime = 10;//最小匀速时间为50ms
-            crdprm1.profile1 = 0;//规划器1对应X轴
-            crdprm1.profile2 = 0;//规划器2对应Y轴
-            crdprm1.profile3 = 0;//规划器3对应Z轴
-            crdprm1.profile4 = 1;//规划器2对应A轴
-            crdprm1.profile5 = 2;//规划器1对应X轴
-            crdprm1.profile6 = 0;//规划器2对应Y轴
-            crdprm1.profile7 = 0;//规划器3对应Z轴
-            crdprm1.profile8 = 0;//规划器2对应A轴
+        /// <summary>
+        /// Add to motion buffer.
+        /// </summary>
+        /// <param name="core"></param>
+        /// <param name="coordinateId"></param>
+        /// <param name="xPos"></param>
+        /// <param name="yPos"></param>
+        /// <param name="synVel"></param>
+        /// <param name="synAcc"></param>
+        /// <param name="endVel"></param>
+        /// <param name="fifo"></param>
+        public void AddTargetPoint(short core, short coordinateId, int xPos, int yPos, int zPos,
+            double synVel, double synAcc, double endVel, short fifo)
+        {
+            Run(mc.GTN_LnXYZ(core, coordinateId, xPos, yPos, zPos, synVel, synAcc, endVel, fifo), 
+                "Set target point exception");
+        }
 
-            crdprm1.setOriginFlag = 1;//1表示需要用户指定坐标原点的规划位置
-            crdprm1.originPos1 = 0;//1轴的规划位置为0
-            crdprm1.originPos2 = 0;//2轴的规划位置为0
-            crdprm1.originPos3 = 0;//3轴的规划位置为0
-            crdprm1.originPos4 = 0;//2轴的规划位置为0
-            crdprm1.originPos5 = 0;//1轴的规划位置为0
-            crdprm1.originPos6 = 0;//2轴的规划位置为0
-            crdprm1.originPos7 = 0;//3轴的规划位置为0
-            crdprm1.originPos8 = 0;//2轴的规划位置为0
+        //public void AddOutput(short core, short coordinateId, short doType, ushort doMask,
+        //    ushort doValue, short fifo)
+        //{
+        //    Run(mc.GTN_BufIO(core, coordinateId, doType, doMask, doValue, fifo), 
+        //        "Add digital output exception");
+        //}
 
-            short rtn = mc.GTN_SetCrdPrm(1, 1, ref crdprm1);//建立1号坐标系
+        public void AddOutput(short core, short coordinateId, Output output, OutputState state, short fifo =0)
+        {
+            var cp = ConvertToOutput(output);
+            switch (state)
+            {
+                case OutputState.On:
+                    Run(mc.GTN_BufIO(core, coordinateId, mc.MC_GPO, ConvertToDoMask(cp.Pin), 
+                        ConvertToDoMask(cp.Pin), fifo), "Add digital output exception");
+                    break;
+                case OutputState.Off:
+                    Run(mc.GTN_BufIO(core, coordinateId, mc.MC_GPO, ConvertToDoMask(cp.Pin),
+                        0, fifo), "Add digital output exception");
+                    break;
+                default:
+                    break;
+            }
+            
+        }
+
+        public void AddDelay(short coordinateId,
+          ushort delayMs, short core = 2, short fifo = 0)
+        {
+            Run(mc.GTN_BufDelay(core, coordinateId, delayMs, fifo),
+                "Add digital output exception");
+        }
+
+        public bool IsCrdSpaceEnough(short coordinateId, short core = 2, short fifo = 0)
+        {
+            Run(mc.GTN_CrdSpace(core, coordinateId, out int pSpace, fifo), "No space for buffer");
+            //Todo Right?
+            return pSpace > 10;
+        }
+
+        public void StartInterpolation(CoordinateId mask, short core = 2, short option = 0)
+        {
+            Run(mc.GTN_CrdStart(core, (short)mask, option), "Start interpolation exception.");
+        }
+
+        public bool IsInterpolationFinished(CoordinateId mask, short core = 2, short fifo = 0)
+        {
+            Run(mc.GTN_CrdStatus(core, (short)mask, out short pRun, out int pSegment, fifo),
+                "Get coordinate running error");
+            return pRun == 0;    
+        }
+
+        public void WaitTillInterpolationEnd(CoordinateId id, int timeoutSec = 120)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            bool end = false;
+
+            while (end == false)
+            {
+                if (stopwatch.ElapsedMilliseconds > timeoutSec * 1000)
+                {
+                    if (end == false)
+                    {
+                        throw new Exception("Interpolation finish timeout: " + id);
+                    }
+                }
+
+                end = IsInterpolationFinished(id);
+                Delay(20);
+            }
+        }
+
+
+        /// <summary>
+        /// Set max vel and acc and smooth time.
+        /// </summary>
+        /// <param name="coordinate"></param>
+        public void SetCoordinateSystem(CoordinateId coordinate)
+        {
+            mc.TCrdPrm crdprm;
+
+            switch (coordinate)
+            {
+                case CoordinateId.GluePoint:
+                    crdprm.dimension = 3;//坐标系的维数为3维
+                    crdprm.synVelMax = 200;//最大合成速度为500
+                    crdprm.synAccMax = 10;//最大合成加速度为100
+                    crdprm.evenTime = 10;//最小匀速时间为50ms
+                    crdprm.profile1 = 1;//规划器1对应X轴
+                    crdprm.profile2 = 2;//规划器2对应Y轴
+                    crdprm.profile3 = 3;//规划器3对应Z轴
+                    crdprm.profile4 = 0;//规划器2对应A轴
+                    crdprm.profile5 = 0;//规划器1对应X轴
+                    crdprm.profile6 = 0;//规划器2对应Y轴
+                    crdprm.profile7 = 0;//规划器3对应Z轴
+                    crdprm.profile8 = 0;//规划器2对应A轴
+
+                    crdprm.setOriginFlag = 1;//1表示需要用户指定坐标原点的规划位置
+                    crdprm.originPos1 = 0;//1轴的规划位置为0
+                    crdprm.originPos2 = 0;//2轴的规划位置为0
+                    crdprm.originPos3 = 0;//3轴的规划位置为0
+                    crdprm.originPos4 = 0;//2轴的规划位置为0
+                    crdprm.originPos5 = 0;//1轴的规划位置为0
+                    crdprm.originPos6 = 0;//2轴的规划位置为0
+                    crdprm.originPos7 = 0;//3轴的规划位置为0
+                    crdprm.originPos8 = 0;//2轴的规划位置为0
+
+                    
+                    break;
+
+                case CoordinateId.GlueLine:
+                    crdprm.dimension = 3;//坐标系的维数为3维
+                    crdprm.synVelMax = 200;//最大合成速度为500
+                    crdprm.synAccMax = 10;//最大合成加速度为100
+                    crdprm.evenTime = 10;//最小匀速时间为50ms
+                    crdprm.profile1 = 0;//规划器1对应X轴
+                    crdprm.profile2 = 0;//规划器2对应Y轴
+                    crdprm.profile3 = 0;//规划器3对应Z轴
+                    crdprm.profile4 = 1;//A轴
+                    crdprm.profile5 = 2;//规划器1对应X轴
+                    crdprm.profile6 = 3;//规划器2对应Y轴
+                    crdprm.profile7 = 0;//规划器3对应Z轴
+                    crdprm.profile8 = 0;//A轴
+
+                    crdprm.setOriginFlag = 1;//1表示需要用户指定坐标原点的规划位置
+                    crdprm.originPos1 = 0;//1轴的规划位置为0
+                    crdprm.originPos2 = 0;//2轴的规划位置为0
+                    crdprm.originPos3 = 0;//3轴的规划位置为0
+                    crdprm.originPos4 = 0;//2轴的规划位置为0
+                    crdprm.originPos5 = 0;//1轴的规划位置为0
+                    crdprm.originPos6 = 0;//2轴的规划位置为0
+                    crdprm.originPos7 = 0;//3轴的规划位置为0
+                    crdprm.originPos8 = 0;//2轴的规划位置为0
+                    break;
+
+                default:
+                    throw new NotImplementedException("Set coordinate");
+            }
+
+            Run(mc.GTN_SetCrdPrm(2, (short)coordinate, ref crdprm), "Set coordinate system error.");
         }
 
         public void TestLineMove()
@@ -1269,6 +1432,10 @@ namespace Sorter
             rtn = mc.GTN_CrdStart(1, 1, 0);
         }
 
+        public void SetCoordinateSystem()
+        {
+            throw new NotImplementedException();
+        }
     }
 
 
