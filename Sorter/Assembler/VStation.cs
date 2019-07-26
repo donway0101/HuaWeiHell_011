@@ -2,19 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Bp.Mes;
 
+/// <summary>
+/// Copy right：
+/// All right reserved to B&P.
+/// Author email: don_way@163.com
+/// </summary>
 namespace Sorter
 {
-    public class VStation : IRobot
+    public class VStation : IAssemblyRobot, IRobot
     {
         private readonly MotionController _mc;
         private readonly VisionServer _vision;
         private readonly RoundTable _table;
+        private List<CapturePosition> _capturePositions;
+        private List<CapturePosition> _userPositionOffsets;
 
         /// <summary>
-        /// Unload 
+        /// Unload stepper motor
         /// </summary>
         public Motor MotorAUnload { get; set; }
 
@@ -25,34 +33,50 @@ namespace Sorter
         public Motor MotorX { get; set; }
         public Motor MotorY { get; set; }
         public Motor MotorZ { get; set; }
-        public double SafeXArea { get; set; } = 100;
+
+        public double SafeXArea { get; set; } = 80;
         public double SafeYArea { get; set; } = -100;
         public Tray UnloadTray { get; set; }
+        public bool UnloadTrayCaptured { get; set; }
         public Tray LoadTray { get; set; }
-        public double LoadTrayHeight { get; set; } = -35.935;
+        public double LoadTrayHeight { get; set; } = -35;
         public double UnloadTrayHeight { get; set; } = -32.634;
         public double FixtureHeight { get; set; } = -36.634;
+
         public bool CheckVacuumValue { get; set; } = false;
         public bool VisionSimulateMode { get; set; } = false;
-        public double SafeZHeight { get; set; }
+
+        public double SafeZHeight { get; set; } = -10;
 
         /// <summary>
-        /// Camera take three picture to get this position.
+        /// User for next 
         /// </summary>
-        public Pose BaseUnloadPosition { get; set; }
-        public Task<WaitBlock> Preparation { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        private CapturePosition[] _capturePositions;
-        private CapturePosition[] _capturePositionOffsets;
+        public Task<WaitBlock> Preparation {get; set; }
+        public Task<WaitBlock> PreparationAsync { get; set; }
 
         public VStation(MotionController controller, VisionServer vision,
-            RoundTable table, CapturePosition[] positions, CapturePosition[] offsets)
+            RoundTable table, List<CapturePosition> positions, List<CapturePosition> offsets)
         {
             _mc = controller;
             _vision = vision;
             _table = table;
             _capturePositions = positions;
-            _capturePositionOffsets = offsets;
+            _userPositionOffsets = offsets;
+        }
+
+        public Task<WaitBlock> FindBaseUnloadPositionAsync()
+        {
+            return Task.Run(() => {
+                try
+                {
+                    FindBaseUnloadPosition();
+                    return new WaitBlock() { Message="Find tray location OK" };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "Find tray position fail:" + ex.Message };
+                }
+            });
         }
 
         public void FindBaseUnloadPosition()
@@ -69,6 +93,8 @@ namespace Sorter
             MoveToCapture(unloadCapture3);
 
             UnloadTray.TrayInfo = GetRawVisionResult(unloadCapture3);
+
+            MoveToSafeHeight();
 
             UnloadTray.BaseCapturePosition = new CapturePosition()
             {
@@ -89,20 +115,24 @@ namespace Sorter
                 },
                 UnloadHeight = UnloadTrayHeight,
             };
+
+            UnloadTrayCaptured = true;
         }
 
+        /// <summary>
+        /// Goes to capture for position locating.
+        /// </summary>
+        /// <param name="target"></param>
         public void MoveToCapture(CapturePosition target)
         {
-            var tar = Helper.ConvertCapturePositionToPose(target);
-            MoveTo(tar, ActionType.None);
+            var tar = Helper.ConvertToPose(target);
+            MoveTo(tar, MoveModeAMotor.None, ActionType.None);
         }
 
-        public void MoveToTarget(CapturePosition target)
-        {
-            var tar = Helper.ConvertCapturePositionToPose(target);
-            MoveTo(tar);
-        }
-
+        /// <summary>
+        /// Set all speed.
+        /// </summary>
+        /// <param name="speed"></param>
         public void SetSpeed(double speed)
         {
             MotorX.Velocity = speed;
@@ -112,6 +142,9 @@ namespace Sorter
             MotorAUnload.Velocity = speed;
         }
 
+        /// <summary>
+        /// Motor setup and tray info setup.
+        /// </summary>
         public void Setup()
         {
             MotorX = _mc.MotorVX;
@@ -127,7 +160,11 @@ namespace Sorter
                 XOffset = 18.5,
                 YOffset = 18.5,
                 BaseCapturePosition = GetCapturePosition(CaptureId.VTrayPickTop),
-                CurrentPart = new Part() { CapturePos = GetCapturePosition(CaptureId.VTrayPickTop) },
+                CurrentPart = new Part()
+                {
+                    CapturePos = GetCapturePosition(CaptureId.VTrayPickTop),
+                    TargetPose = new Pose(),
+                },
             };
 
             UnloadTray = new Tray()
@@ -138,9 +175,13 @@ namespace Sorter
                 YOffset = 18.5,
                 
                 BaseCapturePosition = GetCapturePosition(CaptureId.VTrayPlaceTop),
-                CurrentPart = new Part() { CapturePos = GetCapturePosition(CaptureId.VTrayPickTop) },
+                CurrentPart = new Part() {
+                    CapturePos = GetCapturePosition(CaptureId.VTrayPickTop),
+                    TargetPose = new Pose(),
+                },
             };
 
+            //Set as a simulate mode.
             var tempState = VisionSimulateMode;
             VisionSimulateMode = true;
             UnloadTray.CurrentPart.TargetPose = GetVisionResult(UnloadTray.CurrentPart.CapturePos);
@@ -149,6 +190,11 @@ namespace Sorter
             UnloadTray.TrayHeight = UnloadTrayHeight;
         }
 
+        /// <summary>
+        /// For picking and for unload tray locating.
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
         public Pose GetVisionResult(CapturePosition pos)
         {
             var visionOffset = GetRawVisionResult(pos);
@@ -166,93 +212,214 @@ namespace Sorter
             };
         }
 
+        /// <summary>
+        /// Find capture positions.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public CapturePosition GetCapturePosition(CaptureId id)
         {
-            return Helper.FindCapturePosition(_capturePositions, id);
+            return Helper.GetCapturePosition(_capturePositions, id);
         }
 
+        /// <summary>
+        /// For unload tray locating.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="tag"></param>
+        /// <returns></returns>
         public CapturePosition GetCapturePosition(CaptureId id, string tag = "1")
         {
             return Helper.GetCapturePosition(_capturePositions, id, tag);
         }
 
-        public void Unload(Part unloadPart)
+        private void UnloadPick(Part part)
         {
-            //var unloadCapturePos = GetCapturePosition(CaptureId.VUnloadHolderTop);
-            //MoveToCapture(unloadCapturePos);
-            //var pickPose = GetVisionResult(unloadPart.CapturePos);
-            //MoveToTarget(pickPose, ActionType.Load);
-            ////Todo Table sucker off
-            //Sucker(VacuumState.On, ActionType.Load);
-
-            //var bottomCamCapturePosLoad = GetCapturePosition(CaptureId.VLoadCompensationBottom);
-            //MoveToCapture(bottomCamCapturePosLoad);
-            //var angleOffset = GetVisionResult(bottomCamCapturePosLoad);
-            //CorrectAngle(angleOffset.A, ActionType.Unload);
-            //var coordinateOffset = GetVisionResult(bottomCamCapturePosLoad);
-
-            //unloadPart.TargetPose.X += coordinateOffset.X;
-            //unloadPart.TargetPose.Y += coordinateOffset.Y;
-
-            MoveToTarget(unloadPart.TargetPose, ActionType.Unload);
-            //Sucker(VacuumState.Off, ActionType.Unload);
+            if (UnloadTrayCaptured==false)
+            {
+                throw new Exception("Unload tray has't been captured by camera.");
+            }
+            var unloadCapturePos = GetCapturePosition(CaptureId.VUnloadHolderTop);
+            MoveToCapture(unloadCapturePos);
+            var pickPose = GetVisionResult(unloadCapturePos);
+            MoveToTarget(pickPose, MoveModeAMotor.Abs, ActionType.Unload);
+            Sucker(FixtureId.V, VacuumState.Off, VacuumArea.Circle);
+            Sucker(FixtureId.V, VacuumState.Off, VacuumArea.Center);
+            Sucker(VacuumState.On, ActionType.Unload);
             MoveToSafeHeight();
+        }
 
-            UnloadTray.CurrentPart = UnloadTray.GetNextPartForUnload(unloadPart);
+        private Pose AngleCompensationUnload(ref Part part)
+        {
+            var bottomCamCapturePosLoad = GetCapturePosition(CaptureId.VUnloadCompensationBottom);
+            MoveToCapture(bottomCamCapturePosLoad);
+            Delay(500);
+            var angleOffset = GetVisionResult(bottomCamCapturePosLoad);
+            MoveAngleMotor( -angleOffset.A, MoveModeAMotor.Relative, ActionType.Unload);
+            var xNyOffset = GetVisionResult(bottomCamCapturePosLoad);
+            part.TargetPose.X += xNyOffset.X;
+            part.TargetPose.Y += xNyOffset.Y;
+            return xNyOffset;
+        }
+
+        private void UnloadPlace(Part part)
+        {
+            MoveToTarget(part.TargetPose, MoveModeAMotor.None, ActionType.Unload);
+            Sucker(VacuumState.Off, ActionType.Unload);
+            MoveToSafeHeight();
         }
 
         /// <summary>
-        /// Load a part and get next part.
+        /// Unload a part.
+        /// </summary>
+        /// <param name="part"></param>
+        public void Unload(Part part)
+        {
+            UnloadPick(part);
+            AngleCompensationUnload(ref part);
+            UnloadPlace(part);
+
+            UnloadTray.CurrentPart = UnloadTray.GetNextPartForUnload(part);
+        }
+
+        public async Task<WaitBlock> UnloadAsync(Part part)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    Unload(part);
+                    return new WaitBlock() { Message = "V unload Finished Successful." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "V unload fail: " + ex.Message };
+                }
+            });
+        }
+
+        public async Task<WaitBlock> PrepareAsync()
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    Prepare();
+                    return new WaitBlock() { Message = "V unload Finished Successful." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "V unload fail: " + ex.Message };
+                }
+            });
+        }
+
+        private void Prepare()
+        {
+            LoadPick(LoadTray.CurrentPart);
+            AngleCompensationLoad();
+            MoveToTarget(GetCapturePosition(CaptureId.VLoadHolderTop), 
+                MoveModeAMotor.None, ActionType.None);
+        }
+
+        private void Delay(int ms)
+        {
+            Thread.Sleep(ms);
+        }
+
+        private void LoadPick(Part part)
+        {
+            MoveToCapture(part.CapturePos);
+            var pickPose = GetVisionResult(part.CapturePos, 3);
+            pickPose.Z = GetZHeight(CaptureId.VTrayPickTop);
+            MoveToTarget(pickPose, MoveModeAMotor.None, ActionType.Load);
+            Sucker(VacuumState.On, ActionType.Load);
+            MoveToSafeHeight();
+            SetNextPartLoad();
+        }
+
+        private void AngleCompensationLoad()
+        {
+            //Get angle offset for loading.
+            var bottomCamCapturePosLoad = GetCapturePosition(CaptureId.VLoadCompensationBottom);
+            MoveToCapture(bottomCamCapturePosLoad);
+            Delay(500);
+            var bottomCamPos = GetVisionResult(bottomCamCapturePosLoad, 3);
+            // 0724 no angle correction right now for V load.
+            //MoveAngleMotor(bottomCamPos.A, MoveModeAMotor.Relative, ActionType.Load);
+            //var xNyOffset = GetVisionResult(bottomCamCapturePosLoad, 3);
+
+            //return xNyOffset;
+            //return null;
+        }
+
+        private void LoadPlace(Part part)
+        {
+            MoveToTarget(part.TargetPose, MoveModeAMotor.None, ActionType.Load);
+            Sucker(FixtureId.V, VacuumState.On, VacuumArea.Circle);
+            Sucker(VacuumState.Off, ActionType.Load);
+            MoveToSafeHeight();
+        }
+
+        private Pose GetFixturePose()
+        {
+            var fixtureCapturePos = GetCapturePosition(CaptureId.VLoadHolderTop);
+            MoveToCapture(fixtureCapturePos);
+            return GetVisionResult(fixtureCapturePos, 3);
+        }
+
+        /// <summary>
+        /// Load a part.
         /// </summary>
         /// <param name="part">Para LoadTray current part.</param>
         public void Load(Part part)
         {
-            MoveToCapture(part.CapturePos);
-            var pickPose = GetVisionResult(part.CapturePos);
-            MoveToTarget(pickPose, ActionType.Load);
-            Sucker(VacuumState.On, ActionType.Load);
+            LoadPick(part);
 
-            var bottomCamCapturePosLoad = GetCapturePosition(CaptureId.VLoadCompensationBottom);
-            MoveToCapture(bottomCamCapturePosLoad);
-            GetVisionResult(bottomCamCapturePosLoad);
+            //No angle correction right now. 0724
+            AngleCompensationLoad();
 
-            var fixtureCapturePosLoad = GetCapturePosition(CaptureId.VLoadHolderTop);
-            MoveToCapture(fixtureCapturePosLoad);
-            var loadPose = GetVisionResult(fixtureCapturePosLoad);
-            MoveToTarget(loadPose, ActionType.Load);
-            Sucker(VacuumState.Off, ActionType.Load);
-            Sucker(FixtureId.V, VacuumState.On, VacuumArea.Circle);
-            MoveToSafeHeight();
+            part.TargetPose =  GetFixturePose();
+            part.TargetPose.Z = GetZHeight(CaptureId.VLoadHolderTop);
+
+            LoadPlace(part);
 
             LoadTray.CurrentPart = LoadTray.GetNextPartForLoad(part);
-            //MoveToNextCaptureAsync(LoadTray.CurrentPart);
         }
 
-        public Task<WaitBlock> LoadAsync(Part part)
+        /// <summary>
+        /// asynchranous Loading a part.
+        /// </summary>
+        /// <param name="part"></param>
+        /// <returns></returns>
+        public async Task<WaitBlock> LoadAsync(Part part)
         {
-            return Task.Run(async () =>
+            return await Task.Run(() =>
             {
                 try
                 {
-                    await Task.Delay(1);
                     Load(part);
-                    return new WaitBlock() { Message = "V Load OK" };
+                    return new WaitBlock() { Message = "V Load Finished Successful." };
                 }
                 catch (Exception ex)
                 {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "V Load error: " + ex.Message };
+                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "V Load fail: " + ex.Message };
                 }
             });
         }
 
-        public Task<WaitBlock> MoveToNextCaptureAsync(Part part)
+        /// <summary>
+        /// For next unload and load
+        /// </summary>
+        /// <param name="part"></param>
+        /// <returns></returns>
+        public Task<WaitBlock> PreparationForNextCycleAsync(Part part)
         {
-            return Task.Run(async () =>
+            return Task.Run(() =>
             {
                 try
                 {
-                    await Task.Delay(1);
-                    MoveToCapture(part.CapturePos);
+                    //MoveToCapture(part.CapturePos);
                     return new WaitBlock() { Message = "V Load OK" };
                 }
                 catch (Exception ex)
@@ -260,118 +427,85 @@ namespace Sorter
                     return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "V Load error: " + ex.Message };
                 }
             });
-        }
-
-        private void Unload()
-        {
-            //Unload a finished product.
-            var fixtureCapturePosUnload = GetCapturePosition(CaptureId.VUnloadHolderTop);
-            MoveToCapture(fixtureCapturePosUnload);
-            var unloadPose = GetVisionResult(fixtureCapturePosUnload);
-            MoveToTarget(unloadPose, ActionType.Unload);
-            Sucker(FixtureId.V, VacuumState.Off, VacuumArea.Center);
-            Sucker(FixtureId.V, VacuumState.Off, VacuumArea.Circle);
-            Sucker(VacuumState.On, ActionType.Unload);
-        }
-
-        private void Load()
-        {
-            //Load a Part
-            var fixtureCapturePosLoad = GetCapturePosition(CaptureId.VLoadHolderTop);
-            MoveToCapture(fixtureCapturePosLoad);
-            var loadPose = GetVisionResult(fixtureCapturePosLoad);
-            MoveToTarget(loadPose, ActionType.Load);
-            Sucker(FixtureId.V, VacuumState.On, VacuumArea.Circle);
-            Sucker(VacuumState.Off, ActionType.Load);
-        }
-
-        private void Place(Part part)
-        {
-            if (VisionSimulateMode)
-            {
-                var unloadCapture = GetCapturePosition(CaptureId.VTrayPlaceTop);
-                MoveToCapture(unloadCapture);
-                var unloadPos = GetVisionResult(unloadCapture);
-                MoveToTarget(unloadPos, ActionType.Unload);
-            }
-            else
-            {
-                MoveToTarget(part.TargetPose, ActionType.Unload);
-                Sucker(VacuumState.Off, ActionType.Unload);
-                MoveToSafeHeight();
-                UnloadTray.CurrentPart = UnloadTray.GetNextPartForUnload(part);
-            }
-        }
-
-        private void Pick(Part loadPart)
-        {
-            //Pick a new part for next load.
-            MoveToCapture(loadPart.CapturePos);
-            var pickPose = GetVisionResult(loadPart.CapturePos);
-            MoveToTarget(pickPose, ActionType.Load);
-            Sucker(VacuumState.On, ActionType.Load);
         }
 
         public void PrepareForNextLoad(Part loadPart)
         {
-            Pick(loadPart);
-            CorrectAngle(ref loadPart, ActionType.Load);
+            //Pick(loadPart);
+            //CorrectAngle(ref loadPart, MoveModeAMotor.Abs, ActionType.Load);
 
-            var nextFixtureCapturePosUnload = GetCapturePosition(CaptureId.VUnloadHolderTop);
-            MoveToCapture(nextFixtureCapturePosUnload);
+            //var nextFixtureCapturePosUnload = GetCapturePosition(CaptureId.VUnloadHolderTop);
+            //MoveToCapture(nextFixtureCapturePosUnload);
         }
 
-        public void UnloadAndLoad(Part unloadPart, Part loadPart)
+        #region For testing
+        public async Task<WaitBlock> LDoingSomthingForALongTime()
         {
-            Unload();
-            Load();
-            CorrectAngle(ref unloadPart, ActionType.Unload);
-            Place(unloadPart);
-
-            SetNextPartLoad();
-            SetNextPartUnload();
-
-            PrepareForNextLoad(LoadTray.CurrentPart);
-        }
-
-        /// <summary>
-        /// Correct angle and return x offset and y offset.
-        /// </summary>
-        /// <param name="part"></param>
-        public  void CorrectAngle(ref Part part, ActionType action)
-        {
-            switch (action)
+            try
             {
-                case ActionType.None:
-                    break;
-                case ActionType.Load:
-                    //Get angle offset for unload.
-                    var bottomCamCapturePosLoad = GetCapturePosition(CaptureId.VLoadCompensationBottom);
-                    MoveToCapture(bottomCamCapturePosLoad);
-                    var angleOffsetLoad = GetVisionResult(bottomCamCapturePosLoad);
-                    CorrectAngle(angleOffsetLoad.A, ActionType.Unload);
-                    var xNyOffsetLoad = GetVisionResult(bottomCamCapturePosLoad);
-                    part.XOffset = xNyOffsetLoad.X;
-                    part.YOffset += xNyOffsetLoad.Y;
-                    break;
-                case ActionType.Unload:
-                    //Get angle offset for unload.
-                    var bottomCamCapturePosUnload = GetCapturePosition(CaptureId.VUnloadCompensationBottom);
-                    MoveToCapture(bottomCamCapturePosUnload);
-                    var angleOffsetUnload = GetVisionResult(bottomCamCapturePosUnload);
-                    CorrectAngle(angleOffsetUnload.A, ActionType.Unload);
-                    var xNyOffsetUnload = GetVisionResult(bottomCamCapturePosUnload);
-                    part.XOffset += xNyOffsetUnload.X;
-                    part.YOffset += xNyOffsetUnload.Y;
-                    break;
-                default:
-                    break;
+                //await Task.Delay(1);
+                await SomeBasicTask();
+                return new WaitBlock() { Code = ErrorCode.ControllerConnectFail, Message = "V Error" };
+            }
+            catch (Exception ex)
+            {
+                return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "V error: " + ex.Message };
             }
         }
 
+        private async Task SomeBasicTask()
+        {
+            await SomethingHard();
+        }
+
+        private async Task SomethingHard()
+        {
+            await Task.Run(() =>
+            {
+                Thread.Sleep(1000);
+                Thread.Sleep(1000);
+                Thread.Sleep(1000);
+                Thread.Sleep(1000);
+            });
+
+        } 
+        #endregion
+
+        public void UnloadAndLoad(Part unloadPart, Part loadPart)
+        {
+            UnloadPick(unloadPart);
+            SetNextPartLoad();
+
+            loadPart.TargetPose = GetFixturePose();
+            loadPart.TargetPose.Z = GetZHeight(CaptureId.VLoadHolderTop);
+
+            LoadPlace(loadPart);
+            AngleCompensationUnload(ref unloadPart);
+            UnloadPlace(unloadPart);
+
+            SetNextPartUnload();
+        }
+
+        public async Task<WaitBlock> UnloadAndLoadAsync(Part unloadPart, Part loadPart)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    UnloadAndLoad(unloadPart, loadPart);
+                    return new WaitBlock() { Message = "V Load Finished Successful." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "V Load fail: " + ex.Message };
+                }
+            });
+        }
+
+
         public void Sucker(VacuumState state)
         {
-            throw new NotImplementedException();
+            _mc.VLoadVacuum(state, CheckVacuumValue);
         }
 
         public void Sucker(VacuumState state, ActionType procedure)
@@ -396,23 +530,11 @@ namespace Sorter
             _table.Sucker(id, state, area, CheckVacuumValue);
         }
 
-        public Task<WaitBlock> Work()
-        {
-            return Task.Run(async () =>
-            {
-                try
-                {
-                    await Task.Delay(1);
-                    UnloadAndLoad(UnloadTray.CurrentPart, LoadTray.CurrentPart);
-                    return new WaitBlock() { Message = "V OK" };
-                }
-                catch (Exception ex)
-                {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "V Station error: " + ex.Message };
-                }
-            });
-        }
-
+        /// <summary>
+        /// Get encoder position or reference position of motor.
+        /// </summary>
+        /// <param name="motor"></param>
+        /// <returns></returns>
         public double GetPosition(Motor motor)
         {
             return _mc.GetPosition(motor);
@@ -435,14 +557,9 @@ namespace Sorter
             }
         }
 
-        public void MoveToTarget(Pose target)
+        public void MoveToTarget(Pose target, MoveModeAMotor mode, ActionType procedure)
         {
-            MoveTo(target);
-        }
-
-        public void MoveToTarget(Pose target, ActionType procedure)
-        {
-            MoveTo(target, procedure);
+            MoveTo(target, mode, procedure);
         }
 
         private bool IsMoveToSameArea(Pose target)
@@ -451,7 +568,14 @@ namespace Sorter
                        (GetPosition(MotorX) <= SafeXArea && target.X <= SafeXArea);
         }  
 
-        private void MoveTo(Pose target, ActionType procedure = ActionType.None)
+        /// <summary>
+        /// Move robot to target.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="mode"></param>
+        /// <param name="procedure"></param>
+        public void MoveTo(Pose target, MoveModeAMotor mode = MoveModeAMotor.None,
+            ActionType procedure = ActionType.Load)
         {
             MoveToSafeHeight();
 
@@ -459,7 +583,7 @@ namespace Sorter
             {
                 _mc.MoveToTarget(MotorY, target.Y);
                 _mc.MoveToTarget(MotorX, target.X);
-                MoveAngleMotor(target, procedure);
+                MoveAngleMotor(target.A, mode, procedure);
 
                 _mc.WaitTillEnd(MotorX);
                 _mc.WaitTillEnd(MotorY);
@@ -474,10 +598,11 @@ namespace Sorter
                 if (GetPosition(MotorY) > SafeYArea &&
                    target.Y < SafeYArea)
                 {
-                    MoveAngleMotor(target, procedure);
+                    MoveAngleMotor(target.A, mode, procedure);
                     _mc.MoveToTargetTillEnd(MotorX, target.X);
                     _mc.MoveToTargetTillEnd(MotorY, target.Y);
                     WaitTillEndAngleMotor();
+
                     CylinderHead(HeadCylinderState.Down, procedure);
                     _mc.MoveToTargetTillEnd(MotorZ, target.Z);
                 }
@@ -487,16 +612,17 @@ namespace Sorter
                     if (GetPosition(MotorX) < SafeXArea &&
                         target.X > SafeXArea)
                     {
-                        MoveAngleMotor(target, procedure);
+                        MoveAngleMotor(target.A, mode, procedure);
                         _mc.MoveToTargetTillEnd(MotorY, target.Y);
                         _mc.MoveToTargetTillEnd(MotorX, target.X);
                         WaitTillEndAngleMotor();
+
                         CylinderHead(HeadCylinderState.Down, procedure);
                         _mc.MoveToTargetTillEnd(MotorZ, target.Z);
                     }
                     else
                     {
-                        throw new Exception("Robot is in unknown position, need to go home first.");
+                        throw new Exception("V robot move to routine goes into bug6516516498513.");
                     }
                 }
             }
@@ -508,23 +634,54 @@ namespace Sorter
             _mc.WaitTillEnd(MotorAUnload);
         }
 
-        private void MoveAngleMotor(Pose target, ActionType procedure)
+        /// <summary>
+        /// Move stepper rotation motor.
+        /// </summary>
+        /// <param name="angle"></param>
+        /// <param name="mode"></param>
+        /// <param name="procedure"></param>
+        public void MoveAngleMotor(double angle, MoveModeAMotor mode, ActionType procedure)
         {
+            var stepperMotor = MotorA;
+
             switch (procedure)
             {
                 case ActionType.None:
                     break;
                 case ActionType.Load:
-                    _mc.MoveToTargetRelative(MotorA, target.A);
+                    stepperMotor = MotorA;
                     break;
                 case ActionType.Unload:
-                    _mc.MoveToTargetRelative(MotorAUnload, target.A);
+                    stepperMotor = MotorAUnload;
+                    break;
+                default:
+                    break;
+            }
+
+            switch (mode)
+            {
+                case MoveModeAMotor.None:
+                    //Motor goes to its current position, meet the wait till end condition.
+                    _mc.MoveToTarget(MotorA, MotorA.TargetPosition);
+                    _mc.MoveToTarget(MotorAUnload, MotorA.TargetPosition);
+                    break;
+
+                case MoveModeAMotor.Abs:
+                    _mc.MoveToTarget(stepperMotor, angle);
+                    break;
+                case MoveModeAMotor.Relative:
+                    _mc.MoveToTargetRelative(stepperMotor, angle);
                     break;
                 default:
                     break;
             }
         }
 
+        /// <summary>
+        /// Cylinder with sucker head.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="procedure"></param>
         public void CylinderHead(HeadCylinderState state, ActionType procedure)
         {
             switch (procedure)
@@ -542,6 +699,11 @@ namespace Sorter
             }
         }
 
+        /// <summary>
+        /// Get vision raw data.
+        /// </summary>
+        /// <param name="capturePosition"></param>
+        /// <returns></returns>
         public AxisOffset GetRawVisionResult(CapturePosition capturePosition)
         {
             if (VisionSimulateMode)
@@ -559,6 +721,11 @@ namespace Sorter
             }
         }
 
+        /// <summary>
+        /// Get Z height for moving to target.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public double GetZHeight(CaptureId id)
         {
             switch (id)
@@ -580,6 +747,10 @@ namespace Sorter
             }
         }
 
+        /// <summary>
+        /// Unlock tray of load or unload.
+        /// </summary>
+        /// <param name="procedure"></param>
         public void UnlockTray(ActionType procedure = ActionType.Load)
         {
             switch (procedure)
@@ -595,6 +766,10 @@ namespace Sorter
             }
         }
 
+        /// <summary>
+        /// Lock tray for load or unload.
+        /// </summary>
+        /// <param name="procedure"></param>
         public void LockTray(ActionType procedure = ActionType.Load)
         {
             switch (procedure)
@@ -610,6 +785,11 @@ namespace Sorter
             }
         }
 
+        /// <summary>
+        /// Has retry times.
+        /// </summary>
+        /// <param name="retryTimes"></param>
+        /// <param name="action"></param>
         public void Sucker(int retryTimes, ActionType action)
         {
             int retryCount = 0;
@@ -635,35 +815,33 @@ namespace Sorter
         public void RiseZALittleAndDown()
         {
             _mc.MoveToTargetRelativeTillEnd(MotorZ, 1);
-            _mc.MoveToTargetRelativeTillEnd(MotorZ, 1);
+            _mc.MoveToTargetRelativeTillEnd(MotorZ, -1);
         }
 
-        public void CorrectAngle(double relativeAngle, ActionType action)
+        public Pose GetVisionResult(CapturePosition capturePosition, int retryTimes)
         {
-            switch (action)
+            int retryCount = 0;
+            do
             {
-                case ActionType.None:
-                    break;
-                case ActionType.Load:
-                    _mc.MoveToTargetRelativeTillEnd(MotorA, -relativeAngle);
-                    break;
-                case ActionType.Unload:
-                    _mc.MoveToTargetRelativeTillEnd(MotorAUnload, -relativeAngle);
-                    break;
-                default:
-                    break;
-            }
-            
-        }
+                try
+                {
+                    return GetVisionResult(capturePosition);
+                }
+                catch (Exception)
+                {
+                    retryCount++;
+                }
+            } while (retryCount < 3);
 
-        public AxisOffset GetVisionResult(CapturePosition capturePosition, int retryTimes)
-        {
-            throw new NotImplementedException();
+            //To be developed.
+            //NgBin(LoadTray.CurrentPart);
+
+            throw new Exception("Vision fail three times. Ng bin action coming soon.");
         }
 
         public void NgBin(Part part)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void SetNextPartLoad()
@@ -681,9 +859,20 @@ namespace Sorter
             throw new NotImplementedException();
         }
 
-        public void MoveRotaryMotor(double angle, MoveMode mode, ActionType type)
+        void IAssemblyRobot.Work()
         {
             throw new NotImplementedException();
+        }
+
+        public Task<WaitBlock> WorkAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void MoveToTarget(CapturePosition target, MoveModeAMotor mode, ActionType type)
+        {
+            var tar = Helper.ConvertToPose(target);
+            MoveToTarget(tar, mode, type);
         }
     }
 }

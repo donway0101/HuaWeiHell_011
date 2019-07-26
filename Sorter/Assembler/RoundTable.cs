@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sorter
@@ -17,6 +18,8 @@ namespace Sorter
         public bool HomeComplete { get; set; }
 
         public Motor TableMotor { get; set; }
+
+        public Output BottomUVLight { get; set; } = Output.UVLightBottom;
 
         public RoundTable(MotionController controller)
         {
@@ -61,6 +64,27 @@ namespace Sorter
             Holders[4].VaccumInputCircle = Input.VaccumHolerCircleReserve;
             Holders[5].VaccumInputCenter = Input.VaccumHolerCenterUV;
             Holders[5].VaccumInputCircle = Input.VaccumHolerCircleUV;
+        }
+
+        public Task UVLightOnAsync(int delayMs = 1000)
+        {
+            return Task.Run(() => {
+                _mc.SetOutput(BottomUVLight, OutputState.On);
+                Delay(delayMs);
+                _mc.SetOutput(BottomUVLight, OutputState.Off);
+            });
+        }
+
+        public void Delay(int delayMs)
+        {
+            Thread.Sleep(delayMs);
+        }
+
+        public void UVLightOn(int delayMs = 1000)
+        {
+            _mc.SetOutput(BottomUVLight, OutputState.On);
+            Delay(delayMs);
+            _mc.SetOutput(BottomUVLight, OutputState.Off);
         }
 
         /// <summary>

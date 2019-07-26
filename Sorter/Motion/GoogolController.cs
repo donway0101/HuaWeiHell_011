@@ -36,13 +36,13 @@ namespace Sorter
         VTrayLoad = 101,
         VTrayUnload = 104,
 
-        GlueLineY = 205,
-        GlueLineX = 204,
-        GlueLineZ = 206,
+        GlueLineY = 202,
+        GlueLineX = 201,
+        GlueLineZ = 203,
 
-        GluePointY = 202,
-        GluePointX = 201,
-        GluePointZ = 203,
+        GluePointY = 205,
+        GluePointX = 204,
+        GluePointZ = 206,
 
         LY = 207,
         LX = 208,
@@ -91,7 +91,7 @@ namespace Sorter
     {
         None = 0,
         GluePoint = 1,
-        GlueLine = 2,
+        GlueCurve = 2,
     }
 
     public class PointPulse
@@ -99,9 +99,11 @@ namespace Sorter
         public int X { get; set; }
         public int Y { get; set; }
         public int Z { get; set; }
+        public int ArcCenterToXOffset { get; set; }
+        public int ArcCenterToYOffset { get; set; }
     }
 
-    public enum MoveMode
+    public enum MoveModeAMotor
     {
         None,
         Abs = 1,

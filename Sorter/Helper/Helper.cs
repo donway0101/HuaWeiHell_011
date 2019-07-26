@@ -15,12 +15,17 @@ namespace Sorter
             System.IO.File.WriteAllText(path, config);
         }
 
+        public static void SaveDevelopmentPoints(string config, string path = "Development.config")
+        {
+            System.IO.File.WriteAllText(path, config);
+        }
+
         public static void AddCapturePosition(string posInfo, string path)
         {
             System.IO.File.AppendAllText(path, posInfo + Environment.NewLine);
         }
 
-        public static OutputState ConvertVacuumStateToOutputState(VacuumState state)
+        public static OutputState ConvertToOutputState(VacuumState state)
         {
             switch (state)
             {
@@ -38,7 +43,7 @@ namespace Sorter
             return System.IO.File.ReadAllText(path);
         }
 
-        public static string ConvertObjectToString(object obj)
+        public static string ConvertToJsonString(object obj)
         {
             return JsonConvert.SerializeObject(obj, Formatting.Indented);
         }
@@ -48,12 +53,24 @@ namespace Sorter
             return JsonConvert.DeserializeObject<Motor[]>(config);
         }
 
-        public static CapturePosition[] ConvertConfigToCapturePositions(string config)
+        public static List<CapturePosition> ConvertToCapturePositions(string config)
         {
-            return JsonConvert.DeserializeObject<CapturePosition[]>(config);
+            return JsonConvert.DeserializeObject<List<CapturePosition>>(config);
         }
 
-        public static CapturePosition FindCapturePosition(CapturePosition[] positions, CaptureId id)
+        public static GluePosition[] ConvertToGluePositions(Pose[] poses)
+        {
+            GluePosition[] gluePositions = new GluePosition[4];
+            for (int i = 0; i < poses.Length; i++)
+            {
+                gluePositions[i].X = poses[i].X;
+                gluePositions[i].Y = poses[i].Y;
+                gluePositions[i].Z = poses[i].Z;
+            }
+            return gluePositions;
+        }
+
+        public static CapturePosition GetCapturePosition(List<CapturePosition> positions, CaptureId id)
         {
             foreach (var pos in positions)
             {
@@ -65,7 +82,7 @@ namespace Sorter
             throw new Exception("FindCapturePosition fail: " + id);
         }
 
-        public static CapturePosition GetCapturePosition(CapturePosition[] positions, CaptureId id, string tag)
+        public static CapturePosition GetCapturePosition(List<CapturePosition> positions, CaptureId id, string tag)
         {
             foreach (var pos in positions)
             {
@@ -77,6 +94,18 @@ namespace Sorter
             throw new Exception("FindCapturePosition fail: " + id);
         }
 
+        public static CapturePosition GetDevelopmentPoints(List<CapturePosition> positions, string tag)
+        {
+            foreach (var pos in positions)
+            {
+                if (pos.Tag == tag)
+                {
+                    return pos;
+                }
+            }
+            throw new Exception("FindCapturePosition fail: " + tag);
+        }
+
         public static void CheckTaskResult(Task<WaitBlock> waitBlock)
         {
             if (waitBlock.Result.Code != 0)
@@ -86,7 +115,7 @@ namespace Sorter
             }
         }
 
-        public static Pose ConvertCapturePositionToPose(CapturePosition capPos)
+        public static Pose ConvertToPose(CapturePosition capPos)
         {
             return new Pose()
             {
@@ -97,7 +126,7 @@ namespace Sorter
             };
         }
 
-        public static Pose ConvertAxisOffsetToPose(AxisOffset offset)
+        public static Pose ConvertToPose(AxisOffset offset)
         {
             return new Pose()
             {

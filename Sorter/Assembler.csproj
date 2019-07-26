@@ -54,10 +54,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicFunction.cs" />
-    <Compile Include="Assembler\GlueRobot.cs" />
-    <Compile Include="Assembler\IRobot.cs" />
     <Compile Include="Assembler\LStation.cs" />
-    <Compile Include="LaserSensor\PressureSensor.cs" />
+    <Compile Include="Assembler\IAssemblyRobot.cs" />
+    <Compile Include="Assembler\IRobot.cs" />
+    <Compile Include="Assembler\GluePointStation.cs" />
+    <Compile Include="Assembler\GlueCurveStation.cs" />
+    <Compile Include="Assembler\IGlueRobot.cs" />
+    <Compile Include="LaserSensor\LaserSensor.cs" />
     <Compile Include="LaserSensor\SerialCommunicationTemplate.cs" />
     <Compile Include="Motion\IMotionController.cs" />
     <Compile Include="PressureSensor\PressureSensor.cs" />

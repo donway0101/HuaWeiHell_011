@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sorter
@@ -15,44 +16,31 @@ namespace Sorter
             _mc = controller;
         }
 
-        /// <summary>
-        /// Turn on light and turn off after a period.
-        /// </summary>
-        /// <param name="delayMs"></param>
-        /// <returns></returns>
-        public Task<WaitBlock> OnAsync(int delayMs)
+        public async Task<WaitBlock> OnAsync(int delayMs = 1000)
         {
-            return Task.Run(async () =>
-            {
+            return await Task.Run(async () => {
                 try
                 {
-                    await Task.Delay(1);
-                    On(delayMs);
-                    return new WaitBlock() { };
+                    On();
+                    await Task.Delay(delayMs * 1000);
+                    Off();
+                    return new WaitBlock() { Message = "UV Light Finished Successful." };
                 }
                 catch (Exception)
                 {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, };
-                }
-            });
-        }
-
-
-        public void On(int delayMs = 1000)
-        {
-            On();
-            Delay(delayMs);
-            Off();
+                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "UV Light Finished Successful." };
+                } 
+            }); 
         }
 
         public void On()
         {
-            _mc.SetOutput(Output.UVLight, OutputState.On);
+            _mc.SetOutput(Output.UVLightTop, OutputState.On);
         }
 
         public void Off()
         {
-            _mc.SetOutput(Output.UVLight, OutputState.Off);
+            _mc.SetOutput(Output.UVLightTop, OutputState.Off);
         }
 
         public void SetSpeed(double speed = 1)
@@ -92,7 +80,7 @@ namespace Sorter
 
         public void Delay(int delayMs)
         {
-            throw new NotImplementedException();
+            Thread.Sleep(delayMs);
         }
     }
 }

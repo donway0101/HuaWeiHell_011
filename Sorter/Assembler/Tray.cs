@@ -67,8 +67,13 @@ namespace Sorter
                 ZPosition = BaseCapturePosition.ZPosition
             };
 
+            Pose pose = new Pose()
+            {
+                Z = BaseCapturePosition.ZPosition,
+            };
+
             return new Part()
-            { CapturePos = newCapture, XIndex = xIndex, YIndex = yIndex };
+            { CapturePos = newCapture, TargetPose=pose, XIndex = xIndex, YIndex = yIndex };
         }
 
         /// <summary>

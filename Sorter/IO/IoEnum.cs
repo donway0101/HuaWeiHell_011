@@ -77,7 +77,10 @@ namespace Sorter
         None = 0,
 
         //Core 1, pin 01
-        UVLight = 201,
+        LightBig = 223,
+
+        UVLightTop = 224,
+        UVLightBottom = 208,
 
         LLoadTrayCylinder = 118,
 
@@ -117,6 +120,6 @@ namespace Sorter
         VUnloadHeadCylinder = 114,
 
         GluePoint = 206,
-        GlueLine = 207,
+        GlueCurve = 207,
     }
 }

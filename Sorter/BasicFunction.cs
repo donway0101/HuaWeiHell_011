@@ -9,6 +9,9 @@ namespace Sorter
 {
     public class BasicFunction
     {
+
+
+
         public CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         public Task<WaitBlock> TaskTest()
         {

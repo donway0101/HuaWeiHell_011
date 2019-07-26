@@ -57,7 +57,7 @@ namespace Sorter
         public void Vacuum(VacuumState state, Output output, Input input, 
             bool checkVacuum = true, int delayMs = 500, int timeoutMs = 3000)
         {
-            SetOutput(output, Helper.ConvertVacuumStateToOutputState(state));
+            SetOutput(output, Helper.ConvertToOutputState(state));
             bool expectedState = Convert.ToBoolean(state);
             bool inputState = false;
             var stopwatch = new Stopwatch();

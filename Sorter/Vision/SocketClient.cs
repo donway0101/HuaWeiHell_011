@@ -114,7 +114,7 @@ namespace Sorter
             }
 
             log.Info("Sending to server:" + Environment.NewLine +
-                Helper.ConvertObjectToString(capturePosition));
+                Helper.ConvertToJsonString(capturePosition));
 
             AxisOffset offsetResult = null;
             string JsonCommand = Handle.Instance.ObjToJsonstring(capturePosition);
@@ -138,12 +138,12 @@ namespace Sorter
             if (offsetResult.ResultOK == false)
             {
                 log.Info("No Recieved to server of :" + Environment.NewLine +
-                Helper.ConvertObjectToString(capturePosition));
+                Helper.ConvertToJsonString(capturePosition));
                 throw new Exception("Vision NG at capture position of " + capturePosition.CaptureId);
             }
 
             log.Info("Recieved to server:" + Environment.NewLine +
-                Helper.ConvertObjectToString(offsetResult));
+                Helper.ConvertToJsonString(offsetResult));
             return offsetResult;
         }
 
@@ -289,7 +289,7 @@ namespace Sorter
                 _receiveManualResetEvent.WaitOne();
                 try
                 {
-                    byte[] buffer = new byte[512];
+                    byte[] buffer = new byte[8192];
                     int rec = _clientSocket.Receive(buffer, 0, buffer.Length, 0);
                     if (rec <= 0)
                     {

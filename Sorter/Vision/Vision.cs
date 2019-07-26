@@ -11,6 +11,7 @@ namespace Bp.Mes
     /// </summary>
     public enum CaptureId
     {   
+        None = 0,
         /// <summary>
         /// L抓取
         /// </summary>
@@ -57,9 +58,30 @@ namespace Bp.Mes
         GluePointBeforeGlue = 14,
         GluePointAfterGlue = 15,
 
+        //Calibrate at china point.
+        GluePointCalibration = 87,
+        GlueCurveCalibration = 88,
+        GluePointLaser = 89,
+        GlueCurveLaser = 90,
+        GluePointNeedle = 91,
+        GlueCurveNeedle = 92,
+
+        GluePointDevelopment =93,
+        GlueCurveDevelopment=94,
+        VDevelopment=95,
+        LDevelopment = 96,
+
+        /// <summary>
+        /// To calculate needle to laser height offset.
+        /// </summary>
+        GluePointLaserSensor = 97,
+
+        /// <summary>
+        /// To capture needle height.
+        /// </summary>
+        GluePointPressureSensor =98,
 
         LBin =99,
-
         VBin=100,
     }
 
@@ -101,16 +123,20 @@ namespace Bp.Mes
         public double YOffset2 { get; set; } = 1.0;
         public double ROffset { get; set; } = 1.0;
 
-        public double XGluePoint1 { get; set; } = 1.0;
-        public double YGluePoint1 { get; set; } = 1.0;
-        public double XGluePoint2 { get; set; } = 1.0;
-        public double YGluePoint2 { get; set; } = 1.0;
-        public double XGluePoint3 { get; set; } = 1.0;
-        public double YGluePoint3 { get; set; } = 1.0;
-        public double XGluePoint4 { get; set; } = 1.0;
-        public double YGluePoint4 { get; set; } = 1.0;
+        /// <summary>
+        /// For points: each x,y is a point
+        /// For lines: each two point is a line, from start to end.
+        /// For circle: first start point, second end point, third center point.
+        /// </summary>
+        public double[] PointX { get; set; }
+        public double[] PointY { get; set; }
 
         public bool ResultOK { get; set; }
+
+        /// <summary>
+        /// V station has part on fixture.
+        /// </summary>
+        public bool ObjectDetected { get; set; }
 
     }
 
