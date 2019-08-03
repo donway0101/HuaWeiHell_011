@@ -17,13 +17,40 @@ namespace Sorter
 
        // StartButton,
        // StopButton
-       //ResetButton
-       //EStopButton
+       // ResetButton
+       // EStopButton
 
-       //VLoadTrayOpticalSensor
+        VLoadTrayOpticalSensor = 000,    
+        VLoadConveyorOutsideOpticalSensor = 000,
+        VLoadConveyorInsideOpticalSensor = 000,
+        VUnloadTrayOpticalSensor = 000,
+        VUnloadConveyorOutsideOpticalSensor = 000,
+        VUnloadConveyorInsideOpticalSensor = 000,
 
-        LLoadTrayPushCylinderOut = 125,
-        LLoadTrayPushCylinderIn = 126,                  
+        LLoadTrayOpticalSensor = 000,
+        LLoadConveyorOutsideOpticalSensor = 000,
+        LLoadConveyorInsideOpticalSensor = 000,
+        LUnloadTrayOpticalSensor = 000,
+        LUnloadConveyorOutsideOpticalSensor = 000,
+        LUnloadConveyorInsideOpticalSensor = 000,
+
+        LLoadTrayCylinderOut = 125,
+        LLoadTrayCylinderIn = 126,
+        LLoadConveyorCylinderOut = 000,
+        LLoadConveyorCylinderIn = 000,
+        VLoadTrayCylinderOut = 000,
+        VLoadTrayCylinderIn = 000,
+        VLoadConveyorCylinderOut = 000,
+        VLoadConveyorCylinderIn = 000,
+
+        LUnloadTrayCylinderOut = 000,
+        LUnloadTrayCylinderIn = 000,
+        LUnloadConveyorCylinderOut = 000,
+        LUnloadConveyorCylinderIn = 000,
+        VUnloadTrayCylinderOut = 000,
+        VUnloadTrayCylinderIn = 000,
+        VUnloadConveyorCylinderOut = 000,
+        VUnloadConveyorCylinderIn = 000,
 
         VaccumLLoad = 211,
         VaccumVLoad = 209,
@@ -83,6 +110,14 @@ namespace Sorter
         UVLightHead = 208,
 
         LLoadTrayCylinder = 118,
+        LLoadConveyorCylinder = 000,
+        VLoadTrayCylinder = 000,
+        VLoadConveyorCylinder = 000,
+
+        LUnloadTrayCylinder = 000,
+        LUnloadConveyorCylinder = 000,
+        VUnloadTrayCylinder = 000,
+        VUnloadConveyorCylinder = 000,
 
         LLoadConveyorBlockUp = 106,
         LLoadConveyorTightUp=119,

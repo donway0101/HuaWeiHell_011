@@ -101,12 +101,12 @@
     <Compile Include="Vision\Json.cs" />
     <Compile Include="Vision\SocketClientExample.cs" />
     <Compile Include="Vision\SocketClient.cs" />
-    <Compile Include="Assembler\TrayStation.cs" />
     <Compile Include="Assembler\UVLight.cs" />
     <Compile Include="Assembler\VisionData.cs" />
     <Compile Include="Vision\Vision.cs" />
     <Compile Include="Assembler\VStation.cs" />
     <Compile Include="Assembler\VLoadTrayStation.cs" />
+    <Compile Include="Assembler\VUnloadTrayStation.cs" />
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
     </EmbeddedResource>

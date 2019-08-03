@@ -16,7 +16,7 @@ namespace Sorter
         public double YOffset { get; set; } = 18.5;
         public int RowCount { get; set; } = 4;
         public int ColumneCount { get; set; } = 12;
-        public bool IsReady { get; set; }
+        public bool NeedChanged { get; set; }
         public Part CurrentPart { get; set; }
         public bool HasPartOnHand { get; set; }
         public double TrayHeight { get; set; }
@@ -55,11 +55,9 @@ namespace Sorter
                 y = y + YIncreaseDirection*YOffset;
             }
 
-            if (part.YIndex == RowCount - 1)
+            if (part.YIndex == RowCount - 1 && part.XIndex == ColumneCount - 1)
             {
-                IsReady = false;
-                xIndex = 0;
-                yIndex = 0;
+                NeedChanged = true;
             }
 
             CapturePosition newCapture = new CapturePosition()
@@ -104,11 +102,9 @@ namespace Sorter
             double y = BaseCapturePosition.YPosition + xIndex * TrayInfo.YOffset1 + yIndex * TrayInfo.YOffset2;
 
             // End of tray.
-            if (part.YIndex == RowCount - 1)
+            if (part.YIndex == RowCount - 1 && part.XIndex == ColumneCount - 1)
             {
-                IsReady = false;
-                xIndex = 0;
-                yIndex = 0;
+                NeedChanged = true;
             }
 
             return new Part()

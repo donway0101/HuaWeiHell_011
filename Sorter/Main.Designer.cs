@@ -38,6 +38,7 @@ namespace Sorter
             this.buttonConnect = new System.Windows.Forms.Button();
             this.tabPageRobot = new System.Windows.Forms.TabPage();
             this.panelManualControl = new System.Windows.Forms.Panel();
+            this.buttonStopMotion = new System.Windows.Forms.Button();
             this.buttonMoveToHistoryPoint = new System.Windows.Forms.Button();
             this.comboBoxReadDevPoints = new System.Windows.Forms.ComboBox();
             this.buttonClearAllFault = new System.Windows.Forms.Button();
@@ -207,6 +208,7 @@ namespace Sorter
             this.textBoxShotGlueDelay = new System.Windows.Forms.TextBox();
             this.buttonShotGlue = new System.Windows.Forms.Button();
             this.tabPageFunctionTest = new System.Windows.Forms.TabPage();
+            this.buttonPauseProduction = new System.Windows.Forms.Button();
             this.buttonSetFixtureFull = new System.Windows.Forms.Button();
             this.buttonVStationTestRun = new System.Windows.Forms.Button();
             this.buttonResetError = new System.Windows.Forms.Button();
@@ -226,8 +228,12 @@ namespace Sorter
             this.tabPageConfig = new System.Windows.Forms.TabPage();
             this.button2 = new System.Windows.Forms.Button();
             this.dataGridViewUserSettings = new System.Windows.Forms.DataGridView();
-            this.buttonStopMotion = new System.Windows.Forms.Button();
-            this.buttonPauseProduction = new System.Windows.Forms.Button();
+            this.buttonVLoadLoadTray = new System.Windows.Forms.Button();
+            this.buttonVLoadUnloadTray = new System.Windows.Forms.Button();
+            this.buttonVUnloadUnloadTray = new System.Windows.Forms.Button();
+            this.buttonVUnloadLoadTray = new System.Windows.Forms.Button();
+            this.buttonLUnloadUnloadTray = new System.Windows.Forms.Button();
+            this.buttonLLoadLoadTray = new System.Windows.Forms.Button();
             this.tabControlMenu.SuspendLayout();
             this.tabPageMain.SuspendLayout();
             this.tabPageRobot.SuspendLayout();
@@ -394,10 +400,21 @@ namespace Sorter
             this.panelManualControl.Controls.Add(this.buttonXJogPlus);
             this.panelManualControl.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.panelManualControl.Location = new System.Drawing.Point(7, 16);
-            this.panelManualControl.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panelManualControl.Margin = new System.Windows.Forms.Padding(4);
             this.panelManualControl.Name = "panelManualControl";
             this.panelManualControl.Size = new System.Drawing.Size(1121, 814);
             this.panelManualControl.TabIndex = 0;
+            // 
+            // buttonStopMotion
+            // 
+            this.buttonStopMotion.Location = new System.Drawing.Point(592, 453);
+            this.buttonStopMotion.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonStopMotion.Name = "buttonStopMotion";
+            this.buttonStopMotion.Size = new System.Drawing.Size(499, 69);
+            this.buttonStopMotion.TabIndex = 95;
+            this.buttonStopMotion.Text = "停止运动";
+            this.buttonStopMotion.UseVisualStyleBackColor = true;
+            this.buttonStopMotion.Click += new System.EventHandler(this.buttonStopMotion_Click);
             // 
             // buttonMoveToHistoryPoint
             // 
@@ -550,7 +567,7 @@ namespace Sorter
             this.radioButtonGluePointStation.AutoSize = true;
             this.radioButtonGluePointStation.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.radioButtonGluePointStation.Location = new System.Drawing.Point(203, 19);
-            this.radioButtonGluePointStation.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.radioButtonGluePointStation.Margin = new System.Windows.Forms.Padding(4);
             this.radioButtonGluePointStation.Name = "radioButtonGluePointStation";
             this.radioButtonGluePointStation.Size = new System.Drawing.Size(70, 24);
             this.radioButtonGluePointStation.TabIndex = 6;
@@ -563,7 +580,7 @@ namespace Sorter
             this.radioButtonVStation.AutoSize = true;
             this.radioButtonVStation.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.radioButtonVStation.Location = new System.Drawing.Point(16, 19);
-            this.radioButtonVStation.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.radioButtonVStation.Margin = new System.Windows.Forms.Padding(4);
             this.radioButtonVStation.Name = "radioButtonVStation";
             this.radioButtonVStation.Size = new System.Drawing.Size(70, 24);
             this.radioButtonVStation.TabIndex = 2;
@@ -577,7 +594,7 @@ namespace Sorter
             this.radioButtonLStation.Checked = true;
             this.radioButtonLStation.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.radioButtonLStation.Location = new System.Drawing.Point(115, 19);
-            this.radioButtonLStation.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.radioButtonLStation.Margin = new System.Windows.Forms.Padding(4);
             this.radioButtonLStation.Name = "radioButtonLStation";
             this.radioButtonLStation.Size = new System.Drawing.Size(70, 24);
             this.radioButtonLStation.TabIndex = 5;
@@ -591,7 +608,7 @@ namespace Sorter
             this.radioButtonGlueLineStation.AutoSize = true;
             this.radioButtonGlueLineStation.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.radioButtonGlueLineStation.Location = new System.Drawing.Point(308, 19);
-            this.radioButtonGlueLineStation.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.radioButtonGlueLineStation.Margin = new System.Windows.Forms.Padding(4);
             this.radioButtonGlueLineStation.Name = "radioButtonGlueLineStation";
             this.radioButtonGlueLineStation.Size = new System.Drawing.Size(70, 24);
             this.radioButtonGlueLineStation.TabIndex = 7;
@@ -602,7 +619,7 @@ namespace Sorter
             // textBoxCaptureNote
             // 
             this.textBoxCaptureNote.Location = new System.Drawing.Point(699, 698);
-            this.textBoxCaptureNote.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxCaptureNote.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxCaptureNote.Name = "textBoxCaptureNote";
             this.textBoxCaptureNote.Size = new System.Drawing.Size(391, 27);
             this.textBoxCaptureNote.TabIndex = 83;
@@ -611,7 +628,7 @@ namespace Sorter
             // buttonSaveCapturePosition
             // 
             this.buttonSaveCapturePosition.Location = new System.Drawing.Point(503, 691);
-            this.buttonSaveCapturePosition.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonSaveCapturePosition.Margin = new System.Windows.Forms.Padding(4);
             this.buttonSaveCapturePosition.Name = "buttonSaveCapturePosition";
             this.buttonSaveCapturePosition.Size = new System.Drawing.Size(160, 39);
             this.buttonSaveCapturePosition.TabIndex = 82;
@@ -622,7 +639,7 @@ namespace Sorter
             // buttonHighSpeed
             // 
             this.buttonHighSpeed.Location = new System.Drawing.Point(40, 404);
-            this.buttonHighSpeed.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonHighSpeed.Margin = new System.Windows.Forms.Padding(4);
             this.buttonHighSpeed.Name = "buttonHighSpeed";
             this.buttonHighSpeed.Size = new System.Drawing.Size(80, 69);
             this.buttonHighSpeed.TabIndex = 81;
@@ -633,7 +650,7 @@ namespace Sorter
             // buttonMiddleSpeed
             // 
             this.buttonMiddleSpeed.Location = new System.Drawing.Point(40, 502);
-            this.buttonMiddleSpeed.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonMiddleSpeed.Margin = new System.Windows.Forms.Padding(4);
             this.buttonMiddleSpeed.Name = "buttonMiddleSpeed";
             this.buttonMiddleSpeed.Size = new System.Drawing.Size(80, 69);
             this.buttonMiddleSpeed.TabIndex = 80;
@@ -657,7 +674,7 @@ namespace Sorter
             this.trackBarManualControlSpeed.AutoSize = false;
             this.trackBarManualControlSpeed.BackColor = System.Drawing.Color.Silver;
             this.trackBarManualControlSpeed.Location = new System.Drawing.Point(147, 502);
-            this.trackBarManualControlSpeed.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.trackBarManualControlSpeed.Margin = new System.Windows.Forms.Padding(4);
             this.trackBarManualControlSpeed.Maximum = 50;
             this.trackBarManualControlSpeed.Name = "trackBarManualControlSpeed";
             this.trackBarManualControlSpeed.Size = new System.Drawing.Size(243, 69);
@@ -670,7 +687,7 @@ namespace Sorter
             // 
             this.button_MoveIncZ.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveIncZ.Location = new System.Drawing.Point(805, 348);
-            this.button_MoveIncZ.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveIncZ.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveIncZ.Name = "button_MoveIncZ";
             this.button_MoveIncZ.Size = new System.Drawing.Size(72, 58);
             this.button_MoveIncZ.TabIndex = 75;
@@ -682,7 +699,7 @@ namespace Sorter
             // 
             this.button_MoveIncY.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveIncY.Location = new System.Drawing.Point(700, 348);
-            this.button_MoveIncY.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveIncY.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveIncY.Name = "button_MoveIncY";
             this.button_MoveIncY.Size = new System.Drawing.Size(72, 58);
             this.button_MoveIncY.TabIndex = 74;
@@ -694,7 +711,7 @@ namespace Sorter
             // 
             this.button_MoveIncX.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveIncX.Location = new System.Drawing.Point(592, 348);
-            this.button_MoveIncX.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveIncX.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveIncX.Name = "button_MoveIncX";
             this.button_MoveIncX.Size = new System.Drawing.Size(72, 58);
             this.button_MoveIncX.TabIndex = 73;
@@ -711,7 +728,7 @@ namespace Sorter
             this.panel_RUnoad1.Controls.Add(this.textBox_MoveToTargetRUnload);
             this.panel_RUnoad1.Controls.Add(this.button_MoveToTargetRUnload);
             this.panel_RUnoad1.Location = new System.Drawing.Point(1009, 78);
-            this.panel_RUnoad1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_RUnoad1.Margin = new System.Windows.Forms.Padding(4);
             this.panel_RUnoad1.Name = "panel_RUnoad1";
             this.panel_RUnoad1.Size = new System.Drawing.Size(103, 340);
             this.panel_RUnoad1.TabIndex = 72;
@@ -720,7 +737,7 @@ namespace Sorter
             // 
             this.button_MoveIncRUnload.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveIncRUnload.Location = new System.Drawing.Point(11, 269);
-            this.button_MoveIncRUnload.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveIncRUnload.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveIncRUnload.Name = "button_MoveIncRUnload";
             this.button_MoveIncRUnload.Size = new System.Drawing.Size(72, 58);
             this.button_MoveIncRUnload.TabIndex = 76;
@@ -764,7 +781,7 @@ namespace Sorter
             // textBox_MoveToTargetRUnload
             // 
             this.textBox_MoveToTargetRUnload.Location = new System.Drawing.Point(11, 149);
-            this.textBox_MoveToTargetRUnload.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBox_MoveToTargetRUnload.Margin = new System.Windows.Forms.Padding(4);
             this.textBox_MoveToTargetRUnload.Name = "textBox_MoveToTargetRUnload";
             this.textBox_MoveToTargetRUnload.Size = new System.Drawing.Size(71, 27);
             this.textBox_MoveToTargetRUnload.TabIndex = 50;
@@ -774,7 +791,7 @@ namespace Sorter
             // 
             this.button_MoveToTargetRUnload.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveToTargetRUnload.Location = new System.Drawing.Point(11, 192);
-            this.button_MoveToTargetRUnload.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveToTargetRUnload.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveToTargetRUnload.Name = "button_MoveToTargetRUnload";
             this.button_MoveToTargetRUnload.Size = new System.Drawing.Size(72, 50);
             this.button_MoveToTargetRUnload.TabIndex = 55;
@@ -791,7 +808,7 @@ namespace Sorter
             this.panel_RLoad1.Controls.Add(this.textBox_MoveToTargetRLoad);
             this.panel_RLoad1.Controls.Add(this.button_MoveToTargetRLoad);
             this.panel_RLoad1.Location = new System.Drawing.Point(897, 78);
-            this.panel_RLoad1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_RLoad1.Margin = new System.Windows.Forms.Padding(4);
             this.panel_RLoad1.Name = "panel_RLoad1";
             this.panel_RLoad1.Size = new System.Drawing.Size(103, 340);
             this.panel_RLoad1.TabIndex = 71;
@@ -800,7 +817,7 @@ namespace Sorter
             // 
             this.button_MoveIncRLoad.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveIncRLoad.Location = new System.Drawing.Point(11, 269);
-            this.button_MoveIncRLoad.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveIncRLoad.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveIncRLoad.Name = "button_MoveIncRLoad";
             this.button_MoveIncRLoad.Size = new System.Drawing.Size(72, 58);
             this.button_MoveIncRLoad.TabIndex = 76;
@@ -844,7 +861,7 @@ namespace Sorter
             // textBox_MoveToTargetRLoad
             // 
             this.textBox_MoveToTargetRLoad.Location = new System.Drawing.Point(11, 149);
-            this.textBox_MoveToTargetRLoad.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBox_MoveToTargetRLoad.Margin = new System.Windows.Forms.Padding(4);
             this.textBox_MoveToTargetRLoad.Name = "textBox_MoveToTargetRLoad";
             this.textBox_MoveToTargetRLoad.Size = new System.Drawing.Size(71, 27);
             this.textBox_MoveToTargetRLoad.TabIndex = 49;
@@ -854,7 +871,7 @@ namespace Sorter
             // 
             this.button_MoveToTargetRLoad.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveToTargetRLoad.Location = new System.Drawing.Point(11, 192);
-            this.button_MoveToTargetRLoad.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveToTargetRLoad.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveToTargetRLoad.Name = "button_MoveToTargetRLoad";
             this.button_MoveToTargetRLoad.Size = new System.Drawing.Size(72, 50);
             this.button_MoveToTargetRLoad.TabIndex = 54;
@@ -866,7 +883,7 @@ namespace Sorter
             // 
             this.button_MoveToTargetZ.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveToTargetZ.Location = new System.Drawing.Point(805, 270);
-            this.button_MoveToTargetZ.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveToTargetZ.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveToTargetZ.Name = "button_MoveToTargetZ";
             this.button_MoveToTargetZ.Size = new System.Drawing.Size(72, 51);
             this.button_MoveToTargetZ.TabIndex = 53;
@@ -878,7 +895,7 @@ namespace Sorter
             // 
             this.button_MoveToTargetY.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveToTargetY.Location = new System.Drawing.Point(700, 270);
-            this.button_MoveToTargetY.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveToTargetY.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveToTargetY.Name = "button_MoveToTargetY";
             this.button_MoveToTargetY.Size = new System.Drawing.Size(72, 51);
             this.button_MoveToTargetY.TabIndex = 52;
@@ -890,7 +907,7 @@ namespace Sorter
             // 
             this.button_MoveToTargetX.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_MoveToTargetX.Location = new System.Drawing.Point(592, 270);
-            this.button_MoveToTargetX.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_MoveToTargetX.Margin = new System.Windows.Forms.Padding(4);
             this.button_MoveToTargetX.Name = "button_MoveToTargetX";
             this.button_MoveToTargetX.Size = new System.Drawing.Size(72, 51);
             this.button_MoveToTargetX.TabIndex = 51;
@@ -901,7 +918,7 @@ namespace Sorter
             // textBox_MoveToTargetZ
             // 
             this.textBox_MoveToTargetZ.Location = new System.Drawing.Point(805, 226);
-            this.textBox_MoveToTargetZ.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBox_MoveToTargetZ.Margin = new System.Windows.Forms.Padding(4);
             this.textBox_MoveToTargetZ.Name = "textBox_MoveToTargetZ";
             this.textBox_MoveToTargetZ.Size = new System.Drawing.Size(71, 27);
             this.textBox_MoveToTargetZ.TabIndex = 48;
@@ -910,7 +927,7 @@ namespace Sorter
             // textBox_MoveToTargetY
             // 
             this.textBox_MoveToTargetY.Location = new System.Drawing.Point(700, 226);
-            this.textBox_MoveToTargetY.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBox_MoveToTargetY.Margin = new System.Windows.Forms.Padding(4);
             this.textBox_MoveToTargetY.Name = "textBox_MoveToTargetY";
             this.textBox_MoveToTargetY.Size = new System.Drawing.Size(71, 27);
             this.textBox_MoveToTargetY.TabIndex = 47;
@@ -919,7 +936,7 @@ namespace Sorter
             // textBox_MoveToTargetX
             // 
             this.textBox_MoveToTargetX.Location = new System.Drawing.Point(592, 226);
-            this.textBox_MoveToTargetX.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBox_MoveToTargetX.Margin = new System.Windows.Forms.Padding(4);
             this.textBox_MoveToTargetX.Name = "textBox_MoveToTargetX";
             this.textBox_MoveToTargetX.Size = new System.Drawing.Size(71, 27);
             this.textBox_MoveToTargetX.TabIndex = 46;
@@ -931,7 +948,7 @@ namespace Sorter
             this.panel_Inc.Controls.Add(this.radioButtonMoveIncPositive);
             this.panel_Inc.Controls.Add(this.textBox_MoveInc);
             this.panel_Inc.Location = new System.Drawing.Point(467, 348);
-            this.panel_Inc.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_Inc.Margin = new System.Windows.Forms.Padding(4);
             this.panel_Inc.Name = "panel_Inc";
             this.panel_Inc.Size = new System.Drawing.Size(111, 68);
             this.panel_Inc.TabIndex = 40;
@@ -941,7 +958,7 @@ namespace Sorter
             this.radioButtonMoveIncNegative.AutoSize = true;
             this.radioButtonMoveIncNegative.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.radioButtonMoveIncNegative.Location = new System.Drawing.Point(52, 6);
-            this.radioButtonMoveIncNegative.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.radioButtonMoveIncNegative.Margin = new System.Windows.Forms.Padding(4);
             this.radioButtonMoveIncNegative.Name = "radioButtonMoveIncNegative";
             this.radioButtonMoveIncNegative.Size = new System.Drawing.Size(40, 24);
             this.radioButtonMoveIncNegative.TabIndex = 4;
@@ -955,7 +972,7 @@ namespace Sorter
             this.radioButtonMoveIncPositive.Checked = true;
             this.radioButtonMoveIncPositive.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.radioButtonMoveIncPositive.Location = new System.Drawing.Point(4, 6);
-            this.radioButtonMoveIncPositive.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.radioButtonMoveIncPositive.Margin = new System.Windows.Forms.Padding(4);
             this.radioButtonMoveIncPositive.Name = "radioButtonMoveIncPositive";
             this.radioButtonMoveIncPositive.Size = new System.Drawing.Size(40, 24);
             this.radioButtonMoveIncPositive.TabIndex = 3;
@@ -967,7 +984,7 @@ namespace Sorter
             // textBox_MoveInc
             // 
             this.textBox_MoveInc.Location = new System.Drawing.Point(4, 38);
-            this.textBox_MoveInc.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBox_MoveInc.Margin = new System.Windows.Forms.Padding(4);
             this.textBox_MoveInc.Name = "textBox_MoveInc";
             this.textBox_MoveInc.Size = new System.Drawing.Size(103, 27);
             this.textBox_MoveInc.TabIndex = 38;
@@ -1117,7 +1134,7 @@ namespace Sorter
             // 
             this.button_ZJogPlus.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_ZJogPlus.Location = new System.Drawing.Point(300, 79);
-            this.button_ZJogPlus.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_ZJogPlus.Margin = new System.Windows.Forms.Padding(4);
             this.button_ZJogPlus.Name = "button_ZJogPlus";
             this.button_ZJogPlus.Size = new System.Drawing.Size(89, 85);
             this.button_ZJogPlus.TabIndex = 9;
@@ -1130,7 +1147,7 @@ namespace Sorter
             // 
             this.buttonZJogMinus.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.buttonZJogMinus.Location = new System.Drawing.Point(211, 170);
-            this.buttonZJogMinus.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonZJogMinus.Margin = new System.Windows.Forms.Padding(4);
             this.buttonZJogMinus.Name = "buttonZJogMinus";
             this.buttonZJogMinus.Size = new System.Drawing.Size(93, 82);
             this.buttonZJogMinus.TabIndex = 8;
@@ -1143,7 +1160,7 @@ namespace Sorter
             // 
             this.button_YJogMinus.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_YJogMinus.Location = new System.Drawing.Point(40, 196);
-            this.button_YJogMinus.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_YJogMinus.Margin = new System.Windows.Forms.Padding(4);
             this.button_YJogMinus.Name = "button_YJogMinus";
             this.button_YJogMinus.Size = new System.Drawing.Size(80, 100);
             this.button_YJogMinus.TabIndex = 4;
@@ -1156,7 +1173,7 @@ namespace Sorter
             // 
             this.button_YJogPlus.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.button_YJogPlus.Location = new System.Drawing.Point(40, 79);
-            this.button_YJogPlus.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button_YJogPlus.Margin = new System.Windows.Forms.Padding(4);
             this.button_YJogPlus.Name = "button_YJogPlus";
             this.button_YJogPlus.Size = new System.Drawing.Size(80, 100);
             this.button_YJogPlus.TabIndex = 3;
@@ -1169,7 +1186,7 @@ namespace Sorter
             // 
             this.buttonXJogMinus.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.buttonXJogMinus.Location = new System.Drawing.Point(147, 299);
-            this.buttonXJogMinus.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonXJogMinus.Margin = new System.Windows.Forms.Padding(4);
             this.buttonXJogMinus.Name = "buttonXJogMinus";
             this.buttonXJogMinus.Size = new System.Drawing.Size(103, 69);
             this.buttonXJogMinus.TabIndex = 1;
@@ -1182,7 +1199,7 @@ namespace Sorter
             // 
             this.buttonXJogPlus.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.buttonXJogPlus.Location = new System.Drawing.Point(285, 299);
-            this.buttonXJogPlus.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonXJogPlus.Margin = new System.Windows.Forms.Padding(4);
             this.buttonXJogPlus.Name = "buttonXJogPlus";
             this.buttonXJogPlus.Size = new System.Drawing.Size(103, 69);
             this.buttonXJogPlus.TabIndex = 0;
@@ -1193,6 +1210,12 @@ namespace Sorter
             // 
             // tabPageConveyor
             // 
+            this.tabPageConveyor.Controls.Add(this.buttonLUnloadUnloadTray);
+            this.tabPageConveyor.Controls.Add(this.buttonLLoadLoadTray);
+            this.tabPageConveyor.Controls.Add(this.buttonVUnloadUnloadTray);
+            this.tabPageConveyor.Controls.Add(this.buttonVUnloadLoadTray);
+            this.tabPageConveyor.Controls.Add(this.buttonVLoadUnloadTray);
+            this.tabPageConveyor.Controls.Add(this.buttonVLoadLoadTray);
             this.tabPageConveyor.Controls.Add(this.buttonLockAllTray);
             this.tabPageConveyor.Controls.Add(this.buttonLLoadUnlockTray);
             this.tabPageConveyor.Controls.Add(this.buttonLLoadLockTray);
@@ -1201,7 +1224,7 @@ namespace Sorter
             this.tabPageConveyor.Controls.Add(this.buttonVUnloadLockTray);
             this.tabPageConveyor.Controls.Add(this.buttonVLoadLockTray);
             this.tabPageConveyor.Location = new System.Drawing.Point(124, 4);
-            this.tabPageConveyor.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPageConveyor.Margin = new System.Windows.Forms.Padding(4);
             this.tabPageConveyor.Name = "tabPageConveyor";
             this.tabPageConveyor.Size = new System.Drawing.Size(1232, 880);
             this.tabPageConveyor.TabIndex = 2;
@@ -1210,10 +1233,10 @@ namespace Sorter
             // 
             // buttonLockAllTray
             // 
-            this.buttonLockAllTray.Location = new System.Drawing.Point(624, 356);
+            this.buttonLockAllTray.Location = new System.Drawing.Point(343, 486);
             this.buttonLockAllTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonLockAllTray.Name = "buttonLockAllTray";
-            this.buttonLockAllTray.Size = new System.Drawing.Size(173, 45);
+            this.buttonLockAllTray.Size = new System.Drawing.Size(173, 58);
             this.buttonLockAllTray.TabIndex = 6;
             this.buttonLockAllTray.Text = "lock all";
             this.buttonLockAllTray.UseVisualStyleBackColor = true;
@@ -1221,7 +1244,7 @@ namespace Sorter
             // 
             // buttonLLoadUnlockTray
             // 
-            this.buttonLLoadUnlockTray.Location = new System.Drawing.Point(272, 421);
+            this.buttonLLoadUnlockTray.Location = new System.Drawing.Point(343, 360);
             this.buttonLLoadUnlockTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonLLoadUnlockTray.Name = "buttonLLoadUnlockTray";
             this.buttonLLoadUnlockTray.Size = new System.Drawing.Size(173, 45);
@@ -1232,7 +1255,7 @@ namespace Sorter
             // 
             // buttonLLoadLockTray
             // 
-            this.buttonLLoadLockTray.Location = new System.Drawing.Point(272, 356);
+            this.buttonLLoadLockTray.Location = new System.Drawing.Point(343, 295);
             this.buttonLLoadLockTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonLLoadLockTray.Name = "buttonLLoadLockTray";
             this.buttonLLoadLockTray.Size = new System.Drawing.Size(173, 45);
@@ -1254,7 +1277,7 @@ namespace Sorter
             // 
             // buttonVLoadUnlockTray
             // 
-            this.buttonVLoadUnlockTray.Location = new System.Drawing.Point(272, 131);
+            this.buttonVLoadUnlockTray.Location = new System.Drawing.Point(343, 131);
             this.buttonVLoadUnlockTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonVLoadUnlockTray.Name = "buttonVLoadUnlockTray";
             this.buttonVLoadUnlockTray.Size = new System.Drawing.Size(173, 45);
@@ -1276,7 +1299,7 @@ namespace Sorter
             // 
             // buttonVLoadLockTray
             // 
-            this.buttonVLoadLockTray.Location = new System.Drawing.Point(272, 64);
+            this.buttonVLoadLockTray.Location = new System.Drawing.Point(343, 64);
             this.buttonVLoadLockTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonVLoadLockTray.Name = "buttonVLoadLockTray";
             this.buttonVLoadLockTray.Size = new System.Drawing.Size(173, 45);
@@ -1313,7 +1336,7 @@ namespace Sorter
             this.tabPageWorkTable.Controls.Add(this.buttonTableCircleVacuumOnV);
             this.tabPageWorkTable.Controls.Add(this.buttonTableCWStep);
             this.tabPageWorkTable.Location = new System.Drawing.Point(124, 4);
-            this.tabPageWorkTable.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPageWorkTable.Margin = new System.Windows.Forms.Padding(4);
             this.tabPageWorkTable.Name = "tabPageWorkTable";
             this.tabPageWorkTable.Size = new System.Drawing.Size(1232, 880);
             this.tabPageWorkTable.TabIndex = 3;
@@ -1773,7 +1796,7 @@ namespace Sorter
             this.tabPageGlue.Controls.Add(this.textBoxShotGlueDelay);
             this.tabPageGlue.Controls.Add(this.buttonShotGlue);
             this.tabPageGlue.Location = new System.Drawing.Point(124, 4);
-            this.tabPageGlue.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPageGlue.Margin = new System.Windows.Forms.Padding(4);
             this.tabPageGlue.Name = "tabPageGlue";
             this.tabPageGlue.Size = new System.Drawing.Size(1232, 880);
             this.tabPageGlue.TabIndex = 6;
@@ -1783,7 +1806,7 @@ namespace Sorter
             // textBoxNeedleOnPressureSensorCompensation
             // 
             this.textBoxNeedleOnPressureSensorCompensation.Location = new System.Drawing.Point(588, 362);
-            this.textBoxNeedleOnPressureSensorCompensation.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxNeedleOnPressureSensorCompensation.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxNeedleOnPressureSensorCompensation.Name = "textBoxNeedleOnPressureSensorCompensation";
             this.textBoxNeedleOnPressureSensorCompensation.Size = new System.Drawing.Size(132, 25);
             this.textBoxNeedleOnPressureSensorCompensation.TabIndex = 61;
@@ -1802,7 +1825,7 @@ namespace Sorter
             // textBoxSecondLineLessPreShot
             // 
             this.textBoxSecondLineLessPreShot.Location = new System.Drawing.Point(944, 760);
-            this.textBoxSecondLineLessPreShot.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxSecondLineLessPreShot.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxSecondLineLessPreShot.Name = "textBoxSecondLineLessPreShot";
             this.textBoxSecondLineLessPreShot.Size = new System.Drawing.Size(132, 25);
             this.textBoxSecondLineLessPreShot.TabIndex = 59;
@@ -1821,7 +1844,7 @@ namespace Sorter
             // textBoxGlueHeightOffset
             // 
             this.textBoxGlueHeightOffset.Location = new System.Drawing.Point(941, 684);
-            this.textBoxGlueHeightOffset.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxGlueHeightOffset.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxGlueHeightOffset.Name = "textBoxGlueHeightOffset";
             this.textBoxGlueHeightOffset.Size = new System.Drawing.Size(132, 25);
             this.textBoxGlueHeightOffset.TabIndex = 57;
@@ -1840,7 +1863,7 @@ namespace Sorter
             // textBoxGlueCloseDelay
             // 
             this.textBoxGlueCloseDelay.Location = new System.Drawing.Point(944, 608);
-            this.textBoxGlueCloseDelay.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxGlueCloseDelay.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxGlueCloseDelay.Name = "textBoxGlueCloseDelay";
             this.textBoxGlueCloseDelay.Size = new System.Drawing.Size(132, 25);
             this.textBoxGlueCloseDelay.TabIndex = 55;
@@ -1859,7 +1882,7 @@ namespace Sorter
             // textBoxGluePreClosePercentage
             // 
             this.textBoxGluePreClosePercentage.Location = new System.Drawing.Point(939, 326);
-            this.textBoxGluePreClosePercentage.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxGluePreClosePercentage.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxGluePreClosePercentage.Name = "textBoxGluePreClosePercentage";
             this.textBoxGluePreClosePercentage.Size = new System.Drawing.Size(132, 25);
             this.textBoxGluePreClosePercentage.TabIndex = 53;
@@ -1878,7 +1901,7 @@ namespace Sorter
             // textBoxGluePeriod
             // 
             this.textBoxGluePeriod.Location = new System.Drawing.Point(939, 392);
-            this.textBoxGluePeriod.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxGluePeriod.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxGluePeriod.Name = "textBoxGluePeriod";
             this.textBoxGluePeriod.Size = new System.Drawing.Size(132, 25);
             this.textBoxGluePeriod.TabIndex = 51;
@@ -1897,7 +1920,7 @@ namespace Sorter
             // textBoxGlueRiseHeight
             // 
             this.textBoxGlueRiseHeight.Location = new System.Drawing.Point(939, 541);
-            this.textBoxGlueRiseHeight.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxGlueRiseHeight.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxGlueRiseHeight.Name = "textBoxGlueRiseHeight";
             this.textBoxGlueRiseHeight.Size = new System.Drawing.Size(132, 25);
             this.textBoxGlueRiseHeight.TabIndex = 49;
@@ -1916,7 +1939,7 @@ namespace Sorter
             // textBoxGlueRiseSpeed
             // 
             this.textBoxGlueRiseSpeed.Location = new System.Drawing.Point(941, 459);
-            this.textBoxGlueRiseSpeed.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxGlueRiseSpeed.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxGlueRiseSpeed.Name = "textBoxGlueRiseSpeed";
             this.textBoxGlueRiseSpeed.Size = new System.Drawing.Size(132, 25);
             this.textBoxGlueRiseSpeed.TabIndex = 47;
@@ -1935,7 +1958,7 @@ namespace Sorter
             // textBoxGlueSpeed
             // 
             this.textBoxGlueSpeed.Location = new System.Drawing.Point(939, 255);
-            this.textBoxGlueSpeed.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxGlueSpeed.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxGlueSpeed.Name = "textBoxGlueSpeed";
             this.textBoxGlueSpeed.Size = new System.Drawing.Size(132, 25);
             this.textBoxGlueSpeed.TabIndex = 43;
@@ -1954,7 +1977,7 @@ namespace Sorter
             // textBoxPreShot
             // 
             this.textBoxPreShot.Location = new System.Drawing.Point(939, 185);
-            this.textBoxPreShot.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxPreShot.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxPreShot.Name = "textBoxPreShot";
             this.textBoxPreShot.Size = new System.Drawing.Size(132, 25);
             this.textBoxPreShot.TabIndex = 41;
@@ -1974,7 +1997,7 @@ namespace Sorter
             // textBoxCleanPeriod
             // 
             this.textBoxCleanPeriod.Location = new System.Drawing.Point(939, 102);
-            this.textBoxCleanPeriod.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxCleanPeriod.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxCleanPeriod.Name = "textBoxCleanPeriod";
             this.textBoxCleanPeriod.Size = new System.Drawing.Size(148, 25);
             this.textBoxCleanPeriod.TabIndex = 39;
@@ -2025,7 +2048,7 @@ namespace Sorter
             // textBoxHeadUvDelay
             // 
             this.textBoxHeadUvDelay.Location = new System.Drawing.Point(597, 518);
-            this.textBoxHeadUvDelay.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxHeadUvDelay.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxHeadUvDelay.Name = "textBoxHeadUvDelay";
             this.textBoxHeadUvDelay.Size = new System.Drawing.Size(148, 25);
             this.textBoxHeadUvDelay.TabIndex = 33;
@@ -2045,7 +2068,7 @@ namespace Sorter
             // textBoxUvDelaySec
             // 
             this.textBoxUvDelaySec.Location = new System.Drawing.Point(597, 436);
-            this.textBoxUvDelaySec.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxUvDelaySec.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxUvDelaySec.Name = "textBoxUvDelaySec";
             this.textBoxUvDelaySec.Size = new System.Drawing.Size(148, 25);
             this.textBoxUvDelaySec.TabIndex = 31;
@@ -2217,7 +2240,7 @@ namespace Sorter
             // buttonCloseGlue
             // 
             this.buttonCloseGlue.Location = new System.Drawing.Point(67, 162);
-            this.buttonCloseGlue.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonCloseGlue.Margin = new System.Windows.Forms.Padding(4);
             this.buttonCloseGlue.Name = "buttonCloseGlue";
             this.buttonCloseGlue.Size = new System.Drawing.Size(147, 54);
             this.buttonCloseGlue.TabIndex = 10;
@@ -2300,7 +2323,7 @@ namespace Sorter
             // textBoxShotGlueDelay
             // 
             this.textBoxShotGlueDelay.Location = new System.Drawing.Point(221, 106);
-            this.textBoxShotGlueDelay.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBoxShotGlueDelay.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxShotGlueDelay.Name = "textBoxShotGlueDelay";
             this.textBoxShotGlueDelay.Size = new System.Drawing.Size(132, 25);
             this.textBoxShotGlueDelay.TabIndex = 1;
@@ -2309,7 +2332,7 @@ namespace Sorter
             // buttonShotGlue
             // 
             this.buttonShotGlue.Location = new System.Drawing.Point(67, 88);
-            this.buttonShotGlue.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonShotGlue.Margin = new System.Windows.Forms.Padding(4);
             this.buttonShotGlue.Name = "buttonShotGlue";
             this.buttonShotGlue.Size = new System.Drawing.Size(147, 54);
             this.buttonShotGlue.TabIndex = 0;
@@ -2336,10 +2359,21 @@ namespace Sorter
             this.tabPageFunctionTest.Text = "Function";
             this.tabPageFunctionTest.UseVisualStyleBackColor = true;
             // 
+            // buttonPauseProduction
+            // 
+            this.buttonPauseProduction.Location = new System.Drawing.Point(83, 203);
+            this.buttonPauseProduction.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonPauseProduction.Name = "buttonPauseProduction";
+            this.buttonPauseProduction.Size = new System.Drawing.Size(165, 78);
+            this.buttonPauseProduction.TabIndex = 27;
+            this.buttonPauseProduction.Text = "Pause";
+            this.buttonPauseProduction.UseVisualStyleBackColor = true;
+            this.buttonPauseProduction.Click += new System.EventHandler(this.buttonPauseProduction_Click);
+            // 
             // buttonSetFixtureFull
             // 
             this.buttonSetFixtureFull.Location = new System.Drawing.Point(700, 101);
-            this.buttonSetFixtureFull.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonSetFixtureFull.Margin = new System.Windows.Forms.Padding(4);
             this.buttonSetFixtureFull.Name = "buttonSetFixtureFull";
             this.buttonSetFixtureFull.Size = new System.Drawing.Size(147, 42);
             this.buttonSetFixtureFull.TabIndex = 26;
@@ -2350,7 +2384,7 @@ namespace Sorter
             // buttonVStationTestRun
             // 
             this.buttonVStationTestRun.Location = new System.Drawing.Point(487, 161);
-            this.buttonVStationTestRun.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonVStationTestRun.Margin = new System.Windows.Forms.Padding(4);
             this.buttonVStationTestRun.Name = "buttonVStationTestRun";
             this.buttonVStationTestRun.Size = new System.Drawing.Size(147, 42);
             this.buttonVStationTestRun.TabIndex = 25;
@@ -2383,7 +2417,7 @@ namespace Sorter
             // buttonLStationTestRun
             // 
             this.buttonLStationTestRun.Location = new System.Drawing.Point(487, 101);
-            this.buttonLStationTestRun.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.buttonLStationTestRun.Margin = new System.Windows.Forms.Padding(4);
             this.buttonLStationTestRun.Name = "buttonLStationTestRun";
             this.buttonLStationTestRun.Size = new System.Drawing.Size(147, 42);
             this.buttonLStationTestRun.TabIndex = 8;
@@ -2440,7 +2474,7 @@ namespace Sorter
             this.tabControlSettings.Controls.Add(this.tabPageCapturePosition);
             this.tabControlSettings.Controls.Add(this.tabPageConfig);
             this.tabControlSettings.Location = new System.Drawing.Point(31, 22);
-            this.tabControlSettings.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabControlSettings.Margin = new System.Windows.Forms.Padding(4);
             this.tabControlSettings.Name = "tabControlSettings";
             this.tabControlSettings.SelectedIndex = 0;
             this.tabControlSettings.Size = new System.Drawing.Size(1097, 808);
@@ -2452,9 +2486,9 @@ namespace Sorter
             this.tabPageUserOffsets.Controls.Add(this.buttonSaveUserOffset);
             this.tabPageUserOffsets.Font = new System.Drawing.Font("SimSun", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tabPageUserOffsets.Location = new System.Drawing.Point(4, 25);
-            this.tabPageUserOffsets.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPageUserOffsets.Margin = new System.Windows.Forms.Padding(4);
             this.tabPageUserOffsets.Name = "tabPageUserOffsets";
-            this.tabPageUserOffsets.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPageUserOffsets.Padding = new System.Windows.Forms.Padding(4);
             this.tabPageUserOffsets.Size = new System.Drawing.Size(1089, 779);
             this.tabPageUserOffsets.TabIndex = 0;
             this.tabPageUserOffsets.Text = "User Offset   ";
@@ -2487,9 +2521,9 @@ namespace Sorter
             this.tabPageCapturePosition.Controls.Add(this.buttonSaveCapturePositions);
             this.tabPageCapturePosition.Controls.Add(this.dataGridViewCapturePosition);
             this.tabPageCapturePosition.Location = new System.Drawing.Point(4, 25);
-            this.tabPageCapturePosition.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPageCapturePosition.Margin = new System.Windows.Forms.Padding(4);
             this.tabPageCapturePosition.Name = "tabPageCapturePosition";
-            this.tabPageCapturePosition.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPageCapturePosition.Padding = new System.Windows.Forms.Padding(4);
             this.tabPageCapturePosition.Size = new System.Drawing.Size(1089, 779);
             this.tabPageCapturePosition.TabIndex = 2;
             this.tabPageCapturePosition.Text = "Capture Position   ";
@@ -2522,9 +2556,9 @@ namespace Sorter
             this.tabPageConfig.Controls.Add(this.button2);
             this.tabPageConfig.Controls.Add(this.dataGridViewUserSettings);
             this.tabPageConfig.Location = new System.Drawing.Point(4, 25);
-            this.tabPageConfig.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPageConfig.Margin = new System.Windows.Forms.Padding(4);
             this.tabPageConfig.Name = "tabPageConfig";
-            this.tabPageConfig.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPageConfig.Padding = new System.Windows.Forms.Padding(4);
             this.tabPageConfig.Size = new System.Drawing.Size(1089, 779);
             this.tabPageConfig.TabIndex = 1;
             this.tabPageConfig.Text = "Parameters   ";
@@ -2551,27 +2585,65 @@ namespace Sorter
             this.dataGridViewUserSettings.Size = new System.Drawing.Size(1040, 668);
             this.dataGridViewUserSettings.TabIndex = 29;
             // 
-            // buttonStopMotion
+            // buttonVLoadLoadTray
             // 
-            this.buttonStopMotion.Location = new System.Drawing.Point(592, 453);
-            this.buttonStopMotion.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonStopMotion.Name = "buttonStopMotion";
-            this.buttonStopMotion.Size = new System.Drawing.Size(499, 69);
-            this.buttonStopMotion.TabIndex = 95;
-            this.buttonStopMotion.Text = "停止运动";
-            this.buttonStopMotion.UseVisualStyleBackColor = true;
-            this.buttonStopMotion.Click += new System.EventHandler(this.buttonStopMotion_Click);
+            this.buttonVLoadLoadTray.Location = new System.Drawing.Point(142, 64);
+            this.buttonVLoadLoadTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonVLoadLoadTray.Name = "buttonVLoadLoadTray";
+            this.buttonVLoadLoadTray.Size = new System.Drawing.Size(173, 45);
+            this.buttonVLoadLoadTray.TabIndex = 7;
+            this.buttonVLoadLoadTray.Text = "Load a tray";
+            this.buttonVLoadLoadTray.UseVisualStyleBackColor = true;
             // 
-            // buttonPauseProduction
+            // buttonVLoadUnloadTray
             // 
-            this.buttonPauseProduction.Location = new System.Drawing.Point(83, 203);
-            this.buttonPauseProduction.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonPauseProduction.Name = "buttonPauseProduction";
-            this.buttonPauseProduction.Size = new System.Drawing.Size(165, 78);
-            this.buttonPauseProduction.TabIndex = 27;
-            this.buttonPauseProduction.Text = "Pause";
-            this.buttonPauseProduction.UseVisualStyleBackColor = true;
-            this.buttonPauseProduction.Click += new System.EventHandler(this.buttonPauseProduction_Click);
+            this.buttonVLoadUnloadTray.Location = new System.Drawing.Point(142, 131);
+            this.buttonVLoadUnloadTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonVLoadUnloadTray.Name = "buttonVLoadUnloadTray";
+            this.buttonVLoadUnloadTray.Size = new System.Drawing.Size(173, 45);
+            this.buttonVLoadUnloadTray.TabIndex = 8;
+            this.buttonVLoadUnloadTray.Text = "Unload a tray";
+            this.buttonVLoadUnloadTray.UseVisualStyleBackColor = true;
+            // 
+            // buttonVUnloadUnloadTray
+            // 
+            this.buttonVUnloadUnloadTray.Location = new System.Drawing.Point(822, 131);
+            this.buttonVUnloadUnloadTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonVUnloadUnloadTray.Name = "buttonVUnloadUnloadTray";
+            this.buttonVUnloadUnloadTray.Size = new System.Drawing.Size(173, 45);
+            this.buttonVUnloadUnloadTray.TabIndex = 10;
+            this.buttonVUnloadUnloadTray.Text = "Unload a tray";
+            this.buttonVUnloadUnloadTray.UseVisualStyleBackColor = true;
+            // 
+            // buttonVUnloadLoadTray
+            // 
+            this.buttonVUnloadLoadTray.Location = new System.Drawing.Point(822, 64);
+            this.buttonVUnloadLoadTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonVUnloadLoadTray.Name = "buttonVUnloadLoadTray";
+            this.buttonVUnloadLoadTray.Size = new System.Drawing.Size(173, 45);
+            this.buttonVUnloadLoadTray.TabIndex = 9;
+            this.buttonVUnloadLoadTray.Text = "Load a tray";
+            this.buttonVUnloadLoadTray.UseVisualStyleBackColor = true;
+            // 
+            // buttonLUnloadUnloadTray
+            // 
+            this.buttonLUnloadUnloadTray.Location = new System.Drawing.Point(822, 360);
+            this.buttonLUnloadUnloadTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonLUnloadUnloadTray.Name = "buttonLUnloadUnloadTray";
+            this.buttonLUnloadUnloadTray.Size = new System.Drawing.Size(173, 45);
+            this.buttonLUnloadUnloadTray.TabIndex = 12;
+            this.buttonLUnloadUnloadTray.Text = "Unload a tray";
+            this.buttonLUnloadUnloadTray.UseVisualStyleBackColor = true;
+            // 
+            // buttonLLoadLoadTray
+            // 
+            this.buttonLLoadLoadTray.Location = new System.Drawing.Point(142, 295);
+            this.buttonLLoadLoadTray.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonLLoadLoadTray.Name = "buttonLLoadLoadTray";
+            this.buttonLLoadLoadTray.Size = new System.Drawing.Size(173, 45);
+            this.buttonLLoadLoadTray.TabIndex = 11;
+            this.buttonLLoadLoadTray.Text = "Load a tray";
+            this.buttonLLoadLoadTray.UseVisualStyleBackColor = true;
             // 
             // Main
             // 
@@ -2820,6 +2892,12 @@ namespace Sorter
         private System.Windows.Forms.TextBox textBoxNeedleOnPressureSensorCompensation;
         private System.Windows.Forms.Button buttonStopMotion;
         private System.Windows.Forms.Button buttonPauseProduction;
+        private System.Windows.Forms.Button buttonLUnloadUnloadTray;
+        private System.Windows.Forms.Button buttonLLoadLoadTray;
+        private System.Windows.Forms.Button buttonVUnloadUnloadTray;
+        private System.Windows.Forms.Button buttonVUnloadLoadTray;
+        private System.Windows.Forms.Button buttonVLoadUnloadTray;
+        private System.Windows.Forms.Button buttonVLoadLoadTray;
     }
 }
 

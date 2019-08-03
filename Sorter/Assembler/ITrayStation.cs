@@ -8,10 +8,11 @@
         Motor MotorTray { get; set; }
         Motor MotorConveyor { get; set; }
 
-
         void Home();
-        void ConveyorIn();
-        void ConveyorOut();
+        void LoadATray(int timeoutSec = 30);
+        void UnloadATray(int timeoutSec = 30);
+        void ConveyorIn(int timeoutSec);
+        void ConveyorOut(int timeoutSec);
         void LockTray();
         void UnlockTray();
         bool GetInsideOpticalSensor();

@@ -760,13 +760,8 @@ namespace Sorter
         /// <summary>
         /// By default, linear motor need second home.
         /// </summary>
-        public void Home(Motor motor, bool needSencondHome = true) 
+        public void Home(Motor motor) 
         {
-            if (needSencondHome == false)
-            {
-                return;
-            }
-
             ClearFault(motor, false);
             Enable(motor);
             CheckEnabledAndNotMoving(motor);
@@ -801,13 +796,8 @@ namespace Sorter
             return homeStatus.run == 0;
         }
 
-        public void WaitTillHomeEnd(Motor motor, bool needSencondHome = true, int timeout = 60)
+        public void WaitTillHomeEnd(Motor motor, int timeout = 60)
         {
-            if (needSencondHome == false)
-            {
-                return;
-            }
-
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -840,7 +830,7 @@ namespace Sorter
             }
         }
 
-        public void HomeAllMotors(double speed = 10.0, bool IsFirstHome = true)
+        public void HomeAllMotors(double speed = 10.0)
         {
             //Set home speed here.
             AxisSetup(speed);
@@ -865,10 +855,6 @@ namespace Sorter
             Delay(5000);
             ZeroAllPositions();
 
-            //Home(MotorWorkTable, !IsFirstHome);
-            //Home(MotorLRotateLoad, !IsFirstHome);
-            //Home(MotorVRotateLoad, !IsFirstHome);
-            //Home(MotorVRotateUnload, !IsFirstHome);
             Home(MotorWorkTable);
             Home(MotorLRotateLoad);
             Home(MotorVRotateLoad);
@@ -891,11 +877,6 @@ namespace Sorter
             WaitTillHomeEnd(MotorVY);
             WaitTillHomeEnd(MotorGlueLineY);
             WaitTillHomeEnd(MotorGluePointY);
-
-            //WaitTillHomeEnd(MotorLRotateLoad, !IsFirstHome);
-            //WaitTillHomeEnd(MotorVRotateLoad,!IsFirstHome);
-            //WaitTillHomeEnd(MotorVRotateUnload,!IsFirstHome);
-            //WaitTillHomeEnd(MotorWorkTable, !IsFirstHome);
 
             WaitTillHomeEnd(MotorLRotateLoad);
             WaitTillHomeEnd(MotorVRotateLoad);
@@ -1588,6 +1569,22 @@ namespace Sorter
         public void SetCoordinateSystem()
         {
             throw new NotImplementedException();
+        }
+
+        public bool GetOpticalSensor(Input input, int delayMs = 20, int readTimes = 3)
+        {
+            int times = 0;
+            do
+            {
+                if (GetInput(input) == false)
+                {
+                    return false;
+                }
+                Delay(delayMs);
+                times++;
+            } while (times<readTimes);
+
+            return true;
         }
     }
 

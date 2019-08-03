@@ -36,10 +36,10 @@ namespace Sorter
         public GlueLineStation GlueLineRobot;
         public GluePointStation GluePointRobot;
 
-        public TrayStation VLoadStation;
-        public TrayStation VUnloadStation;
-        public TrayStation LLoadStation;
-        public TrayStation LUnloadStation;
+        public VLoadTrayStation VLoadStation;
+        public VUnloadTrayStation VUnloadStation;
+        //public TrayStation LLoadStation;
+        //public TrayStation LUnloadStation;
 
         public VisionServer Vision;
 
@@ -91,7 +91,8 @@ namespace Sorter
             LRobot = new LStation(Mc, Vision, WorkTable, CapturePositions, UserOffsets);
             LRobot.Setup();
 
-            VRobot = new VStation(Mc, Vision, WorkTable, CapturePositions, UserOffsets);
+            VRobot = new VStation(Mc, Vision, WorkTable, VLoadStation, VUnloadStation, 
+                CapturePositions, UserOffsets);
             VRobot.Setup();
 
             GlueLineRobot = new GlueLineStation(Mc, Vision, WorkTable, CoordinateId.GlueLine,
@@ -128,7 +129,7 @@ namespace Sorter
             LaserSensorGluePoint.Test();
             Mc.ClearAllFault();
 
-            Mc.HomeAllMotors(homeSpeed, false);
+            Mc.HomeAllMotors(homeSpeed);
 
             Mc.DisableAllLimits();
         }

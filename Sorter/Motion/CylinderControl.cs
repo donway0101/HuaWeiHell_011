@@ -9,6 +9,126 @@ namespace Sorter
 {
     public partial class MotionController
     {
+        public void LUnloadConveyorCylinder(TrayCylinderState state)
+        {
+            switch (state)
+            {
+                case TrayCylinderState.PushOut:
+                    CylinderOut(Output.LUnloadConveyorCylinder, Input.LUnloadConveyorCylinderOut);
+                    break;
+                case TrayCylinderState.Retract:
+                    CylinderIn(Output.LUnloadConveyorCylinder, Input.LUnloadConveyorCylinderIn);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void LLoadConveyorCylinder(TrayCylinderState state)
+        {
+            switch (state)
+            {
+                case TrayCylinderState.PushOut:
+                    CylinderOut(Output.LLoadConveyorCylinder, Input.LLoadConveyorCylinderOut);
+                    break;
+                case TrayCylinderState.Retract:
+                    CylinderIn(Output.LLoadConveyorCylinder, Input.LLoadConveyorCylinderIn);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void VUnloadConveyorCylinder(TrayCylinderState state)
+        {
+            switch (state)
+            {
+                case TrayCylinderState.PushOut:
+                    CylinderOut(Output.VUnloadConveyorCylinder, Input.VUnloadConveyorCylinderOut);
+                    break;
+                case TrayCylinderState.Retract:
+                    CylinderIn(Output.VUnloadConveyorCylinder, Input.VUnloadConveyorCylinderIn);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void VLoadConveyorCylinder(TrayCylinderState state)
+        {
+            switch (state)
+            {
+                case TrayCylinderState.PushOut:
+                    CylinderOut(Output.VLoadConveyorCylinder, Input.VLoadConveyorCylinderOut);
+                    break;
+                case TrayCylinderState.Retract:
+                    CylinderIn(Output.VLoadConveyorCylinder, Input.VLoadConveyorCylinderIn);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void LUnloadTrayCylinder(TrayCylinderState state)
+        {
+            switch (state)
+            {
+                case TrayCylinderState.PushOut:
+                    CylinderOut(Output.LUnloadTrayCylinder, Input.LUnloadTrayCylinderOut);
+                    break;
+                case TrayCylinderState.Retract:
+                    CylinderIn(Output.LUnloadTrayCylinder, Input.LUnloadTrayCylinderIn);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void LLoadTrayCylinder(TrayCylinderState state)
+        {
+            switch (state)
+            {
+                case TrayCylinderState.PushOut:
+                    CylinderOut(Output.LLoadTrayCylinder, Input.LLoadTrayCylinderOut);
+                    break;
+                case TrayCylinderState.Retract:
+                    CylinderIn(Output.LLoadTrayCylinder, Input.LLoadTrayCylinderIn);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void VUnloadTrayCylinder(TrayCylinderState state)
+        {
+            switch (state)
+            {
+                case TrayCylinderState.PushOut:
+                    CylinderOut(Output.VUnloadTrayCylinder, Input.VUnloadTrayCylinderOut);
+                    break;
+                case TrayCylinderState.Retract:
+                    CylinderIn(Output.VUnloadTrayCylinder, Input.VUnloadTrayCylinderIn);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void VLoadTrayCylinder(TrayCylinderState state)
+        {
+            switch (state)
+            {
+                case TrayCylinderState.PushOut:
+                    CylinderOut(Output.VLoadTrayCylinder, Input.VLoadTrayCylinderOut);
+                    break;
+                case TrayCylinderState.Retract:
+                    CylinderIn(Output.VLoadTrayCylinder, Input.VLoadTrayCylinderIn);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public void VUnloadConveyorLocker(LockState state)
         {
             switch (state)
@@ -107,7 +227,7 @@ namespace Sorter
             }
         }
 
-        public void CylinderOut(Output output, Input input, int timeoutMs=3000,
+        public void CylinderOut(Output output, Input input, int timeoutMs=5000,
             OutputState outputState = OutputState.On, bool inputState=true)
         {
             SetOutput(output, outputState);
@@ -125,7 +245,7 @@ namespace Sorter
             } while (state!=inputState);
         }
 
-        public void CylinderIn(Output output, Input input, int timeoutMs = 3000,
+        public void CylinderIn(Output output, Input input, int timeoutMs = 5000,
            OutputState outputState = OutputState.Off, bool inputState = true)
         {
             SetOutput(output, outputState);
@@ -143,6 +263,14 @@ namespace Sorter
         }
     }
 
+
+    public struct CylinderIO
+    {
+        public Output Output { get; set; }
+        public Input InputIn { get; set; }
+        public Input InputOut { get; set; }
+    }
+
     public enum LockState
     {
         On,
@@ -153,5 +281,11 @@ namespace Sorter
     {
         Up,
         Down,
+    }
+
+    public enum TrayCylinderState
+    {
+        PushOut,
+        Retract,
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Sorter
 {
-    public class VLoadTrayStation : IMachineControl, ITrayStation
+    public class VUnloadTrayStation : IMachineControl, ITrayStation
     {
         private readonly MotionController _mc;
 
@@ -18,7 +18,7 @@ namespace Sorter
         public Motor MotorTray { get; set; }
         public Motor MotorConveyor { get; set; }
 
-        public VLoadTrayStation(MotionController controller)
+        public VUnloadTrayStation(MotionController controller)
         {
             _mc = controller;
         }

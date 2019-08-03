@@ -19,6 +19,11 @@ namespace Sorter
 
         Task<WaitBlock> LoadAsync(Part part);
 
+        Task<WaitBlock> ChangeLoadTray { get; set; }
+        Task<WaitBlock> ChangeUnloadTray { get; set; }
+        Task<WaitBlock> ChangeLoadTrayAsync();
+        Task<WaitBlock> ChangeUnloadTrayAsync();
+
         void SetNextPartLoad();
         void SetNextPartUnload();
         

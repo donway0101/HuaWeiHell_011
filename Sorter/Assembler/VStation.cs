@@ -18,6 +18,8 @@ namespace Sorter
         private readonly MotionController _mc;
         private readonly VisionServer _vision;
         private readonly RoundTable _table;
+        private readonly ITrayStation _loadTrayStation;
+        private readonly ITrayStation _unloadTrayStation;
         private List<CapturePosition> _capturePositions;
         private List<CapturePosition> _capturePositionsOffsets;
 
@@ -64,13 +66,18 @@ namespace Sorter
         public int MaxFailCount { get; set; } = 10;
 
         public bool StopProduction { get; set; }
+        public Task<WaitBlock> ChangeLoadTray { get; set; }
+        public Task<WaitBlock> ChangeUnloadTray { get; set; }
 
-        public VStation(MotionController controller, VisionServer vision,
-            RoundTable table, List<CapturePosition> positions, List<CapturePosition> offsets)
+        public VStation(MotionController controller, VisionServer vision, RoundTable table,
+            VLoadTrayStation vLoadTrayStation, VUnloadTrayStation vUnloadTrayStation,
+            List<CapturePosition> positions, List<CapturePosition> offsets)
         {
             _mc = controller;
             _vision = vision;
             _table = table;
+            _loadTrayStation = vLoadTrayStation;
+            _unloadTrayStation = vUnloadTrayStation;
             _capturePositions = positions;
             _capturePositionsOffsets = offsets;
         }
@@ -202,6 +209,8 @@ namespace Sorter
             UnloadTray.TrayHeight = UnloadTrayHeight;
 
             Preparation = Helper.DummyAsyncTask();
+            ChangeLoadTray = Helper.DummyAsyncTask();
+            ChangeUnloadTray = Helper.DummyAsyncTask();
         }
 
         /// <summary>
@@ -794,11 +803,19 @@ namespace Sorter
         public void SetNextPartLoad()
         {
             LoadTray.CurrentPart = LoadTray.GetNextPartForLoad(LoadTray.CurrentPart);
+            if (LoadTray.NeedChanged == true)
+            {
+                ChangeLoadTray = ChangeLoadTrayAsync();
+            }
         }
 
         public void SetNextPartUnload()
         {
             UnloadTray.CurrentPart = UnloadTray.GetNextPartForUnload(UnloadTray.CurrentPart);
+            if (UnloadTray.NeedChanged==true)
+            {
+                ChangeUnloadTray = ChangeUnloadTrayAsync();
+            }
         }
 
         public void MoveToTarget(CapturePosition target, MoveModeAMotor mode, ActionType type)
@@ -829,7 +846,7 @@ namespace Sorter
         /// <returns></returns>
         public async Task<WaitBlock> PrepareAsync()
         {
-            return await Task.Run(() =>
+            return await Task.Run(async() =>
             {
                 int failCount = 0;
                 string remarks = string.Empty;
@@ -838,6 +855,12 @@ namespace Sorter
                 {
                     try
                     {
+                        await ChangeLoadTray;
+                        Helper.CheckTaskResult(ChangeLoadTray);
+
+                        await ChangeUnloadTray;
+                        Helper.CheckTaskResult(ChangeUnloadTray);
+
                         Prepare();
                         return new WaitBlock()
                         {
@@ -1037,6 +1060,66 @@ namespace Sorter
             {
                 Preparation = Helper.DummyAsyncTask();
             }
+        }
+
+        public async Task<WaitBlock> ChangeLoadTrayAsync()
+        {
+            return await Task.Run(() =>
+            {
+                string remarks = string.Empty;
+
+                try
+                {
+                    _loadTrayStation.UnloadATray();
+                    _loadTrayStation.LoadATray();
+
+                    LoadTray.CurrentPart.XIndex = 0;
+                    LoadTray.CurrentPart.YIndex = 0;
+
+                    return new WaitBlock()
+                    {
+                        Message = "ChangeLoadTray Finished."
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "ChangeLoadTray fail: " + ex.Message
+                    };
+                }
+            });
+        }
+
+        public async Task<WaitBlock> ChangeUnloadTrayAsync()
+        {
+            return await Task.Run(() =>
+            {
+                string remarks = string.Empty;
+
+                try
+                {
+                    _loadTrayStation.UnloadATray();
+                    _loadTrayStation.LoadATray();
+
+                    LoadTray.CurrentPart.XIndex = 0;
+                    LoadTray.CurrentPart.YIndex = 0;
+
+                    return new WaitBlock()
+                    {
+                        Message = "ChangeUnloadTray Finished."
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "ChangeUnloadTray fail: " + ex.Message
+                    };
+                }
+            });
         }
     }
 }

@@ -53,6 +53,8 @@ namespace Sorter
         public int CurrentCycleId { get; set; }
 
         public int MaxFailCount { get; set; } = 10;
+        public Task<WaitBlock> ChangeLoadTray { get; set; }
+        public Task<WaitBlock> ChangeUnloadTray { get; set; }
 
         public LStation(MotionController controller, VisionServer vision,
             RoundTable table, List<CapturePosition> positions, List<CapturePosition> offsets)
@@ -581,6 +583,11 @@ namespace Sorter
             });
         }
 
+        public async Task<WaitBlock> ChangeLoadTrayAsync()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Bin(ActionType type = ActionType.Load)
         {
             MoveToCapture(GetCapturePosition(CaptureId.LBin));
@@ -838,6 +845,11 @@ namespace Sorter
             {
                 Preparation = Helper.DummyAsyncTask();
             }
+        }
+
+        public Task<WaitBlock> ChangeUnloadTrayAsync()
+        {
+            throw new NotImplementedException();
         }
     }
 }
