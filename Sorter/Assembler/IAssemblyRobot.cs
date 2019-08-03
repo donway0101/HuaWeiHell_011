@@ -12,19 +12,16 @@ namespace Sorter
         bool CheckVacuumValue { get; set; }     
 
         void Load(Part part);
-        void Unload(Part part);
         void UnloadAndLoad(Part unload, Part load);
+        void Bin(ActionType type);
         void Sucker(VacuumState state);
-        void Sucker(VacuumState state, int retryTimes, ActionType action);
-        void Work();
+        void Sucker(int retryTimes, ActionType action);
 
         Task<WaitBlock> LoadAsync(Part part);
-        Task<WaitBlock> PreparationForNextCycleAsync(Part part);
 
-        void NgBin(Part part);
         void SetNextPartLoad();
         void SetNextPartUnload();
-        void RiseZALittleAndDown();
+        
         void MoveAngleMotor(double angle, MoveModeAMotor mode, ActionType type);
 
     }
@@ -39,7 +36,7 @@ namespace Sorter
         Unload,
         UnloadAndLoad,
         GluePoint,
-        GlueCurve,
+        GlueLine,
         PrepareV
     }
 }

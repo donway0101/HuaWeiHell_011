@@ -20,27 +20,10 @@ namespace Sorter
         TobeCompleted = 44444,
         CameraDisconnected = 40001,
         ControllerConnectFail = 40002,
+        LStationWorkFail = 40003,
+        LStationPrepareFail = 40004,
+        VStationWorkFail = 40005,
+        VStationPrepareFail = 40006,
     }
-
-    /// <summary>
-    /// Bottom camera capture fail three times.
-    /// </summary>
-    public class NeedToPickAnotherPartException : Exception
-    {
-        public NeedToPickAnotherPartException()
-        {
-        }
-
-        public NeedToPickAnotherPartException(string message)
-            : base(message)
-        {
-        }
-
-        public NeedToPickAnotherPartException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
-    }
-
 
 }

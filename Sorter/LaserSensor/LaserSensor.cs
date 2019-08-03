@@ -60,14 +60,25 @@ namespace Sorter
                 _serial.DataReceived += _serial_DataReceived;
             }
 
-            Test();
+            //Test();
 
             _started = true;
         }
 
         public void Test()
         {
-            SendCmd(requestHeightCommand);
+            try
+            {
+                GetLaserHeight(2);
+            }
+            catch (TimeoutException)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                //Todo ..
+            }
         }
 
         private void _serial_DataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -99,7 +110,7 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Pressure sensor communication exception: " + ex.Message);
+                    throw new Exception("sensor communication exception: " + _id + ex.Message);
                 }
             }
         }
@@ -116,7 +127,7 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Height sensor communication exception: " + ex.Message);
+                    throw new Exception("Laser sensor communication exception: " + ex.Message);
                 }
             }
         }
@@ -183,7 +194,7 @@ namespace Sorter
 
                 if (stopwatch.ElapsedMilliseconds > timeoutSec * 1000)
                 {
-                    throw new Exception("Wait height sensor response timeout: " + _id);
+                    throw new TimeoutException("Wait height sensor response timeout: " + _id);
                 }
             }
 

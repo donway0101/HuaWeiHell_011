@@ -14,9 +14,25 @@ namespace Sorter
         public double Z { get; set; }
         public double A { get; set; }
         public double RUnloadAngle { get; set; }
+
+        /// <summary>
+        /// Offset is for unload tray locating.
+        /// </summary>
         public double XOffset1 { get; set; }
+
+        /// <summary>
+        /// Offset is for unload tray locating.
+        /// </summary>
         public double YOffset1 { get; set; }
+
+        /// <summary>
+        /// Offset is for unload tray locating.
+        /// </summary>
         public double XOffset2 { get; set; }
+
+        /// <summary>
+        /// Offset is for unload tray locating.
+        /// </summary>
         public double YOffset2 { get; set; }
     }
     

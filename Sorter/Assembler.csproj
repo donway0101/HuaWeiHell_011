@@ -53,13 +53,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BasicFunction.cs" />
+    <Compile Include="Run\BasicFunction.cs" />
     <Compile Include="Assembler\LStation.cs" />
     <Compile Include="Assembler\IAssemblyRobot.cs" />
     <Compile Include="Assembler\IRobot.cs" />
     <Compile Include="Assembler\GluePointStation.cs" />
-    <Compile Include="Assembler\GlueCurveStation.cs" />
+    <Compile Include="Assembler\GlueLineStation.cs" />
     <Compile Include="Assembler\IGlueRobot.cs" />
+    <Compile Include="Helper\Exceptions.cs" />
+    <Compile Include="Assembler\ITrayStation.cs" />
     <Compile Include="LaserSensor\LaserSensor.cs" />
     <Compile Include="LaserSensor\SerialCommunicationTemplate.cs" />
     <Compile Include="Motion\IMotionController.cs" />
@@ -104,6 +106,7 @@
     <Compile Include="Assembler\VisionData.cs" />
     <Compile Include="Vision\Vision.cs" />
     <Compile Include="Assembler\VStation.cs" />
+    <Compile Include="Assembler\VLoadTrayStation.cs" />
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
     </EmbeddedResource>

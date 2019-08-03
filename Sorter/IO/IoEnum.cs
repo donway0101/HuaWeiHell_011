@@ -79,8 +79,8 @@ namespace Sorter
         //Core 1, pin 01
         LightBig = 223,
 
-        UVLightTop = 224,
-        UVLightBottom = 208,
+        UVLightTable = 224,
+        UVLightHead = 208,
 
         LLoadTrayCylinder = 118,
 
@@ -120,6 +120,9 @@ namespace Sorter
         VUnloadHeadCylinder = 114,
 
         GluePoint = 206,
-        GlueCurve = 207,
+        GlueLine = 207,
+
+        GluePointClean = 116,
+        GlueLineClean = 115,
     }
 }

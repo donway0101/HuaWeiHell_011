@@ -11,67 +11,65 @@ namespace Sorter
     {
         private readonly MotionController _mc;
 
-        public Holder[] Holders { get; set; } = new Holder[6];      
+        public Fixture[] Fixtures { get; set; } = new Fixture[6];      
 
-        public double HolderAngle { get; set; } = 60.0;
+        public double FixtureAngle { get; set; } = 60.0;
 
         public bool HomeComplete { get; set; }
 
         public Motor TableMotor { get; set; }
 
-        public Output BottomUVLight { get; set; } = Output.UVLightBottom;
-
         public RoundTable(MotionController controller)
         {
             _mc = controller;
-            Holders = new Holder[6];
+            Fixtures = new Fixture[6];
             for (int i = 0; i < 6; i++)
             {
-                Holders[i] = new Holder();
+                Fixtures[i] = new Fixture();
             }
         }
 
         public void Setup()
         {
             TableMotor = _mc.MotorWorkTable;
-            ResetAllHolders();
+            ResetAllFixtures();
         }
 
-        public void ResetAllHolders()
+        public void ResetAllFixtures()
         {          
-            Holders[0].VaccumOutputCenter = Output.VaccumHolerCenterV;
-            Holders[0].VaccumOutputCircle = Output.VaccumHolerCircleV;
-            Holders[1].VaccumOutputCenter = Output.VaccumHolerCenterGluePoint;
-            Holders[1].VaccumOutputCircle = Output.VaccumHolerCircleGluePoint;
-            Holders[2].VaccumOutputCenter = Output.VaccumHolerCenterGlueLine;
-            Holders[2].VaccumOutputCircle = Output.VaccumHolerCircleGlueLine;
-            Holders[3].VaccumOutputCenter = Output.VaccumHolerCenterL;
-            Holders[3].VaccumOutputCircle = Output.VaccumHolerCircleL;
-            Holders[4].VaccumOutputCenter = Output.VaccumHolerCenterReserve;
-            Holders[4].VaccumOutputCircle = Output.VaccumHolerCircleReserve;
-            Holders[5].VaccumOutputCenter = Output.VaccumHolerCenterUV;
-            Holders[5].VaccumOutputCircle = Output.VaccumHolerCircleUV;
+            Fixtures[0].VaccumOutputCenter = Output.VaccumHolerCenterV;
+            Fixtures[0].VaccumOutputCircle = Output.VaccumHolerCircleV;
+            Fixtures[1].VaccumOutputCenter = Output.VaccumHolerCenterGluePoint;
+            Fixtures[1].VaccumOutputCircle = Output.VaccumHolerCircleGluePoint;
+            Fixtures[2].VaccumOutputCenter = Output.VaccumHolerCenterGlueLine;
+            Fixtures[2].VaccumOutputCircle = Output.VaccumHolerCircleGlueLine;
+            Fixtures[3].VaccumOutputCenter = Output.VaccumHolerCenterL;
+            Fixtures[3].VaccumOutputCircle = Output.VaccumHolerCircleL;
+            Fixtures[4].VaccumOutputCenter = Output.VaccumHolerCenterReserve;
+            Fixtures[4].VaccumOutputCircle = Output.VaccumHolerCircleReserve;
+            Fixtures[5].VaccumOutputCenter = Output.VaccumHolerCenterUV;
+            Fixtures[5].VaccumOutputCircle = Output.VaccumHolerCircleUV;
 
-            Holders[0].VaccumInputCenter = Input.VaccumHolerCenterV;
-            Holders[0].VaccumInputCircle = Input.VaccumHolerCircleV;
-            Holders[1].VaccumInputCenter = Input.VaccumHolerCenterGluePoint;
-            Holders[1].VaccumInputCircle = Input.VaccumHolerCircleGluePoint;
-            Holders[2].VaccumInputCenter = Input.VaccumHolerCenterGlueLine;
-            Holders[2].VaccumInputCircle = Input.VaccumHolerCircleGlueLine;
-            Holders[3].VaccumInputCenter = Input.VaccumHolerCenterL;
-            Holders[3].VaccumInputCircle = Input.VaccumHolerCircleL;
-            Holders[4].VaccumInputCenter = Input.VaccumHolerCenterReserve;
-            Holders[4].VaccumInputCircle = Input.VaccumHolerCircleReserve;
-            Holders[5].VaccumInputCenter = Input.VaccumHolerCenterUV;
-            Holders[5].VaccumInputCircle = Input.VaccumHolerCircleUV;
+            Fixtures[0].VaccumInputCenter = Input.VaccumHolerCenterV;
+            Fixtures[0].VaccumInputCircle = Input.VaccumHolerCircleV;
+            Fixtures[1].VaccumInputCenter = Input.VaccumHolerCenterGluePoint;
+            Fixtures[1].VaccumInputCircle = Input.VaccumHolerCircleGluePoint;
+            Fixtures[2].VaccumInputCenter = Input.VaccumHolerCenterGlueLine;
+            Fixtures[2].VaccumInputCircle = Input.VaccumHolerCircleGlueLine;
+            Fixtures[3].VaccumInputCenter = Input.VaccumHolerCenterL;
+            Fixtures[3].VaccumInputCircle = Input.VaccumHolerCircleL;
+            Fixtures[4].VaccumInputCenter = Input.VaccumHolerCenterReserve;
+            Fixtures[4].VaccumInputCircle = Input.VaccumHolerCircleReserve;
+            Fixtures[5].VaccumInputCenter = Input.VaccumHolerCenterUV;
+            Fixtures[5].VaccumInputCircle = Input.VaccumHolerCircleUV;
         }
 
-        public Task UVLightOnAsync(int delayMs = 1000)
+        public Task UVLightOnAsync(int delaySec = 5)
         {
             return Task.Run(() => {
-                _mc.SetOutput(BottomUVLight, OutputState.On);
-                Delay(delayMs);
-                _mc.SetOutput(BottomUVLight, OutputState.Off);
+                _mc.SetOutput(Output.UVLightTable, OutputState.On);
+                Delay(delaySec * 1000);
+                _mc.SetOutput(Output.UVLightTable, OutputState.Off);
             });
         }
 
@@ -80,26 +78,27 @@ namespace Sorter
             Thread.Sleep(delayMs);
         }
 
-        public void UVLightOn(int delayMs = 1000)
-        {
-            _mc.SetOutput(BottomUVLight, OutputState.On);
-            Delay(delayMs);
-            _mc.SetOutput(BottomUVLight, OutputState.Off);
-        }
-
         /// <summary>
         /// After finish place.
         /// </summary>
-        public void ResetFirstHolder()
+        public void ResetFirstFixture()
         {
-            Holders[0] = new Holder();
+            Fixtures[0] = new Fixture();
+        }
+
+        public void SetFixturesFull()
+        {
+            foreach (var fix in Fixtures)
+            {
+                fix.IsEmpty = false;
+            }
         }
 
         public void Home()
         {
             HomeComplete = false;
             _mc.Home(_mc.MotorWorkTable);
-            ResetAllHolders();
+            ResetAllFixtures();
             HomeComplete = true;
         }
 
@@ -110,56 +109,76 @@ namespace Sorter
 
         public void Turns()
         {
-            _mc.MoveToTargetRelativeTillEnd(TableMotor, HolderAngle);
+            _mc.MoveToTargetRelativeTillEnd(TableMotor, FixtureAngle);
             TurnsTableData();
         }
 
-        public void Turns(List<WaitBlock> waitBlocks)
+        public async Task<WaitBlock> TurnsAsync()
         {
-
-            Turns();
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    Turns();
+                    return new WaitBlock() { Message = "Table turns Finished Successful." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "Table turns fail: " + ex.Message
+                    };
+                }
+            });
         }
 
         private void TurnsTableData()
         {
             //Turns array.
-            var lastHolderIndex = Holders.Length - 1;
+            var lastFixtureIndex = Fixtures.Length - 1;
 
-            //Keep the last holder in temp.
-            var lastHolder = Holders[lastHolderIndex];
+            //Keep the last Fixture in temp.
+            var lastFixture = Fixtures[lastFixtureIndex];
 
-            for (int i = 0; i < Holders.Length - 1; i++)
+            for (int i = 0; i < Fixtures.Length - 1; i++)
             {
-                //Last holder become the holder before it.
-                Holders[lastHolderIndex - i] = Holders[lastHolderIndex - i - 1];
+                //Last Fixture become the Fixture before it.
+                Fixtures[lastFixtureIndex - i] = Fixtures[lastFixtureIndex - i - 1];
             }
 
-            Holders[0] = lastHolder;
+            Fixtures[0] = lastFixture;
+
+            //Reset missions.
+            foreach (var fixture in Fixtures)
+            {
+                fixture.MissionAccomplished = false;
+            }
         }
 
-        public void Sucker(FixtureId holder, VacuumState state, VacuumArea area = VacuumArea.Circle, bool checkVacuum = true)
+        public void Sucker(FixtureId Fixture, VacuumState state, VacuumArea area = VacuumArea.Circle, bool checkVacuum = true)
         {
             switch (state)
             {
                 case VacuumState.On:
                     if (area== VacuumArea.Circle)
                     {
-                        _mc.VacuumOn(Holders[(int)holder].VaccumOutputCircle, Holders[(int)holder].VaccumInputCircle, checkVacuum);
+                        _mc.VacuumOn(Fixtures[(int)Fixture].VaccumOutputCircle, Fixtures[(int)Fixture].VaccumInputCircle, checkVacuum);
                     }
                     else
                     {
-                        _mc.VacuumOn(Holders[(int)holder].VaccumOutputCenter, Holders[(int)holder].VaccumInputCenter, checkVacuum);
+                        _mc.VacuumOn(Fixtures[(int)Fixture].VaccumOutputCenter, Fixtures[(int)Fixture].VaccumInputCenter, checkVacuum);
                     }
                     break;
 
                 case VacuumState.Off:
                     if (area == VacuumArea.Circle)
                     {
-                        _mc.VacuumOff(Holders[(int)holder].VaccumOutputCircle, Holders[(int)holder].VaccumInputCircle, checkVacuum);
+                        _mc.VacuumOff(Fixtures[(int)Fixture].VaccumOutputCircle, Fixtures[(int)Fixture].VaccumInputCircle, checkVacuum);
                     }
                     else
                     {
-                        _mc.VacuumOff(Holders[(int)holder].VaccumOutputCenter, Holders[(int)holder].VaccumInputCenter, checkVacuum);
+                        _mc.VacuumOff(Fixtures[(int)Fixture].VaccumOutputCenter, Fixtures[(int)Fixture].VaccumInputCenter, checkVacuum);
                     }
                     break;
 
@@ -169,13 +188,11 @@ namespace Sorter
         }
     }
 
-    public class Holder
+    public class Fixture
     {
-        public bool IsEmpty { get; set; }
-        public bool VPartPlaced { get; set; }
-        public bool PointGlued { get; set; }
-        public bool LineGlued { get; set; }
-        public bool LPartPlaced { get; set; }
+        public bool IsEmpty { get; set; } = true;
+        public bool NG { get; set; } = false;
+        public bool MissionAccomplished { get; set; } = false;
 
         public Output VaccumOutputCenter { get; set; }
         public Output VaccumOutputCircle { get; set; }

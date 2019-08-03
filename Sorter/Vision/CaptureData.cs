@@ -11,17 +11,17 @@ namespace Sorter
     {
         //    LTrayPickTop = 1,
         //    LLoadCompensationBottom=2,
-        //    LLoadHolderTop=3,
+        //    LLoadFixtureTop=3,
 
         //    VTrayPickTop = 4,
         //    VLoadCompensationBottom = 5,
-        //    VLoadHolderTop = 6,
+        //    VLoadFixtureTop = 6,
 
-        //    VUnloadHolderTop = 7,
+        //    VUnloadFixtureTop = 7,
         //    VUnloadCompensationBottom = 8,
         //    VTrayPlaceTop = 9,
 
-        public static CapturePosition VUnloadHolderTop = new CapturePosition()
+        public static CapturePosition VUnloadFixtureTop = new CapturePosition()
         {
             CaptureId = CaptureId.VUnloadHolderTop,
             XPosition = -20.015,
@@ -59,7 +59,7 @@ namespace Sorter
             YPosition = -223.848,
             ZPosition = -9.954,
         };
-        public static CapturePosition VLoadHolderTop = new CapturePosition()
+        public static CapturePosition VLoadFixtureTop = new CapturePosition()
         {
             CaptureId = CaptureId.VLoadHolderTop,
             XPosition = -20.228,
@@ -82,7 +82,7 @@ namespace Sorter
             ZPosition = -24.795,
 
         };
-        public static CapturePosition LLoadHolderTop = new CapturePosition()
+        public static CapturePosition LLoadFixtureTop = new CapturePosition()
         {
             CaptureId = CaptureId.LLoadHolderTop,
             XPosition = -10.218,

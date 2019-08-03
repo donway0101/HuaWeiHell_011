@@ -10,21 +10,54 @@ namespace Sorter
 {
     public static class Helper
     {
-        public static void SaveConfiguration(string config, string path)
+        /// <summary>
+        /// Used for tasks that need successful immediately return.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<WaitBlock> DummyAsyncTask()
         {
-            System.IO.File.WriteAllText(path, config);
+            return await Task.Run(() =>
+            {
+                return new WaitBlock() { Code = ErrorCode.Sucessful };
+            });
         }
 
-        public static void SaveDevelopmentPoints(string config, string path = "Development.config")
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="fileName"></param>
+        public static void WriteFile(string content, string fileName)
         {
-            System.IO.File.WriteAllText(path, config);
+            System.IO.File.WriteAllText(fileName, content);
         }
 
-        public static void AddCapturePosition(string posInfo, string path)
+        /// <summary>
+        /// Find even for four numbers.
+        /// </summary>
+        /// <param name="dataSource"></param>
+        /// <returns></returns>
+        public static double FindEven(double[] dataSource)
         {
-            System.IO.File.AppendAllText(path, posInfo + Environment.NewLine);
+            if (dataSource.Length==0)
+            {
+                return double.NaN;
+            }
+
+            double total = 0;
+            foreach (var source in dataSource)
+            {
+                total += source;
+            }
+
+            return total / dataSource.Length;
         }
 
+        /// <summary>
+        /// Convert a vacuum state to a output state to drive output action.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
         public static OutputState ConvertToOutputState(VacuumState state)
         {
             switch (state)
@@ -38,38 +71,52 @@ namespace Sorter
             }
         }
 
-        public static string ReadConfiguration(string path)
+        /// <summary>
+        /// Read configuration file.
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public static string ReadFile(string fileName)
         {
-            return System.IO.File.ReadAllText(path);
+            return System.IO.File.ReadAllText(fileName);
         }
 
+        /// <summary>
+        /// Convert an object to json string for storage
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public static string ConvertToJsonString(object obj)
         {
             return JsonConvert.SerializeObject(obj, Formatting.Indented);
         }
 
-        public static Motor[] ConvertConfigToMotors(string config)
+        /// <summary>
+        /// Convert json string to user settings.
+        /// </summary>
+        /// <param name="jsonString"></param>
+        /// <returns></returns>
+        public static List<UserSetting> ConvertToUserSettings(string jsonString)
         {
-            return JsonConvert.DeserializeObject<Motor[]>(config);
+            return JsonConvert.DeserializeObject<List<UserSetting>>(jsonString);
         }
 
-        public static List<CapturePosition> ConvertToCapturePositions(string config)
+        /// <summary>
+        /// Convert to capture positions.
+        /// </summary>
+        /// <param name="jsonString"></param>
+        /// <returns></returns>
+        public static List<CapturePosition> ConvertToCapturePositions(string jsonString)
         {
-            return JsonConvert.DeserializeObject<List<CapturePosition>>(config);
+            return JsonConvert.DeserializeObject<List<CapturePosition>>(jsonString);
         }
 
-        public static GluePosition[] ConvertToGluePositions(Pose[] poses)
-        {
-            GluePosition[] gluePositions = new GluePosition[4];
-            for (int i = 0; i < poses.Length; i++)
-            {
-                gluePositions[i].X = poses[i].X;
-                gluePositions[i].Y = poses[i].Y;
-                gluePositions[i].Z = poses[i].Z;
-            }
-            return gluePositions;
-        }
-
+        /// <summary>
+        /// Find capture position from a list.
+        /// </summary>
+        /// <param name="positions"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public static CapturePosition GetCapturePosition(List<CapturePosition> positions, CaptureId id)
         {
             foreach (var pos in positions)
@@ -82,6 +129,13 @@ namespace Sorter
             throw new Exception("FindCapturePosition fail: " + id);
         }
 
+        /// <summary>
+        /// Match with id and tag.
+        /// </summary>
+        /// <param name="positions"></param>
+        /// <param name="id"></param>
+        /// <param name="tag"></param>
+        /// <returns></returns>
         public static CapturePosition GetCapturePosition(List<CapturePosition> positions, CaptureId id, string tag)
         {
             foreach (var pos in positions)
@@ -94,27 +148,42 @@ namespace Sorter
             throw new Exception("FindCapturePosition fail: " + id);
         }
 
-        public static CapturePosition GetDevelopmentPoints(List<CapturePosition> positions, string tag)
+        /// <summary>
+        /// For goes to history point.
+        /// </summary>
+        /// <param name="positions"></param>
+        /// <param name="remark"></param>
+        /// <returns></returns>
+        public static CapturePosition GetDevelopmentPoints(List<CapturePosition> positions, string remark)
         {
             foreach (var pos in positions)
             {
-                if (pos.Tag == tag)
+                if (pos.Remarks == remark)
                 {
                     return pos;
                 }
             }
-            throw new Exception("FindCapturePosition fail: " + tag);
+            throw new Exception("FindCapturePosition fail: " + remark);
         }
 
+        /// <summary>
+        /// Check task result.
+        /// </summary>
+        /// <param name="waitBlock"></param>
         public static void CheckTaskResult(Task<WaitBlock> waitBlock)
         {
-            if (waitBlock.Result.Code != 0)
+            if (waitBlock.Result.Code != ErrorCode.Sucessful)
             {
-                throw new Exception("Task not finished, Error Code: " + waitBlock.Result.Code + 
+                throw new Exception("Error Code: " + waitBlock.Result.Code + " " +
                     waitBlock.Result.Message);
             }
         }
 
+        /// <summary>
+        /// For robot to go.
+        /// </summary>
+        /// <param name="capPos"></param>
+        /// <returns></returns>
         public static Pose ConvertToPose(CapturePosition capPos)
         {
             return new Pose()
@@ -126,20 +195,8 @@ namespace Sorter
             };
         }
 
-        public static Pose ConvertToPose(AxisOffset offset)
-        {
-            return new Pose()
-            {
-                //Todo currently is abs position.
-                X = offset.XOffset,
-                Y = offset.YOffset,
-                // Z is const,
-                A = offset.ROffset,
-                RUnloadAngle = offset.ROffset,
-            };
-        }
-
         /// <summary>
+        /// Zero based index
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bitPosition">0 based index</param>
@@ -149,7 +206,7 @@ namespace Sorter
         }
 
         /// <summary>
-        /// 
+        /// Zero based index
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bitPosition">0 based index</param>
@@ -159,6 +216,7 @@ namespace Sorter
         }
 
         /// <summary>
+        /// Zero based index
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bitPosition">0 based index</param>

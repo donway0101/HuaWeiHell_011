@@ -59,6 +59,7 @@ namespace Sorter
         public ErrorCode Code { get; set; } = ErrorCode.Sucessful;
 
         public string Message { get; set; } = "To be complete error message.";
+        public string Remarks { get; set; } = "To be complete remarks.";
     }
 
 }

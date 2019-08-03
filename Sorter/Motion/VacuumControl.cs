@@ -74,10 +74,11 @@ namespace Sorter
         }
 
         public void VacuumOn(Output output, Input input, bool checkVacuum = true,
-            int delayMs = 500, int timeoutMs = 3000,
+            int delayMs = 500, int timeoutMs = 4000,
             OutputState outputState = OutputState.On, bool inputState = true)
         {
             SetOutput(output, outputState);
+            //Delay(delayMs);
             bool state;
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -88,15 +89,14 @@ namespace Sorter
                     throw new Exception("Vacuum timeout: " + output);
                 }
                 state = checkVacuum ? GetInput(input) : inputState;
-            } while (state != inputState);
-            Delay(delayMs);
+            } while (state != inputState);          
         }
 
         public void VacuumOff(Output output, Input input, bool checkVacuum = true,
             int delayMs = 500, int timeoutMs = 3000,
            OutputState outputState = OutputState.Off, bool inputState = false)
         {
-            SetOutput(output, outputState);
+            SetOutput(output, outputState);            
             bool state;
             var stopwatch = new Stopwatch();
             stopwatch.Start();

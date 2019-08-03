@@ -54,7 +54,7 @@ namespace Sorter
 
         VConveyorUnload = 103,
         VConveyorLoad = 102,
-
+        LConveyorLoad = 109, // 112?
     }
 
     public enum MotorState
@@ -91,16 +91,33 @@ namespace Sorter
     {
         None = 0,
         GluePoint = 1,
-        GlueCurve = 2,
+        GlueLine = 2,
     }
 
-    public class PointPulse
+    /// <summary>
+    /// Parameters that for controller a draw a circle.
+    /// </summary>
+    public class ArcInfoPulse
     {
         public int X { get; set; }
         public int Y { get; set; }
         public int Z { get; set; }
-        public int ArcCenterToXOffset { get; set; }
-        public int ArcCenterToYOffset { get; set; }
+
+        public int ArcCenterToXStartOffset { get; set; }
+        public int ArcCenterToYStartOffset { get; set; }
+
+        public double Velocity { get; set; }
+        public double Acceleration { get; set; }
+    }
+
+    public class PointInfoPulse
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Z { get; set; }
+
+        public double Velocity { get; set; }
+        public double Acceleration { get; set; }
     }
 
     public enum MoveModeAMotor

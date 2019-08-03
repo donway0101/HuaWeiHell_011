@@ -116,6 +116,12 @@ namespace Sorter
             log.Info("Sending to server:" + Environment.NewLine +
                 Helper.ConvertToJsonString(capturePosition));
 
+            //Clean the last unhandled vision response.
+            while(ResultFound(capturePosition.CaptureId, out AxisOffset offsetResultDump))
+            {
+
+            }
+
             AxisOffset offsetResult = null;
             string JsonCommand = Handle.Instance.ObjToJsonstring(capturePosition);
             Send(JsonCommand);
@@ -139,7 +145,10 @@ namespace Sorter
             {
                 log.Info("No Recieved to server of :" + Environment.NewLine +
                 Helper.ConvertToJsonString(capturePosition));
-                throw new Exception("Vision NG at capture position of " + capturePosition.CaptureId);
+                throw new VisionException("Vision NG")
+                {
+                    CaptureId = capturePosition.CaptureId,
+                };
             }
 
             log.Info("Recieved to server:" + Environment.NewLine +

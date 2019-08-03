@@ -14,7 +14,7 @@ namespace Sorter
         private readonly VisionServer _vision;
         private readonly RoundTable _table;
         private List<CapturePosition> _capturePositions;
-        private List<CapturePosition> _userPositionOffsets;
+        public List<CapturePosition> _capturePositionsOffsets;
 
         public Motor MotorA { get; set; }
         public Motor MotorX { get; set; }
@@ -26,8 +26,10 @@ namespace Sorter
         public double SafeZHeight { get; set; } = -10;
 
         public Tray LoadTray { get; set; }
-        public double LoadTrayHeight { get; set; } = -63.146;
-        public double FixtureHeight { get; set; } = -57.2;
+        public double LoadTrayHeight { get; set; } = -64.1;
+        public double FixtureHeight { get; set; } = -57.6;
+
+        public int UvDelayMs { get; set; } = 4;
 
         public bool CheckVacuumValue { get; set; } = false;
         public bool VisionSimulateMode { get; set; } = false;
@@ -44,7 +46,13 @@ namespace Sorter
         /// <summary>
         /// Preparation work for next cycle.
         /// </summary>
-        //public Task<WaitBlock> Preparation { get; set; }
+        public Task<WaitBlock> Preparation { get; set; }
+
+        public bool HasPartOnLoadSucker { get; set; }
+
+        public int CurrentCycleId { get; set; }
+
+        public int MaxFailCount { get; set; } = 10;
 
         public LStation(MotionController controller, VisionServer vision,
             RoundTable table, List<CapturePosition> positions, List<CapturePosition> offsets)
@@ -53,7 +61,7 @@ namespace Sorter
             _vision = vision;
             _table = table;
             _capturePositions = positions;
-            _userPositionOffsets = offsets;
+            _capturePositionsOffsets = offsets;
         }
 
         public CapturePosition GetCapturePosition(CaptureId id)
@@ -61,11 +69,31 @@ namespace Sorter
             return Helper.GetCapturePosition(_capturePositions, id);
         }
 
+        public CapturePosition GetCapturePositionWithUserOffset(CaptureId id)
+        {
+            var capPos = GetCapturePosition(id);
+            var userOffset = GetCapturePositionOffset(id);
+
+            return new CapturePosition()
+            {
+                CaptureId = id,
+                XPosition = capPos.XPosition + userOffset.XPosition,
+                YPosition = capPos.YPosition + userOffset.YPosition,
+                ZPosition = capPos.ZPosition + userOffset.ZPosition,
+                Angle = capPos.Angle + userOffset.Angle,
+            };
+        }
+
         public CapturePosition GetCapturePositionOffset(CaptureId id)
         {
-            return new CapturePosition();
-            //Todo add offset 
-            return Helper.GetCapturePosition(_userPositionOffsets, id);
+            try
+            {
+                return Helper.GetCapturePosition(_capturePositionsOffsets, id);
+            }
+            catch (Exception)
+            {
+                return new CapturePosition();
+            }
         }
 
         /// <summary>
@@ -88,29 +116,6 @@ namespace Sorter
                 //Todo fail check.
                 return _vision.RequestVisionCalibration(capturePosition);
             }
-        }
-
-
-
-        /// <summary>
-        /// For efficency's shake.
-        /// </summary>
-        /// <param name="part"></param>
-        /// <returns></returns>
-        public async Task<WaitBlock> PreparationForNextCycleAsync(Part part)
-        {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    //MoveToCapture(part.CapturePos);
-                    return new WaitBlock() { Message = "V prepare OK" };
-                }
-                catch (Exception ex)
-                {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "V prepare error: " + ex.Message };
-                }
-            });
         }
 
         /// <summary>
@@ -155,17 +160,17 @@ namespace Sorter
         /// <summary>
         /// Try to get vision result less than three times.
         /// </summary>
-        /// <param name="capturePosition"></param>
+        /// <param name="capPos"></param>
         /// <param name="retryTimes"></param>
         /// <returns></returns>
-        public Pose GetVisionResult(CapturePosition capturePosition, int retryTimes = 3)
+        public Pose GetVisionResult(CapturePosition capPos, int retryTimes = 3)
         {
             int retryCount = 0;
             do
             {
                 try
                 {
-                    return GetVisionResult(capturePosition);
+                    return GetVisionResult(capPos);
                 }
                 catch (Exception)
                 {
@@ -173,10 +178,7 @@ namespace Sorter
                 }
             } while (retryCount < 3);
 
-            //To be developed.
-            //NgBin(LoadTray.CurrentPart);
-
-            throw new Exception("Vision fail three times. Ng bin action coming soon.");
+            throw new VisionException() { CaptureId = capPos.CaptureId };
         }
 
         #region For testing.
@@ -211,22 +213,6 @@ namespace Sorter
         }
         #endregion
 
-        public async Task<WaitBlock> LoadAsync(Part part, int uVDelay = 4)
-        {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    Load(part, uVDelay);
-                    return new WaitBlock() { Message = "L Load Finished Successful." };
-                }
-                catch (Exception ex)
-                {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "L Load fail: " + ex.Message };
-                }
-            });
-        }
-
         /// <summary>
         /// Suck a part from L tray hole.
         /// </summary>
@@ -235,9 +221,11 @@ namespace Sorter
         {
             MoveToCapture(part.CapturePos);
             var pickPose = GetVisionResult(part.CapturePos, 3);
-            MoveToTarget(pickPose);
-            Sucker(VacuumState.On);
+            MoveToTarget(pickPose, MoveModeAMotor.Relative);
+            Sucker(2, ActionType.Load);
             MoveToSafeHeight();
+
+            HasPartOnLoadSucker = true;
             SetNextPartLoad();
         }
 
@@ -248,53 +236,65 @@ namespace Sorter
             return GetVisionResult(fixtureCapturePos);
         }
 
-        private Pose AngleCompensation(double fixtureAngle)
+        private Pose AngleCompensation(double fixtureAngle, double userCompensation)
         {
             //Get angle offset for loading.
             var bottomCamCapturePosLoad = GetCapturePosition(CaptureId.LLoadCompensationBottom);
             MoveToCapture(bottomCamCapturePosLoad);
-            var bottomCamPos = GetVisionResult(bottomCamCapturePosLoad, 3);
-            var angleOffset = fixtureAngle - bottomCamPos.A;
-            CorrectAngle(angleOffset, MoveModeAMotor.Relative);
+
+            var slidAngle = GetVisionResult(bottomCamCapturePosLoad, 3);
+
+            var angleCompensation = userCompensation + 180.0 - fixtureAngle - slidAngle.A;
+            CorrectAngle(angleCompensation, MoveModeAMotor.Relative);
+
             var xNyOffset = GetVisionResult(bottomCamCapturePosLoad, 3);
-            var finalAngelError = Math.Abs(fixtureAngle - xNyOffset.A);
-            if (finalAngelError>0.7)
-            {
-                //Todo maybe need to compensate again.
-                throw new Exception("Angle compensation NG, error is:" + finalAngelError);
-            }
+
+            //var finalAngelError = Math.Abs(fixtureAngle - xNyOffset.A);
+
+            //Todo check error.
+            //if (finalAngelError>0.7)
+            //{
+            //    //Todo maybe need to compensate again.
+            //    throw new Exception("Angle compensation NG, error is:" + finalAngelError);
+            //}
 
             return xNyOffset;
         }
 
-        private void PlacePart(Pose pose, int uVDelay = 4)
+        /// <summary>
+        /// With UV delay time.
+        /// </summary>
+        /// <param name="pose"></param>
+        private void PlacePart(Pose pose)
         {
             MoveToTarget(pose, MoveModeAMotor.None);
+
             Sucker(FixtureId.L, VacuumState.On, VacuumArea.Center);
-            _table.UVLightOn(uVDelay * 1000);
+            UVLightOn(UvDelayMs*1000);
             Sucker(VacuumState.Off);
-            MoveToSafeHeight();       
+
+            MoveToSafeHeight();
+
+            HasPartOnLoadSucker = false;
         }
 
-        /// <summary>
-        /// Load a part.
-        /// </summary>
-        /// <param name="part"></param>
-        public void Load(Part part, int uVDelay = 4)
+        public Task UVLightOnAsync(int delayMs = 1000)
         {
-            PickPart(part);
+            return Task.Run(() => {
+                UVLightOn(delayMs);
+            });
+        }
 
-            var fixturePose = GetFixturePose();
+        public void UVLightOn(int delayMs = 1000)
+        {
+            _mc.SetOutput(Output.UVLightHead, OutputState.On);
+            Delay(delayMs);
+            _mc.SetOutput(Output.UVLightHead, OutputState.Off);
+        }
 
-            //5.0 test result.
-            var xNyOffset = AngleCompensation(fixturePose.A + 3.0);
-
-            //0.1 test result
-            part.TargetPose.X = fixturePose.X - xNyOffset.X + 0.1;
-            part.TargetPose.Y = fixturePose.Y - xNyOffset.Y + 0.1;
-            part.TargetPose.Z = GetZHeight(CaptureId.LLoadHolderTop);
-
-            PlacePart(part.TargetPose, uVDelay);         
+        public void Delay(int delayMs)
+        {
+            Thread.Sleep(delayMs);
         }
 
         /// <summary>
@@ -315,7 +315,7 @@ namespace Sorter
         public void MoveToCapture(CapturePosition target)
         {
             var tar = Helper.ConvertToPose(target);
-            MoveTo(tar, MoveModeAMotor.None);
+            MoveTo(tar, MoveModeAMotor.Abs);
         }
 
         public void MoveTo(Pose target, MoveModeAMotor mode, ActionType type = ActionType.Load)
@@ -409,38 +409,18 @@ namespace Sorter
                 CurrentPart = new Part() {
                     CapturePos = GetCapturePosition(CaptureId.LTrayPickTop),
                     TargetPose = new Pose() { },
-                },              
+                },
                 BaseCapturePosition = GetCapturePosition(CaptureId.LTrayPickTop),
+                YIncreaseDirection = 1,
             };
 
-            //Wired!
-            //Preparation = Task.Run(() =>
-            //{
-            //    return new WaitBlock()
-            //    {
-            //        Code = ErrorCode.Sucessful,
-            //        Message = "This is a empty task, just for preparation of loading."
-            //    };
-            //});
-
-            //Preparation = EmptyTask();
+            ResetPreparation();
         }
 
-        //private Task<WaitBlock> EmptyTask()
-        //{
-        //    return Task.Run(async () =>
-        //    {
-        //        try
-        //        {
-        //            await Task.Delay(1);
-        //            return new WaitBlock() { Code = ErrorCode.Sucessful };
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = ex.Message };
-        //        }
-        //    });
-        //}
+        public void ResetPreparation()
+        {
+            Preparation = Helper.DummyAsyncTask();
+        }
 
         public void Unload(Part part)
         {
@@ -449,7 +429,14 @@ namespace Sorter
 
         public void Sucker(VacuumState state)
         {
-            _mc.LLoadVacuum(state, CheckVacuumValue);
+            try
+            {
+                _mc.LLoadVacuum(state, true);
+            }
+            catch (Exception)
+            {
+                throw new SuckerException() { CaptureId = CaptureId.LTrayPickTop, };
+            }
         }
 
         public void Sucker(FixtureId id, VacuumState state, VacuumArea area)
@@ -467,9 +454,9 @@ namespace Sorter
             _mc.LLoadConveyorLocker(LockState.On);
         }
 
-        public async Task<WaitBlock> LockTrayAsync(int delayMs = 1000)
+        public async Task<WaitBlock> LockTrayAsync()
         {
-            return await Task.Run(async () => {
+            return await Task.Run(() => {
                 try
                 {
                     LockTray();
@@ -478,45 +465,6 @@ namespace Sorter
                 catch (Exception)
                 {
                     return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "LockTray Finished Successful." };
-                }
-            });
-        }
-
-        public Task<WaitBlock> Work()
-        {
-            return Task.Run(async () =>
-            {
-                try
-                {
-                    await Task.Delay(1);
-                    try
-                    {
-                        Load(LoadTray.CurrentPart);
-                    }
-                    catch(NeedToPickAnotherPartException)
-                    {
-                        //To get next part.
-                        SetNextPartLoad();
-                        //Try another tray part.
-                        try
-                        {
-                            Load(LoadTray.CurrentPart);
-                        }
-                        catch (Exception)
-                        {
-                            throw;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        throw;
-                    }
-                    
-                    return new WaitBlock() { };
-                }
-                catch (Exception ex)
-                {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "L station error:" + ex.Message };
                 }
             });
         }
@@ -541,23 +489,17 @@ namespace Sorter
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Correct direction counter clockwise
+        /// </summary>
+        /// <param name="relativeAngle"></param>
+        /// <param name="mode"></param>
+        /// <param name="action"></param>
         public void CorrectAngle(double relativeAngle, MoveModeAMotor mode,
             ActionType action = ActionType.Load)
         {
             _mc.MoveToTargetRelativeTillEnd(MotorA, relativeAngle);
         }
-
-        public void CorrectAngle(ref Part part, MoveModeAMotor mode, ActionType action)
-        {
-            //Get angle offset for load.
-            var bottomCamCapturePosLoad = GetCapturePosition(CaptureId.LLoadCompensationBottom);
-            MoveToCapture(bottomCamCapturePosLoad);
-            var angleOffset = GetVisionResult(bottomCamCapturePosLoad, 3);
-            CorrectAngle(angleOffset.A, MoveModeAMotor.Abs, ActionType.Unload);
-            var xNyOffset = GetVisionResult(bottomCamCapturePosLoad, 3);
-            part.XOffset = xNyOffset.X;
-            part.YOffset = xNyOffset.Y;
-        }      
 
         /// <summary>
         /// Need to suck another product.
@@ -569,7 +511,7 @@ namespace Sorter
             MoveToCapture(GetCapturePosition(CaptureId.LBin));
             Sucker(VacuumState.Off);
             //May be try to suck again to test if product drops.
-            throw new NeedToPickAnotherPartException();
+            throw new SuckerException();
         }
 
         public void SetNextPartLoad()
@@ -584,7 +526,8 @@ namespace Sorter
 
         public void RiseZALittleAndDown()
         {
-            throw new NotImplementedException();
+            _mc.MoveToTargetRelativeTillEnd(MotorZ, 2);
+            _mc.MoveToTargetRelativeTillEnd(MotorZ, -2.5);
         }
 
         public void MoveAngleMotor(double angle, MoveModeAMotor mode,
@@ -607,33 +550,19 @@ namespace Sorter
             }
         }
 
-        void IAssemblyRobot.Work()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<WaitBlock> WorkAsync()
-        {
-            throw new NotImplementedException();
-        }
-
         public void Load(Part part)
         {
-            PickPart(part);
-
             var fixturePose = GetFixturePose();
 
-            //5.0 test result.
-            var xNyOffset = AngleCompensation(fixturePose.A + 3.0);
+            var userAssemblyOffset = GetCapturePositionOffset(CaptureId.LAssemblyOffset);
 
-            //0.1 test result
-            part.TargetPose.X = fixturePose.X - xNyOffset.X + 0.1;
-            part.TargetPose.Y = fixturePose.Y - xNyOffset.Y + 0.1;
-            part.TargetPose.Z = GetZHeight(CaptureId.LLoadHolderTop);
+            var xNyOffset = AngleCompensation(fixturePose.A, userAssemblyOffset.Angle);
+
+            part.TargetPose.X = fixturePose.X - xNyOffset.X + userAssemblyOffset.XPosition;
+            part.TargetPose.Y = fixturePose.Y - xNyOffset.Y + userAssemblyOffset.YPosition;
+            part.TargetPose.Z = GetZHeight(CaptureId.LLoadHolderTop) + userAssemblyOffset.ZPosition;
 
             PlacePart(part.TargetPose);
-
-            SetNextPartLoad();
         }
 
         public async Task<WaitBlock> LoadAsync(Part part)
@@ -650,6 +579,265 @@ namespace Sorter
                     return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "L Load fail: " + ex.Message };
                 }
             });
+        }
+
+        public void Bin(ActionType type = ActionType.Load)
+        {
+            MoveToCapture(GetCapturePosition(CaptureId.LBin));
+            Sucker(VacuumState.Off);
+        }
+
+        public void Prepare()
+        {
+            PickPart(LoadTray.CurrentPart);
+            MoveToCapture(GetCapturePosition(CaptureId.LLoadHolderTopReady));
+        }
+
+        public async Task<WaitBlock> PrepareAsync()
+        {
+            return await Task.Run(() =>
+            {
+
+                int failCount = 0;
+                string remarks = string.Empty;
+                do
+                {
+                    try
+                    {
+                        Prepare();
+                        return new WaitBlock()
+                        {
+                            Message = "L Preparation Finished."
+                        };
+                    }
+
+                    #region Vision excepiton
+                    catch (VisionException vex)
+                    {
+                        failCount++;
+                        try
+                        {
+                            switch (vex.CaptureId)
+                            {
+                                case CaptureId.LTrayPickTop:
+                                    SetNextPartLoad();
+                                    HasPartOnLoadSucker = false;
+                                    continue;
+
+                                default:
+                                    throw new NotImplementedException("Error 465465413216894");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            return new WaitBlock()
+                            {
+                                Code = ErrorCode.LStationPrepareFail,
+                                Message = ex.Message
+                            };
+                        }
+                    }
+                    #endregion
+
+                    catch (SuckerException sEx)
+                    {
+                        failCount++;
+                        try
+                        {
+                            switch (sEx.CaptureId)
+                            {
+                                case CaptureId.LTrayPickTop:
+                                    SetNextPartLoad();
+                                    HasPartOnLoadSucker = false;
+                                    continue;
+
+                                default:
+                                    throw new NotImplementedException("Error 49874616549746516");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            return new WaitBlock()
+                            {
+                                Code = ErrorCode.LStationPrepareFail,
+                                Message = ex.Message
+                            };
+                        }                       
+                    }
+
+                    catch (Exception ex)
+                    {
+                        return new WaitBlock()
+                        {
+                            Code = ErrorCode.LStationPrepareFail,
+                            Message = ex.Message
+                        };
+                    }
+
+                } while (failCount < MaxFailCount);
+
+                return new WaitBlock()
+                {
+                    Code = ErrorCode.LStationPrepareFail,
+                    Message = "Reaches max fail count."
+                };
+
+            });
+        }
+
+        public void Sucker(int retryTimes, ActionType action)
+        {
+            int failCount = 0;
+            do
+            {
+                try
+                {
+                    Sucker(VacuumState.On);
+                    return;
+                }
+                catch (SuckerException)
+                {
+                    failCount++;
+                    Sucker(VacuumState.Off);
+                    RiseZALittleAndDown();
+                }
+            } while (failCount<retryTimes);
+
+            throw new SuckerException() { CaptureId = CaptureId.LTrayPickTop, };
+        }
+
+        public void SetForTest()
+        {
+            _table.Sucker(FixtureId.L, VacuumState.On, VacuumArea.Circle);
+            LockTray();
+            _table.Fixtures[(int)StationId.L].IsEmpty = false;
+        }
+
+        /// <summary>
+        /// If vision fail, try another new part.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<WaitBlock> WorkAsync(int cycleId)
+        {
+            return await Task.Run(async () =>
+            {
+                #region Skip work due to error or empty or wait for other station.
+                if (_table.Fixtures[(int)StationId.L].NG || 
+                 _table.Fixtures[(int)StationId.L].IsEmpty || CurrentCycleId >= cycleId)
+                {
+                    CurrentCycleId = cycleId;
+                    return new WaitBlock()
+                    {
+                        Message = "LWorkAsync Skip due to previous station fail " +
+                        "or is empty, or has to wait for other station."
+                    };
+                }
+                #endregion
+
+                #region Work
+                int failCount = 0;
+                string remarks = string.Empty;
+
+                do
+                {
+                    try
+                    {
+                        #region Normal procedure
+                        //Wait for last preparation to finish.
+                        // it's finished by default after powerup.
+                        await Preparation;
+                        Helper.CheckTaskResult(Preparation);
+
+                        //If it's first time to prepare.
+                        if (HasPartOnLoadSucker == false)
+                        {
+                            Preparation = PrepareAsync();
+                            await Preparation;
+                            Helper.CheckTaskResult(Preparation);
+                        }
+
+                        Load(LoadTray.CurrentPart);
+
+                        //Trigger a preparation for next cycle.
+                        Preparation = PrepareAsync();
+
+                        //Finish one cycle, goes into next cycle.
+                        CurrentCycleId = cycleId;
+                        return new WaitBlock()
+                        {
+                            Message = "LWorkAsync Finished smoothly.",
+                        }; 
+                        #endregion
+                    }
+
+                    #region Vision exception
+                    catch (VisionException vEx)
+                    {
+                        failCount++;
+                        try
+                        {
+                            switch (vEx.CaptureId)
+                            {
+                                case CaptureId.LLoadCompensationBottom:
+                                    Bin();
+                                    HasPartOnLoadSucker = false;
+                                    continue;
+
+                                case CaptureId.LLoadHolderTop:
+                                    _table.Fixtures[(int)StationId.L].NG = true;
+                                    return new WaitBlock()
+                                    {
+                                        Code = ErrorCode.Sucessful,
+                                        Message = "Set fixture as NG",
+                                    };
+
+                                default:
+                                    throw new NotImplementedException();
+                            }
+                        }
+                        catch (Exception vEx1)
+                        {
+                            return new WaitBlock()
+                            {
+                                Code = ErrorCode.LStationWorkFail,
+                                Message = vEx1.Message,
+                            };
+                        }                        
+                    } 
+                    #endregion
+
+                    #region Exception that need human's assistant.
+                    catch (Exception ex)
+                    {
+                        return new WaitBlock()
+                        {
+                            Code = ErrorCode.LStationWorkFail,
+                            Message = ex.Message,
+                        };
+                    } 
+                    #endregion
+
+                } while (failCount < MaxFailCount);
+
+                #region Return when reaches max fail count.
+                return new WaitBlock()
+                {
+                    Code = ErrorCode.LStationWorkFail,
+                    Message = "Fail count reaches max number or fixture NG.",
+                }; 
+                #endregion
+
+                #endregion
+
+            });
+        }
+
+        public void Reset()
+        {
+            if (Preparation.Result.Code != ErrorCode.Sucessful)
+            {
+                Preparation = Helper.DummyAsyncTask();
+            }
         }
     }
 }

@@ -32,8 +32,8 @@ namespace Sorter
         private double _demoSpeed = 20;
 
         private StationId _selectedStation = StationId.L;
+        private StationId _selectedGlueStation = StationId.GlueLine;
         private ActionType _selectedSuckerVacuum = ActionType.Load;
-        private ActionType _selectedVStationActionType = ActionType.PrepareV;
         private CaptureId _selectedCaptureId = CaptureId.LTrayPickTop;
         private CapturePosition _selectedCapturePosition;
         private Pose _visionResult;
@@ -56,7 +56,7 @@ namespace Sorter
             InitializeComponent();
             //Set tab draw mode to ownerdraw
             tabControlMenu.DrawItem += new DrawItemEventHandler(tabControlMenu_DrawItem);
-            log.Info("System start");                       
+            log.Info("System start");
         }
 
         private void tabControlMenu_DrawItem(Object sender, System.Windows.Forms.DrawItemEventArgs e)
@@ -93,50 +93,47 @@ namespace Sorter
             g.DrawString(_tabPage.Text, _tabFont, _textBrush, _tabBounds, new StringFormat(_stringFlags));
         }
 
-        private void SaveMotorConfiguration()
-        {
-            //Helper.ConvertObjectToString();
-            Helper.SaveConfiguration("Test", Properties.Settings.Default.MotorConfig);
-        }
-
-        private void ReadMotorConfiguration()
-        {
-            Helper.ReadConfiguration(Properties.Settings.Default.MotorConfig);
-        }
-
         //SocketClient SocketClient = new SocketClient("192.168.1.192", 1000);
 
         //BasicFunction BasicFunction = new BasicFunction();
 
-            /// <summary>
-            /// Connect to controller.
-            /// </summary>
-            /// <param name="sender"></param>
-            /// <param name="e"></param>
+        /// <summary>
+        /// Connect to controller.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void button1_Click(object sender, EventArgs e)
-        {          
+        {
             buttonConnect.Enabled = false;
             buttonConnect.Text = "Initializing...";
-            bool result = await Task.Run(() => {
+            bool result = await Task.Run(() =>
+            {
                 try
                 {
                     _cc.Setup();
-                    Setup();
+                   
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    Show(ex);
                     return false;
                 }
             });
-
-            
 
             if (result)
             {
                 buttonConnect.Text = "Connect OK";
                 buttonConnect.BackColor = Color.LightGreen;
+
+                try
+                {
+                    Setup();
+                }
+                catch (Exception ex)
+                {
+                    Show(ex);
+                }
             }
             else
             {
@@ -144,6 +141,7 @@ namespace Sorter
             }
 
             #region MyRegion
+
             //Properties.Settings.Default.Reset();
             //SaveMotorConfiguration();
             //Properties.Settings.Default.Save();
@@ -180,11 +178,24 @@ namespace Sorter
 
             foreach (var pos in _cc.DevelopPoints)
             {
-                comboBoxReadDevPoints.Items.Add(pos.Tag);
+                var bytes = Encoding.Default.GetBytes(pos.Remarks);
+                var remarks = Encoding.UTF8.GetString(bytes);
+
+                comboBoxReadDevPoints.Items.Add(remarks);
             }
+
+            GetUserSettings();
+
+            dataGridViewUserOffset.DataSource = _cc.UserOffsets;
+            dataGridViewCapturePosition.DataSource = _cc.CapturePositions;
+
+            //dataGridViewUserConfig.DataSource = _cc.UserConfigs.Settings;
         }
 
-        #region updata position
+        private void GetUserSettings()
+        {
+
+        }
 
         private void PositionUpdate()
         {
@@ -193,7 +204,8 @@ namespace Sorter
                 return;
             }
             _uiStarted = true;
-            Task.Run(() => {
+            Task.Run(() =>
+            {
                 while (true)
                 {
 
@@ -248,18 +260,21 @@ namespace Sorter
 
                         }));
                         Thread.Sleep(200);
-                        labelFeedbackPosRUnload.BeginInvoke((MethodInvoker)(() =>
-                        {
-                            try
-                            {
-                                labelFeedbackPosRUnload.Text = mc.GetPosition(_manualMotorRUnload).ToString();
-                            }
-                            catch (Exception)
-                            {
-                            }
-                        }));
-                        Thread.Sleep(200);
 
+                        if (_manualMotorRUnload != null)
+                        {
+                            labelFeedbackPosRUnload.BeginInvoke((MethodInvoker)(() =>
+                            {
+                                try
+                                {
+                                    labelFeedbackPosRUnload.Text = mc.GetPosition(_manualMotorRUnload).ToString();
+                                }
+                                catch (Exception)
+                                {
+                                }
+                            }));
+                            Thread.Sleep(200);
+                        }
                     }
                     catch (Exception)
                     {
@@ -269,35 +284,6 @@ namespace Sorter
                 }
             });
         }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            Task.Run(() =>
-            {
-                //timer1.Enabled = false;
-                //UpdatePositionManualResetEvent.WaitOne();
-                //label100.BeginInvoke((MethodInvoker)(() =>
-                //{
-                //    label100.Text = mc.GetPosition(motorX).ToString();
-                //}));
-                //labelFollowingError.BeginInvoke((MethodInvoker)(() =>
-                //{
-                //    labelFollowingError.Text = mc.GetPosition(motorY).ToString();
-                //}));
-
-                //if (panel6.Visible)
-                //{
-                //    label4.Text = mc.GetPosition(motorRLoad).ToString();
-                //}
-                //if (panel7.Visible)
-                //{
-                //    label5.Text = mc.GetPosition(motorRUnload).ToString();
-                //}
-                Thread.Sleep(100);
-            });
-
-        } 
-        #endregion
 
         private void radioButtonLStation_CheckedChanged(object sender, EventArgs e)
         {
@@ -315,8 +301,6 @@ namespace Sorter
             switch (station)
             {
                 case StationId.V:
-                    panel_RLoad2.Visible = true;
-                    panel_RUnload2.Visible = true;
                     _manualMotorX = _cc.VRobot.MotorX;
                     _manualMotorY = _cc.VRobot.MotorY;
                     _manualMotorZ = _cc.VRobot.MotorZ;
@@ -325,26 +309,20 @@ namespace Sorter
                     break;
 
                 case StationId.L:
-                    panel_RLoad2.Visible = true;
-                    panel_RUnload2.Visible = false;
                     _manualMotorX = _cc.LRobot.MotorX;
                     _manualMotorY = _cc.LRobot.MotorY;
                     _manualMotorZ = _cc.LRobot.MotorZ;
                     _manualMotorRLoad = _cc.LRobot.MotorA;
                     break;
 
-                case StationId.GlueCurve:
-                    panel_RLoad2.Visible = false;
-                    panel_RUnload2.Visible = false;
-                    _manualMotorX = _cc.GlueCurveRobot.MotorX;
-                    _manualMotorY = _cc.GlueCurveRobot.MotorY;
-                    _manualMotorZ = _cc.GlueCurveRobot.MotorZ;
-                    _manualMotorRLoad = _cc.GlueCurveRobot.MotorA;
+                case StationId.GlueLine:
+                    _manualMotorX = _cc.GlueLineRobot.MotorX;
+                    _manualMotorY = _cc.GlueLineRobot.MotorY;
+                    _manualMotorZ = _cc.GlueLineRobot.MotorZ;
+                    _manualMotorRLoad = _cc.GlueLineRobot.MotorA;
                     break;
 
                 case StationId.GluePoint:
-                    panel_RLoad2.Visible = false;
-                    panel_RUnload2.Visible = false;
                     _manualMotorX = _cc.GluePointRobot.MotorX;
                     _manualMotorY = _cc.GluePointRobot.MotorY;
                     _manualMotorZ = _cc.GluePointRobot.MotorZ;
@@ -385,7 +363,7 @@ namespace Sorter
             {
                 return;
             }
-            _selectedStation = StationId.GlueCurve;
+            _selectedStation = StationId.GlueLine;
             SelectRobotStation(_selectedStation);
         }
 
@@ -397,7 +375,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -409,7 +387,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -421,7 +399,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -433,7 +411,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -445,7 +423,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -457,7 +435,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -470,11 +448,7 @@ namespace Sorter
         {
             double homeSpeed = 10;
             buttonStart.Enabled = false;
-            if (checkBoxFastHome.Checked)
-            {
-                homeSpeed = 30;
-            }
-            //buttonStart.Enabled = false;
+            buttonStart.Text = "Homing...";
             var result = await Task.Run(() =>
             {
                 try
@@ -484,18 +458,20 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    Show(ex);
                     return false;
-                } });
+                }
+            });
 
             if (result)
             {
+                buttonStart.Text = "Home complete";
                 buttonStart.BackColor = Color.LightGreen;
             }
             else
             {
                 buttonStart.Enabled = true;
-                buttonStart.BackColor = Color.Red;
+                buttonStart.Text = "Start";
             }
         }
 
@@ -507,7 +483,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -519,7 +495,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -531,7 +507,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -543,7 +519,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -555,7 +531,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -567,55 +543,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void button_RLoadCW_MouseDown(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                _manualMotion.Jog(_manualMotorRLoad, _manualSpeed, MoveDirection.Positive);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void button_RLoadCW_MouseUp(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                _manualMotion.Stop(_manualMotorRLoad);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void button_RLoadCCW_MouseDown(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                _manualMotion.Jog(_manualMotorRLoad, _manualSpeed, MoveDirection.Negative);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void button_RLoadCCW_MouseUp(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                _manualMotion.Stop(_manualMotorRLoad);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -650,7 +578,7 @@ namespace Sorter
             catch (Exception ex)
             {
 
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -664,7 +592,7 @@ namespace Sorter
             catch (Exception ex)
             {
 
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -678,7 +606,7 @@ namespace Sorter
             catch (Exception ex)
             {
 
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -692,7 +620,7 @@ namespace Sorter
             catch (Exception ex)
             {
 
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -706,7 +634,7 @@ namespace Sorter
             catch (Exception ex)
             {
 
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -729,7 +657,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -743,7 +671,7 @@ namespace Sorter
             catch (Exception ex)
             {
 
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -757,7 +685,7 @@ namespace Sorter
             catch (Exception ex)
             {
 
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -771,7 +699,7 @@ namespace Sorter
             catch (Exception ex)
             {
 
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -785,7 +713,7 @@ namespace Sorter
             catch (Exception ex)
             {
 
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -802,8 +730,8 @@ namespace Sorter
                     case StationId.L:
                         capId = CaptureId.LDevelopment;
                         break;
-                    case StationId.GlueCurve:
-                        capId = CaptureId.GlueCurveDevelopment;
+                    case StationId.GlueLine:
+                        capId = CaptureId.GlueLineDevelopment;
                         break;
                     case StationId.GluePoint:
                         capId = CaptureId.GluePointDevelopment;
@@ -818,82 +746,25 @@ namespace Sorter
                     XPosition = _manualMotion.GetPosition(_manualMotorX),
                     YPosition = _manualMotion.GetPosition(_manualMotorY),
                     ZPosition = _manualMotion.GetPosition(_manualMotorZ),
-                    Tag = textBoxCaptureNote.Text,
+                    Remarks = textBoxCaptureNote.Text,
                 };
 
                 _cc.DevelopPoints.Add(newCap);
-                comboBoxReadDevPoints.Items.Add(newCap.Tag);
-                
+                comboBoxReadDevPoints.Items.Add(newCap.Remarks);
+
                 var str = Helper.ConvertToJsonString(_cc.DevelopPoints);
 
-                Helper.SaveDevelopmentPoints(str);
+                Helper.WriteFile(str, Properties.Settings.Default.DevelopmentPositions);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void buttonReadActPos_Click(object sender, EventArgs e)
-        {
-            textBox_MoveToTargetX.Text = labelFeedbackPosX.Text;
-            textBox_MoveToTargetY.Text = labelFeedbackPosY.Text;
-            textBox_MoveToTargetZ.Text = labelFeedbackPosZ.Text;
-            textBox_MoveToTargetRLoad.Text = labelFeedbackPosRLoad.Text;
-            textBox_MoveToTargetRUnload.Text = labelFeedbackPosRUnload.Text;
-        }
-
-        private void button_RUnloadCW_MouseDown(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                _manualMotion.Jog(_manualMotorRUnload, _manualSpeed, MoveDirection.Positive);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void button_RUnloadCW_MouseUp(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                _manualMotion.Stop(_manualMotorRUnload);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void button_RUnloadCCW_MouseDown(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                _manualMotion.Jog(_manualMotorRUnload, _manualSpeed, MoveDirection.Negative);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void button_RUnloadCCW_MouseUp(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                _manualMotion.Stop(_manualMotorRUnload);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
         private void buttonVLoadLockTray_Click(object sender, EventArgs e)
         {
-           
+
 
             try
             {
@@ -901,47 +772,47 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
 
         }
 
         private void buttonVLoadUnlockTray_Click(object sender, EventArgs e)
         {
-          
+
             try
             {
                 _cc.VRobot.UnlockTray(ActionType.Load);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
         private void buttonVUnloadLockTray_Click(object sender, EventArgs e)
         {
-          
+
             try
             {
                 _cc.VRobot.LockTray(ActionType.Unload);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
         private void buttonVUnloadUnlockTray_Click(object sender, EventArgs e)
         {
-          
+
             try
             {
                 _cc.VRobot.UnlockTray(ActionType.Unload);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -967,7 +838,7 @@ namespace Sorter
                     case StationId.L:
                         _cc.LRobot.Sucker(VacuumState.On);
                         break;
-                    case StationId.GlueCurve:
+                    case StationId.GlueLine:
                     case StationId.GluePoint:
                     default:
                         throw new Exception("No sucker");
@@ -975,7 +846,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1010,8 +881,9 @@ namespace Sorter
                         break;
                     case StationId.L:
                         _cc.LRobot.Sucker(VacuumState.Off);
+                        _cc.LRobot.HasPartOnLoadSucker = false;
                         break;
-                    case StationId.GlueCurve:
+                    case StationId.GlueLine:
                     case StationId.GluePoint:
                     default:
                         throw new Exception("No sucker");
@@ -1019,7 +891,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1029,12 +901,13 @@ namespace Sorter
             {
                 foreach (var mtr in _cc.Mc.Motors)
                 {
-                    _cc.Mc.ClearFault(mtr);
+                    _cc.Mc.Enable(mtr);
+                    _cc.Mc.ClearFault(mtr);                   
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1047,7 +920,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1059,7 +932,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1071,7 +944,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1085,7 +958,7 @@ namespace Sorter
                         _cc.VRobot.CylinderHead(HeadCylinderState.Up, _selectedSuckerVacuum);
                         break;
                     case StationId.L:
-                    case StationId.GlueCurve:
+                    case StationId.GlueLine:
                     case StationId.GluePoint:
                     default:
                         throw new Exception("No cyliner");
@@ -1093,7 +966,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1107,7 +980,7 @@ namespace Sorter
                         _cc.VRobot.CylinderHead(HeadCylinderState.Down, _selectedSuckerVacuum);
                         break;
                     case StationId.L:
-                    case StationId.GlueCurve:
+                    case StationId.GlueLine:
                     case StationId.GluePoint:
                     default:
                         throw new Exception("No cyliner");
@@ -1115,7 +988,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1123,7 +996,33 @@ namespace Sorter
         {
             try
             {
-                _visionResult = _cc.VRobot.GetVisionResult(_selectedCapturePosition);
+                switch (_selectedStation)
+                {
+                    case StationId.V:
+                        _visionResult = _cc.VRobot.GetVisionResult(_selectedCapturePosition);
+                        break;
+                    case StationId.GluePoint:
+                        //_visionResult = _cc.GluePointRobot.GetVisionResult(_selectedCapturePosition);
+                        break;
+                    case StationId.GlueLine:
+                        _visionResult = _cc.GlueLineRobot.GetVisionResult(_selectedCapturePosition);
+                        break;
+                    case StationId.L:
+                        _visionResult = _cc.LRobot.GetVisionResult(_selectedCapturePosition);
+                        break;
+                    case StationId.Reserved:
+                        break;
+                    case StationId.UV:
+                        break;
+                    default:
+                        break;
+                }
+
+                textBox_MoveToTargetX.Text = _visionResult.X.ToString();
+                textBox_MoveToTargetY.Text = _visionResult.Y.ToString();
+                textBox_MoveToTargetZ.Text = _visionResult.Z.ToString();
+                textBox_MoveToTargetRLoad.Text = _visionResult.A.ToString();
+                textBox_MoveToTargetRUnload.Text = _visionResult.A.ToString();
 
                 labelVisionTarget.Text = " X:" + _visionResult.X + Environment.NewLine +
                " Y:" + _visionResult.Y + Environment.NewLine +
@@ -1132,34 +1031,27 @@ namespace Sorter
                " deltaX1:" + _visionResult.XOffset1 + Environment.NewLine +
                " deltaY1:" + _visionResult.YOffset1 + Environment.NewLine +
                " deltaX2:" + _visionResult.XOffset2 + Environment.NewLine +
-               " deltaY2:" + _visionResult.YOffset2 + Environment.NewLine ;
-
-                MessageBox.Show("Can go to vision target now...");
+               " deltaY2:" + _visionResult.YOffset2 + Environment.NewLine;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
         private async void buttonDemo_Click(object sender, EventArgs e)
         {
-            buttonDemo.Enabled = false;
+            buttonStartProduction.Enabled = false;
+            buttonStartProduction.Text = "Running...";
 
-            _cc.LRobot.VisionSimulateMode = checkBoxVisionSimulate.Checked;
-            _cc.LRobot.CheckVacuumValue = checkBoxVaccumSimulate.Checked;
-
-            _cc.VRobot.VisionSimulateMode = checkBoxVisionSimulate.Checked;
-            _cc.VRobot.CheckVacuumValue = checkBoxVaccumSimulate.Checked;
-
-            _cc.KeepThisShitRunning = checkBoxKeepRunning.Checked;
-
-            buttonDemo.Text = "Running...";
-            var task = _cc.Work();
+            _cc.KeepThisShitRunning = true;
+            _cc.VRobot.StopProduction = false;
+            var task = _cc.WorkAsync();
             await task;
-            CheckTaskResult(task);
+            ShowTaskResult(task);
 
-            buttonDemo.Enabled = true;
+            buttonStartProduction.Text = "Start";
+            buttonStartProduction.Enabled = true;
         }
 
         private void trackBarDemoSpeed_ValueChanged(object sender, EventArgs e)
@@ -1177,7 +1069,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1189,7 +1081,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1201,7 +1093,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1213,7 +1105,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1225,7 +1117,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1237,7 +1129,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1249,7 +1141,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1261,7 +1153,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1273,7 +1165,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1285,7 +1177,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1297,7 +1189,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1309,7 +1201,7 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
@@ -1326,50 +1218,14 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void buttonMoveRobot_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                _cc.SetSpeed(_manualSpeed);
-                Pose pose = new Pose()
-                {
-                    X = Convert.ToDouble(textBox_MoveToTargetX.Text),
-                    Y = Convert.ToDouble(textBox_MoveToTargetY.Text),
-                    Z = Convert.ToDouble(textBox_MoveToTargetZ.Text),
-                    A = Convert.ToDouble(textBox_MoveToTargetRLoad.Text),
-                    RUnloadAngle = Convert.ToDouble(textBox_MoveToTargetRUnload.Text),
-                };
-
-                switch (_selectedStation)
-                {
-                    case StationId.V:
-                        _cc.VRobot.MoveToTarget(pose, MoveModeAMotor.Abs, _selectedSuckerVacuum);
-                        break;
-                    case StationId.L:
-                        _cc.LRobot.MoveToTarget(pose, MoveModeAMotor.Abs, ActionType.Load);
-                        break;
-                    case StationId.GlueCurve:
-                        break;
-                    case StationId.GluePoint:
-                        break;
-                    default:
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
         private CapturePosition GetCapturePosition(CaptureId id)
         {
-            return  Helper.GetCapturePosition(_cc.CapturePositions,
-                _selectedCaptureId, textBoxCaptureTag.Text);
+            return Helper.GetCapturePosition(_cc.CapturePositions,
+                _selectedCaptureId);
         }
 
         private async void buttonMoveToCapture_Click(object sender, EventArgs e)
@@ -1379,37 +1235,49 @@ namespace Sorter
             {
                 try
                 {
-                    _selectedCapturePosition = GetCapturePosition(CaptureId.LTrayPickTop);
-
                     switch (_selectedCaptureId)
                     {
                         case CaptureId.LTrayPickTop:
-                            _cc.LRobot.MoveToCapture(_selectedCapturePosition);
-                            break;
                         case CaptureId.LLoadCompensationBottom:
-                            _cc.LRobot.MoveToCapture(_selectedCapturePosition);
-                            break;
                         case CaptureId.LLoadHolderTop:
                             _cc.LRobot.MoveToCapture(_selectedCapturePosition);
+                            radioButtonLStation.Checked = true;
                             break;
+
                         case CaptureId.VTrayPickTop:
-                            _cc.VRobot.MoveToCapture(_selectedCapturePosition);
-                            break;
                         case CaptureId.VLoadCompensationBottom:
-                            _cc.VRobot.MoveToCapture(_selectedCapturePosition);
-                            break;
                         case CaptureId.VLoadHolderTop:
-                            _cc.VRobot.MoveToCapture(_selectedCapturePosition);
-                            break;
                         case CaptureId.VUnloadHolderTop:
-                            _cc.VRobot.MoveToCapture(_selectedCapturePosition);
-                            break;
                         case CaptureId.VUnloadCompensationBottom:
-                            _cc.VRobot.MoveToCapture(_selectedCapturePosition);
-                            break;
                         case CaptureId.VTrayPlaceTop:
                             _cc.VRobot.MoveToCapture(_selectedCapturePosition);
+                            radioButtonVStation.Checked = true;
                             break;
+
+                        case CaptureId.GlueLineChina:
+                        case CaptureId.GlueLineBeforeGlue:
+                        case CaptureId.GlueLineAfterGlue:
+                        case CaptureId.GlueLineLaserOnPressureSensor:
+                        case CaptureId.GlueLineNeedleOnPressureSensor:
+                        case CaptureId.GlueLineLaserOnCalibrationChina:
+                        case CaptureId.GlueLineCleanNeedleShot:
+                        case CaptureId.GlueLineNeedleOnCalibrationChina:
+                            _cc.GlueLineRobot.MoveToCapture(_selectedCapturePosition);
+                            radioButtonGlueLineStation.Checked = true;
+                            break;
+
+                        case CaptureId.GluePointChina:
+                        case CaptureId.GluePointBeforeGlue:
+                        case CaptureId.GluePointAfterGlue:
+                        case CaptureId.GluePointLaserOnCalibrationChina:
+                        case CaptureId.GluePointCleanNeedleShot:
+                        case CaptureId.GluePointNeedleOnCalibrationChina:
+                        case CaptureId.GluePointNeedleOnPressureSensor:
+                        case CaptureId.GluePointLaserOnPressureSensor:
+                            _cc.GluePointRobot.MoveToCapture(_selectedCapturePosition);
+                            radioButtonGluePointStation.Checked = true;
+                            break;
+
                         default:
                             throw new NotImplementedException();
                     }
@@ -1419,39 +1287,37 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    Show(ex);
                     return false;
                 }
             });
             buttonMoveToCapture.Enabled = true;
         }
 
-        private async void buttonStartupLoad_Click(object sender, EventArgs e)
-        {
-            buttonStartupLoad.Enabled = false;
-
-            _cc.LRobot.VisionSimulateMode = checkBoxVisionSimulate.Checked;
-            _cc.LRobot.CheckVacuumValue = checkBoxVaccumSimulate.Checked;
-
-            _cc.VRobot.VisionSimulateMode = checkBoxVisionSimulate.Checked;
-            _cc.VRobot.CheckVacuumValue = checkBoxVaccumSimulate.Checked;
-
-            var task =  _cc.StartupLoadAsync();
-            await task;
-            CheckTaskResult(task);
-            if (checkBoxContinueWithRunning.Checked)
-            {
-                _cc.KeepThisShitRunning = checkBoxKeepRunning.Checked;
-                task = _cc.Work();
-                await task;               
-            }
-            CheckTaskResult(task);
-            buttonStartupLoad.Enabled = true;
-        }
-
         private void comboBoxSelectCapturePosition_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _selectedCaptureId = (CaptureId)comboBoxSelectCapturePosition.SelectedItem;
+            try
+            {
+                _selectedCaptureId = (CaptureId)comboBoxSelectCapturePosition.SelectedItem;
+
+                var pose = GetCapturePosition(_selectedCaptureId);
+                _selectedCapturePosition = pose;
+
+                textBox_MoveToTargetX.Text = pose.XPosition + "";
+                textBox_MoveToTargetY.Text = pose.YPosition + "";
+                textBox_MoveToTargetZ.Text = pose.ZPosition + "";
+                textBox_MoveToTargetRLoad.Text = pose.Angle + "";
+                textBox_MoveToTargetRUnload.Text = pose.Angle + "";
+
+                labelCapturePosData.Text = " X:" + pose.XPosition + Environment.NewLine +
+              " Y:" + pose.YPosition + Environment.NewLine +
+              " Z:" + pose.ZPosition + Environment.NewLine +
+              " R:" + pose.Angle + Environment.NewLine;
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
         }
 
         private async void buttonMoveToVisionTarget_Click(object sender, EventArgs e)
@@ -1464,31 +1330,19 @@ namespace Sorter
                     switch (_selectedCaptureId)
                     {
                         case CaptureId.LTrayPickTop:
-                            _cc.LRobot.MoveToTarget(_visionResult, MoveModeAMotor.Abs, ActionType.Load);
-                            break;
                         case CaptureId.LLoadCompensationBottom:
-                            _cc.LRobot.MoveToTarget(_visionResult, MoveModeAMotor.Abs, ActionType.Load);
-                            break;
                         case CaptureId.LLoadHolderTop:
-                            _cc.LRobot.MoveToTarget(_visionResult, MoveModeAMotor.Abs, ActionType.Load);
+                            _cc.LRobot.MoveToTarget(_visionResult, 
+                                MoveModeAMotor.Relative, ActionType.Load);
                             break;
                         case CaptureId.VTrayPickTop:
-                            _cc.VRobot.MoveToTarget(_visionResult, MoveModeAMotor.Abs, _selectedVStationActionType);
-                            break;
                         case CaptureId.VLoadCompensationBottom:
-                            _cc.VRobot.MoveToTarget(_visionResult, MoveModeAMotor.Abs, _selectedVStationActionType);
-                            break;
-                        case CaptureId.VLoadHolderTop:
-                            _cc.VRobot.MoveToTarget(_visionResult, MoveModeAMotor.Abs, _selectedVStationActionType);
-                            break;
+                        case CaptureId.VLoadHolderTop:         
                         case CaptureId.VUnloadHolderTop:
-                            _cc.VRobot.MoveToTarget(_visionResult, MoveModeAMotor.Abs, _selectedVStationActionType);
-                            break;
                         case CaptureId.VUnloadCompensationBottom:
-                            _cc.VRobot.MoveToTarget(_visionResult, MoveModeAMotor.Abs, _selectedVStationActionType);
-                            break;
                         case CaptureId.VTrayPlaceTop:
-                            _cc.VRobot.MoveToTarget(_visionResult, MoveModeAMotor.Abs, _selectedVStationActionType);
+                            _cc.VRobot.MoveToTarget(_visionResult, 
+                                MoveModeAMotor.Relative, _selectedSuckerVacuum);
                             break;
                         default:
                             throw new NotImplementedException();
@@ -1496,7 +1350,7 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    Show(ex);
                 }
             });
         }
@@ -1509,176 +1363,62 @@ namespace Sorter
 
             var task = _cc.VRobot.FindBaseUnloadPositionAsync();
             await task;
-            CheckTaskResult(task);
+            ShowTaskResult(task);
 
             button.Text = task.Result.Message;
             button.Enabled = true;
-        }
-
-        private async void buttonGoToUnloadTray_Click(object sender, EventArgs e)
-        {
-            await Task.Run(async () =>
-            {
-                try
-                {
-                    await Task.Delay(1);
-                    int i = 12;
-                    while (i > 0)
-                    {
-                        i--;
-                        _cc.VRobot.Unload(_cc.VRobot.UnloadTray.CurrentPart);
-                    }
-                   
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            });
-        }
-
-        private void button1_Click_1(object sender, EventArgs e)
-        {
-
         }
 
         private async void buttonLStationTestRun_Click(object sender, EventArgs e)
         {
-            _cc.UvBottomDelay = Convert.ToInt32(textBoxUvBottomDelay.Text);
             Button button = (Button)sender;
             button.Enabled = false;
-            button.Text = "Running test routine.";
 
-            var task = _cc.LRobot.LoadAsync(_cc.LRobot.LoadTray.CurrentPart, _cc.UvBottomDelay);
-            await task;
-            CheckTaskResult(task);
-
-            button.Text = task.Result.Message;
-            button.Enabled = true;
-        }
-
-        private async void buttonVStationTestRun_Click(object sender, EventArgs e)
-        {
-            Button button = (Button)sender;
-            button.Enabled = false;
-            button.Text = "Running test routine.";
-
-            Task<WaitBlock> task = new Task<WaitBlock>(() => { return null; });
-
-            switch (_selectedVStationActionType)
+            try
             {
-                case ActionType.None:
-                    break;
-                    
-                case ActionType.Load:
-                    task = _cc.VRobot.LoadAsync(_cc.VRobot.LoadTray.CurrentPart);
-                    break;
+                var temp = _cc.LRobot.CurrentCycleId;
+                _cc.LRobot.SetForTest();
+                var task = _cc.LRobot.WorkAsync(temp+1);
+                await task;
+                ShowTaskResult(task);
+                _cc.LRobot.CurrentCycleId = temp;
 
-                case ActionType.Unload:
-                    task = _cc.VRobot.UnloadAsync(_cc.VRobot.UnloadTray.CurrentPart);
-                    break;
+                _cc.WorkTable.Sucker(FixtureId.L, VacuumState.Off, VacuumArea.Center);
+                _cc.WorkTable.Sucker(FixtureId.L, VacuumState.Off, VacuumArea.Circle);
 
-                case ActionType.UnloadAndLoad:
-                    task = _cc.VRobot.UnloadAndLoadAsync(_cc.VRobot.UnloadTray.CurrentPart, 
-                        _cc.VRobot.LoadTray.CurrentPart);
-                    break;
-                case ActionType.GluePoint:
-                    break;
-                case ActionType.GlueCurve:
-                    break;
-                case ActionType.PrepareV:
-                    task = _cc.VRobot.PrepareAsync();
-                    break;
-                default:
-                    break;
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
             }
 
-            await task;
-            CheckTaskResult(task);
-
-            button.Text = task.Result.Message;
             button.Enabled = true;
-        }
-
-        private async void buttonGluePointTest_Click(object sender, EventArgs e)
-        {
-            buttonGluePointTest.Enabled = false;
-            await Task.Run(async () =>
-            {
-                try
-                {
-                    var taskTest = _cc.GluePointStationTestRun();
-                    await taskTest;
-
-                    if (taskTest.Result.Code != 0)
-                    {
-                        var msg = "";
-                        msg += taskTest.Result.Code.ToString() + taskTest.Result.Message.ToString();
-                        throw new Exception(msg);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            });
-
-            buttonGluePointTest.Enabled = true;
         }
 
         private async void buttonShotGlue_Click(object sender, EventArgs e)
         {
             buttonShotGlue.Enabled = false;
-            var task = _cc.GlueCurveRobot.ShotGlueAsync(Convert.ToUInt16(textBoxShotGlueDelay.Text));
-            await task;
-            CheckTaskResult(task);
+            switch (_selectedGlueStation)
+            {
+                case StationId.V:
+                case StationId.L:
+                    break;
+                case StationId.GluePoint:
+                    var taskGL = _cc.GluePointRobot.ShotGlueAsync(Convert.ToUInt16(textBoxShotGlueDelay.Text));
+                    await taskGL;
+                    ShowTaskResult(taskGL);
+                    break;
 
-            //await Task.Run(() =>
-            //{
-            //    try
-            //    {
-            //        switch (_selectedStation)
-            //        {
-            //            case StationId.V:
-            //                break;
-            //            case StationId.L:
-            //                break;
-            //            case StationId.GlueCurve:
-            //                _cc.GlueCurveRobot.ShotGlue(Convert.ToUInt16(textBoxShotGlueDelay.Text));
-            //                break;
-            //            case StationId.GluePoint:
-                            
-            //                break;
-            //            default:
-            //                break;
-            //        }
-                  
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        MessageBox.Show(ex.Message);
-            //    }
-            //});
+                case StationId.GlueLine:
+                    var taskGC = _cc.GlueLineRobot.ShotGlueAsync(Convert.ToUInt16(textBoxShotGlueDelay.Text));
+                    await taskGC;
+                    ShowTaskResult(taskGC);
+                    break;
+                default:
+                    break;
+            }
 
             buttonShotGlue.Enabled = true;
-        }
-
-        private async void ButtonTemplate(object sender, EventArgs e)
-        {
-            Button button = (Button)sender;
-            button.Enabled = false;
-            await Task.Run(() =>
-            {
-                try
-                {
-
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            });
-            button.Enabled = true;
         }
 
         private async void buttonGetLaserHeight_Click(object sender, EventArgs e)
@@ -1690,17 +1430,17 @@ namespace Sorter
             {
                 try
                 {
-                    switch (_selectedStation)
+                    switch (_selectedGlueStation)
                     {
                         case StationId.V:
                             break;
                         case StationId.L:
                             break;
-                        case StationId.GlueCurve:
-                            value = _cc.GlueCurveRobot.GetLaserHeightValue();
+                        case StationId.GlueLine:
+                            value = _cc.GlueLineRobot.GetLaserHeightValue();
                             break;
                         case StationId.GluePoint:
-                            value = _cc.GluePointRobot.GetLaserHeight();
+                            value = _cc.GluePointRobot.GetLaserHeightValue();
                             break;
                         default:
                             break;
@@ -1708,7 +1448,7 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    Show(ex);
                 }
             }));
             labelLaserValue.Text = value.ToString();
@@ -1720,31 +1460,32 @@ namespace Sorter
             Button button = (Button)sender;
             button.Enabled = false;
             object obj = null;
-            await Task.Run(() =>
+            try
             {
-                try
+                switch (_selectedStation)
                 {
-                    switch (_selectedStation)
-                    {
-                        case StationId.V:
-                            break;
-                        case StationId.L:
-                            break;
-                        case StationId.GlueCurve:
-                            //obj = _cc.GlueCurveRobot.GetWorkPoses();
-                            break;
-                        case StationId.GluePoint:
-                            obj = _cc.GluePointRobot.GetWorkPoses();
-                            break;
-                        default:
-                            break;
-                    }
+                    case StationId.V:
+                        break;
+                    case StationId.L:
+                        break;
+                    case StationId.GlueLine:
+                        var task = _cc.GlueLineRobot.GetVisionResultsForLaserAndWorkAsync();
+                        await task;
+                        ShowTaskResult(task);
+                        break;
+                    case StationId.GluePoint:
+                        //task = _cc.GluePointRobot.GetVisionResultsForLaserAndWorkAsync();
+                        //await task;
+                        //ShowTaskResult(task);
+                        break;
+                    default:
+                        break;
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            });
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
 
             labelGlueWorkPointsInfo.Text = Helper.ConvertToJsonString(obj);
             button.Enabled = true;
@@ -1755,24 +1496,30 @@ namespace Sorter
             Button button = (Button)sender;
             button.Enabled = false;
             var str = comboBoxReadDevPoints.SelectedItem.ToString();
-            var targt = _cc.GetDevelopPoints(str);
+           
 
             await Task.Run(() =>
             {
                 try
                 {
-                    
+                    var targt = _cc.GetDevelopPoints(str);
+
                     switch (targt.CaptureId)
                     {
                         case CaptureId.GluePointDevelopment:
                             _cc.GluePointRobot.MoveToCapture(targt);
                             break;
-                        case CaptureId.GlueCurveDevelopment:
-                            _cc.GlueCurveRobot.MoveToCapture(targt);
+
+                        case CaptureId.GlueLineDevelopment:
+                            _cc.GlueLineRobot.MoveToCapture(targt);
                             break;
+
                         case CaptureId.VDevelopment:
+                            _cc.VRobot.MoveToCapture(targt);
                             break;
+
                         case CaptureId.LDevelopment:
+                            _cc.LRobot.MoveToCapture(targt);
                             break;
 
                         default:
@@ -1781,7 +1528,7 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    Show(ex);
                 }
             });
             button.Enabled = true;
@@ -1802,41 +1549,14 @@ namespace Sorter
 
             arc.CalculateCenterOffset();
 
-            var task = _cc.GlueCurveRobot.DrawArcAsync(arc);
+            var task = _cc.GlueLineRobot.DrawArcAsync(arc);
             await task;
-            CheckTaskResult(task);
+            ShowTaskResult(task);
 
             button.Enabled = true;
         }
 
-        private async void buttonDrawPoints_Click(object sender, EventArgs e)
-        {
-            Button button = (Button)sender;
-            button.Enabled = false;
-            await Task.Run(() =>
-            {
-                try
-                {
-                    //GluePosition[] points = new GluePosition[5];
-
-                    //points[0] = new GluePosition() { X = -10, Y = 0 };
-                    //points[0] = new GluePosition() { X = -10, Y = 10 };
-                    //points[1] = new GluePosition() { X = -20, Y = 10 };
-                    //points[2] = new GluePosition() { X = -20, Y = 0 };
-                    //points[3] = new GluePosition() { X = -10, Y = 0 };
-                    //points[4] = new GluePosition() { X = -10, Y = 0 };
-
-                    //_cc.GluePointRobot.Work(points);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            });
-            button.Enabled = true;
-        }
-
-        private void CheckTaskResult(Task<WaitBlock> waitBlock)
+        private void ShowTaskResult(Task<WaitBlock> waitBlock)
         {
             try
             {
@@ -1844,64 +1564,24 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
-
-        private void radioButtonVStationLoad_CheckedChanged(object sender, EventArgs e)
-        {
-            var radio = (RadioButton)sender;
-            if (!radio.Checked)
-            {
-                return;
-            }
-            _selectedVStationActionType = ActionType.Load;
-        }
-
-        private void radioButtonVStationUnload_CheckedChanged(object sender, EventArgs e)
-        {
-            var radio = (RadioButton)sender;
-            if (!radio.Checked)
-            {
-                return;
-            }
-            _selectedVStationActionType = ActionType.Unload;
-        }
-
-        private void radioButtonVStationUnloadAndLoad_CheckedChanged(object sender, EventArgs e)
-        {
-            var radio = (RadioButton)sender;
-            if (!radio.Checked)
-            {
-                return;
-            }
-            _selectedVStationActionType = ActionType.UnloadAndLoad;
-        }
-
-        private void radioButtonVStationPrepare1_CheckedChanged(object sender, EventArgs e)
-        {
-            var radio = (RadioButton)sender;
-            if (!radio.Checked)
-            {
-                return;
-            }
-            _selectedVStationActionType = ActionType.PrepareV;
-        }
-
+   
         private void buttonCloseGlue_Click(object sender, EventArgs e)
         {
             Button button = (Button)sender;
             button.Enabled = false;
             try
             {
-                switch (_selectedStation)
+                switch (_selectedGlueStation)
                 {
                     case StationId.V:
                         break;
                     case StationId.L:
                         break;
-                    case StationId.GlueCurve:
-                        _cc.GlueCurveRobot.CloseGlue();
+                    case StationId.GlueLine:
+                        _cc.GlueLineRobot.CloseGlue();
                         break;
                     case StationId.GluePoint:
                         _cc.GluePointRobot.CloseGlue();
@@ -1912,62 +1592,480 @@ namespace Sorter
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
             button.Enabled = true;
         }
 
-        private async void buttonVUnloadAndLoad_Click(object sender, EventArgs e)
-        {
-            Button button = (Button)sender;
-            button.Enabled = false;
-            button.Text = "Running test routine.";
-
-            var task = _cc.VPrepareUnloadAndLoadAndPlace();
-            await task;
-            CheckTaskResult(task);
-
-            button.Text = task.Result.Message;
-            button.Enabled = true;
-        }
-
-        private void buttonLockAllTray_Click(object sender, EventArgs e)
+        private async void buttonLockAllTray_Click(object sender, EventArgs e)
         {
             try
             {
-                _cc.LRobot.LockTray();
-                _cc.VRobot.LockTray(ActionType.Load);
-                _cc.VRobot.LockTray(ActionType.Unload);
+                Task<WaitBlock>[] blocks = new Task<WaitBlock>[3];
+                blocks[0] = _cc.LRobot.LockTrayAsync();
+                blocks[1] = _cc.VRobot.LockTrayAsync(ActionType.Load);
+                blocks[2] = _cc.VRobot.LockTrayAsync(ActionType.Unload);
+
+                await blocks[0];
+                await blocks[1];
+                await blocks[2];
+                string errorInfo = string.Empty;
+                foreach (var block in blocks)
+                {
+                    if (block.Result.Code != ErrorCode.Sucessful)
+                    {
+                        errorInfo += "Error Code: " + block.Result.Code +
+                            block.Result.Message + Environment.NewLine;
+                    }
+                }
+
+                if (errorInfo != string.Empty)
+                {
+                    throw new Exception(errorInfo);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Show(ex);
             }
         }
 
-        private void buttonPauseDemo_Click(object sender, EventArgs e)
+        private async void buttonGetPressureSensor_Click(object sender, EventArgs e)
         {
-            if (_cc._runningState == RunningState.Start)
+            Button button = (Button)sender;
+            button.Enabled = false;
+            double value = double.NaN;
+            await Task.Run((Action)(() =>
             {
-                _cc.VUnloadTrayFullManualResetEvent.Reset();
-            }
-            else
+                try
+                {
+                    switch (_selectedGlueStation)
+                    {
+                        case StationId.V:
+                            break;
+                        case StationId.L:
+                            break;
+                        case StationId.GlueLine:
+                            value = _cc.GlueLineRobot.GetPressureValue();
+                            break;
+                        case StationId.GluePoint:
+                            value = _cc.GluePointRobot.GetPressureValue();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Show(ex);
+                }
+            }));
+            labelPressureValue.Text = value.ToString();
+            button.Enabled = true;
+        }
+
+        private async void buttonCaptureNeedle_Click(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+            button.Enabled = false;
+            double needleHeight = 0;
+
+            switch (_selectedGlueStation)
             {
-                _cc.VUnloadTrayFullManualResetEvent.Set();
+                case StationId.V:
+                    break;
+                case StationId.L:
+                    break;
+                case StationId.GlueLine:
+                    var task = _cc.GlueLineRobot.FindNeedleHeightAsync();
+                    await task;
+                    ShowTaskResult(task);
+                    needleHeight = _cc.GlueLineRobot.NeedleOnZHeight;
+                    break;
+                case StationId.GluePoint:
+                    task = _cc.GluePointRobot.FindNeedleHeightAsync();
+                    await task;
+                    ShowTaskResult(task);
+                    needleHeight = _cc.GluePointRobot.NeedleOnZHeight;
+                    break;
+                default:
+                    break;
             }
-            
+
+            labelNeedleHeight.Text = needleHeight + "";
+            button.Enabled = true;
         }
 
-        private void buttonSetUvDelay_Click(object sender, EventArgs e)
+        private async void buttonFindLaserReference_Click(object sender, EventArgs e)
         {
-            _cc.UvBottomDelay = Convert.ToInt32(textBoxUvBottomDelay.Text);
-            _cc.UvTopDelay = Convert.ToInt32(textBoxUvTopDelay.Text);           
+            Button button = (Button)sender;
+            button.Enabled = false;
+            double laserRefereceZHeight = 0;
+
+            switch (_selectedGlueStation)
+            {
+                case StationId.V:
+                    break;
+                case StationId.L:
+                    break;
+                case StationId.GlueLine:
+                    var task = _cc.GlueLineRobot.FindLaserRefereceHeightAsync();
+                    await task;
+                    ShowTaskResult(task);
+                    laserRefereceZHeight = _cc.GlueLineRobot.LaserRefereceZHeight;
+                    break;
+
+                case StationId.GluePoint:
+                    task = _cc.GluePointRobot.FindLaserRefereceHeightAsync();
+                    await task;
+                    ShowTaskResult(task);
+                    laserRefereceZHeight = _cc.GluePointRobot.LaserRefereceZHeight;
+                    break;
+                default:
+                    break;
+            }
+
+            labelLaserReference.Text = laserRefereceZHeight + "";
+            button.Enabled = true;
         }
 
-        private async void buttonUVLightTop_Click(object sender, EventArgs e)
+        private void buttonMeasureDistance_Click(object sender, EventArgs e)
         {
-            _cc.UvTopDelay = Convert.ToInt32(textBoxUvDelaySec.Text);
-            await _cc.UVLight.OnAsync(_cc.UvTopDelay);
+            Button button = (Button)sender;
+            button.Enabled = false;
+            double distance = 0;
+
+            switch (_selectedGlueStation)
+            {
+                case StationId.V:
+                    break;
+                case StationId.L:
+                    break;
+                case StationId.GlueLine:
+                    distance = _cc.GlueLineRobot.GetNeedleToWorkSurfaceHeight();
+                    break;
+                case StationId.GluePoint:
+                    distance = _cc.GluePointRobot.GetNeedleToWorkSurfaceHeight();
+                    break;
+                default:
+                    break;
+            }
+
+            labelNeedleToSurfaceDistance.Text = distance + "";
+            button.Enabled = true;
+        }
+
+        private void buttonStopDemo_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.VRobot.StopProduction = true;
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void Show(Exception ex)
+        {
+            MessageBox.Show(ex.Message);
+        }
+
+        private void buttonResetError_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.Reset();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private async void buttonVStationTestRun_Click(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+            button.Enabled = false;
+
+            try
+            {
+                var temp = _cc.VRobot.CurrentCycleId;
+                _cc.VRobot.SetForTest();
+                var task = _cc.VRobot.WorkAsync(temp+1);
+                await task;
+                ShowTaskResult(task);
+                _cc.VRobot.CurrentCycleId = temp;
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+
+            button.Enabled = true;
+        }
+
+        private void buttonUVLightTop_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.WorkTable.UVLightOnAsync(Convert.ToInt32(textBoxUvDelaySec.Text));
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonHeadUvLight_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.LRobot.UVLightOnAsync(Convert.ToInt32(textBoxHeadUvDelay.Text));
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonSaveUserOffset_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var offsets = Helper.ConvertToJsonString(_cc.UserOffsets);
+                Helper.WriteFile(offsets, "UserOffsets.config");
+                MessageBox.Show("OK");
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonHomeStepper_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.Mc.Home(_cc.Mc.MotorLRotateLoad);
+                _cc.Mc.Home(_cc.Mc.MotorVRotateLoad);
+                _cc.Mc.Home(_cc.Mc.MotorVRotateUnload);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonSetFixtureFull_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.WorkTable.SetFixturesFull();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void textBox_MoveInc_Validating(object sender, CancelEventArgs e)
+        {
+            try
+            {
+                double sign = radioButtonMoveIncPositive.Checked ? 1.0 : -1.0;
+                textBox_MoveInc.Text =
+                    (sign * Math.Abs(Convert.ToDouble(textBox_MoveInc.Text))).ToString();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private async void buttonCalibrateNeedle_Click(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+            button.Enabled = false;
+
+            switch (_selectedGlueStation)
+            {
+                case StationId.V:
+                    break;
+                case StationId.L:
+                    break;
+                case StationId.GlueLine:
+                    _cc.GlueLineRobot.NeedleOnZHeightCompensation = 
+                        Convert.ToDouble(textBoxNeedleOnPressureSensorCompensation.Text);
+                    var task = _cc.GlueLineRobot.CalibrateNeedleAsync();
+                    await task;
+                    ShowTaskResult(task);
+                    break;
+                case StationId.GluePoint:
+                    task = _cc.GluePointRobot.CalibrateNeedleAsync();
+                    await task;
+                    ShowTaskResult(task);
+                    break;
+                default:
+                    break;
+            }
+
+            button.Enabled = true;
+        }
+
+        private async void buttonCleanNeedle_Click(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+            button.Enabled = false;
+            try
+            {
+                int delay = Convert.ToInt32(textBoxShotGlueDelay.Text);
+                switch (_selectedGlueStation)
+                {
+                    case StationId.V:
+                        break;
+                    case StationId.L:
+                        break;
+                    case StationId.GlueLine:
+                        var task = _cc.GlueLineRobot.CleanNeedleAsync(delay);
+                        await task;
+                        ShowTaskResult(task);
+                        break;
+
+                    case StationId.GluePoint:
+                        task = _cc.GluePointRobot.CleanNeedleAsync(delay);
+                        await task;
+                        ShowTaskResult(task);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+
+            button.Enabled = true;
+        }
+
+        private void buttonSaveCapturePositions_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var capPos = Helper.ConvertToJsonString(_cc.CapturePositions);
+                Helper.WriteFile(capPos, "CapturePositions.config");
+                MessageBox.Show("OK");
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private async void buttonGlueWorkTest_Click(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+            button.Enabled = false;
+            try
+            {
+                var para = new GlueParameters()
+                {
+                    PreShotTime = Convert.ToInt16(textBoxPreShot.Text),
+                    GlueSpeed = Convert.ToDouble(textBoxGlueSpeed.Text),
+                    GluePeriod = Convert.ToInt16(textBoxGluePeriod.Text),
+                    RiseGlueSpeed = Convert.ToDouble(textBoxGlueRiseSpeed.Text),
+                    RiseGlueHeight = Convert.ToDouble(textBoxGlueRiseHeight.Text),
+                    CloseGlueDelay = Convert.ToInt16(textBoxGlueCloseDelay.Text),
+                    PreClosePercentage = Convert.ToInt16(textBoxGluePreClosePercentage.Text),
+                    GlueHeightOffset = new double[4],
+                    SecondLineLessPreShot = Convert.ToInt16(textBoxSecondLineLessPreShot.Text),
+                };
+
+                para.GlueHeightOffset[0] = Convert.ToDouble(textBoxGlueHeightOffset.Text);
+
+                switch (_selectedGlueStation)
+                {
+                    case StationId.V:
+                        break;
+                    case StationId.L:
+                        break;
+                    case StationId.GlueLine:
+                        _cc.WorkTable.Sucker(FixtureId.GlueLine, VacuumState.On, VacuumArea.Circle);
+                        
+                        var task = _cc.GlueLineRobot.WorkAsync(1, para);
+                        await task;
+                        ShowTaskResult(task);
+                        _cc.WorkTable.Sucker(FixtureId.GlueLine, VacuumState.Off, VacuumArea.Circle);
+                        break;
+
+                    case StationId.GluePoint:
+                        _cc.WorkTable.Sucker(FixtureId.GluePoint, VacuumState.On, VacuumArea.Circle);
+
+                        task = _cc.GluePointRobot.WorkAsync(1, para);
+                        await task;
+                        ShowTaskResult(task);
+                        _cc.WorkTable.Sucker(FixtureId.GluePoint, VacuumState.Off, VacuumArea.Circle);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+
+            button.Enabled = true;
+        }
+
+        private void radioButtonGluePoint_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioButtonGluePoint.Checked)
+            {
+                _selectedGlueStation = StationId.GluePoint;
+            }            
+        }
+
+        private void radioButtonGlueLine_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioButtonGlueLine.Checked)
+            {
+                _selectedGlueStation = StationId.GlueLine;
+            }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            _cc.UserConfigs = new ConfigManager(_cc);
+            _cc.UserConfigs.SaveSettings();
+
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            _cc.UserConfigs.ReadSettings();
+            dataGridViewUserSettings.DataSource = _cc.UserConfigs.Settings;
+        }
+
+        private void buttonStopMotion_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.Mc.StopAllSoft();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonPauseProduction_Click(object sender, EventArgs e)
+        {
+            _cc.KeepThisShitRunning = false;
+            MessageBox.Show("Production pause after finish current cycle.");
         }
     }
 }

@@ -18,7 +18,9 @@ namespace Sorter
         public int ColumneCount { get; set; } = 12;
         public bool IsReady { get; set; }
         public Part CurrentPart { get; set; }
+        public bool HasPartOnHand { get; set; }
         public double TrayHeight { get; set; }
+        public int YIncreaseDirection { get; set; } = 1;
 
         public CapturePosition BaseCapturePosition { get; set; }
 
@@ -43,13 +45,14 @@ namespace Sorter
             double y = part.CapturePos.YPosition;
 
             //Go to next line.
-            if (part.XIndex == ColumneCount-1)
+            if (part.XIndex == ColumneCount - 1)
             {
                 //Go to next line, index change.
                 xIndex = 0; yIndex = yIndex + 1;
 
                 //Coordinate change.
-                x = BaseCapturePosition.XPosition; y = y - YOffset;
+                x = BaseCapturePosition.XPosition;
+                y = y + YIncreaseDirection*YOffset;
             }
 
             if (part.YIndex == RowCount - 1)
@@ -136,8 +139,6 @@ namespace Sorter
 
     public class Part
     {
-        public bool Empty { get; set; }
-
         /// <summary>
         /// Tray hole index.
         /// </summary>

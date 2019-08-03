@@ -5,17 +5,17 @@
     <Setting Name="MotorConfig" Type="System.String" Scope="User">
       <Value Profile="(Default)">Motor.config</Value>
     </Setting>
-    <Setting Name="UserSetting" Type="System.String" Scope="User">
-      <Value Profile="(Default)">UserSetting.config</Value>
+    <Setting Name="LaserReferenceGlueLine" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="PartTray" Type="System.String" Scope="User">
-      <Value Profile="(Default)">PartTray.state</Value>
+    <Setting Name="LaserReferenceGluePoint" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="EmptyTray" Type="System.String" Scope="User">
-      <Value Profile="(Default)">EmptyTray.State</Value>
+    <Setting Name="UserSettings" Type="System.String" Scope="User">
+      <Value Profile="(Default)">UserSettings.config</Value>
     </Setting>
-    <Setting Name="FullTray" Type="System.String" Scope="User">
-      <Value Profile="(Default)">FullTray.State</Value>
+    <Setting Name="DevelopmentPositions" Type="System.String" Scope="User">
+      <Value Profile="(Default)">DevelopmentPositions.config</Value>
     </Setting>
   </Settings>
 </SettingsFile>

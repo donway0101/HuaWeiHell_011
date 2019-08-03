@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -14,36 +15,15 @@ namespace Sorter
         private readonly CoordinateId _coordinateId;
         private readonly PressureSensor _pressureSensor;
         private readonly LaserSensor _laserSensor;
+        private readonly RoundTable _table;
         private readonly List<CapturePosition> _capturePositions;
-        private readonly List<CapturePosition> _userOffsets;
+        private readonly List<CapturePosition> _capturePositionsOffsets;
         private readonly VisionServer _vision;
 
-        public Output NeedleOutput { get; set; }
-
         /// <summary>
-        /// Get it each time change a needle.
+        /// Avoid conflict between work and needle cleaning.
         /// </summary>
-        public Offset NeedleOffset { get; set; }
-
-        /// <summary>
-        /// Get by pressure sensor.
-        /// </summary>
-        public double NeedleOnZHeight { get; set; }
-
-        /// <summary>
-        /// Laser move to the same point to get the height, then calculate it.
-        /// </summary>
-        public double LaserToNeedleHeightOffset { get; set; }
-
-        /// <summary>
-        /// At the same position where needle detect its height.
-        /// </summary>
-        public double LaserHeight { get; set; }
-
-        public double GlueRadius { get; set; } = 0.2;
-
-        public double GlueFinishRiseHeight { get; set; } = 1;
-        public double GlueFinishLeaveHeight { get; set; } = 2;
+        private readonly object _workLock = new object();
 
         public Motor MotorA { get; set; }
         public Motor MotorX { get; set; }
@@ -52,83 +32,74 @@ namespace Sorter
         public double SafeXArea { get; set; }
         public double SafeYArea { get; set; }
         public double SafeZHeight { get; set; } = -2;
-        public double FixtureHeight { get; set; }
+        public double FixtureHeight { get; set; } = -20.45;
         public bool VisionSimulateMode { get; set; }
-        public Task<WaitBlock> Preparation { get; set; }
-        public double LaserToWorkHeightOffset { get; set; }
-        public Task<WaitBlock> PreparationAsync { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public double LaserRefereceZHeight { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public double NeedleOnZHeightUserCompensation { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public GluePointStation(MotionController controller, VisionServer vision, CoordinateId id,
-             List<CapturePosition> positions, List<CapturePosition> offsets,
+        /// <summary>
+        /// Get by pressure sensor.
+        /// </summary>
+        public double NeedleOnZHeight { get; set; }
+
+        /// <summary>
+        /// Comfirmed, it's distance to china is 0.2;
+        /// </summary>
+        public double NeedleOnZHeightCompensation { get; set; } = 0.3;
+
+        /// <summary>
+        /// Get it each time change a needle.
+        /// </summary>
+        public Offset NeedleOffset { get; set; }
+
+        public Output NeedleOutput { get; set; }
+
+        public Output NeedleCleanPool { get; set; }
+
+        /// <summary>
+        /// For shap changing of pressure sensor.
+        /// </summary>
+        public double GlueRadius { get; set; } = -0.1;
+
+        public double LaserRefereceZHeight { get; set; }
+
+        public Task<WaitBlock> Preparation { get; set; }
+
+        public int CurrentCycleId { get; set; }
+        public double CameraAboveChinaHeight { get; set; } = -2.7;
+        public double CameraAboveFixtureHeight {get; set; } = -10;
+        public double DetectNeedleHeightSpeed { get; set; } = 0.05;
+        public double LaserAboveFixtureHeight { get; set; } = -10;
+        public double LaserSurfaceToNeckHeightOffset { get; set; } = 2.19;
+        public double LaserSurfaceToSpringHeightOffset { get; set; } = 0.3;
+        public double NeedleTouchPressure { get; set; } = 0.02;
+
+        public Stopwatch NeedleCleaningStopWatch { get; set; } = new Stopwatch();
+        public int NeedleCleaningIntervalSec { get; set; } = 120;
+
+        public GluePointStation(MotionController controller, VisionServer vision,
+            RoundTable table, CoordinateId id,
+            List<CapturePosition> positions, List<CapturePosition> offsets,
             PressureSensor pressureSensor, LaserSensor laserSensor)
         {
             _mc = controller;
             _coordinateId = id;
+            _table = table;
             _capturePositions = positions;
-            _userOffsets = offsets;
+            _capturePositionsOffsets = offsets;
             _pressureSensor = pressureSensor;
             _laserSensor = laserSensor;
             _vision = vision;
         }
 
-        public void CaptureNeedleHeight()
-        {
-            throw new NotImplementedException();
-            //var needCapPos = GetCapturePosition(CaptureId.GluePointPressureSensor);
-            //MoveToCapture(needCapPos);
-            ////Keep doing it.
-            //var perssure = _pressureSensor.GetPressureValue();
-            ////If overshoot, pull up and then goes down. and get the right height.
-        }
-
         public double GetLaserHeightValue()
         {
-            return _laserSensor.GetLaserHeight();
-        }
-
-        /// <summary>
-        /// Positions where glue needle goes.
-        /// </summary>
-        /// <returns></returns>
-        public Pose[] GetWorkPoses()
-        {
-            var capPose = GetCapturePosition(CaptureId.GluePointBeforeGlue);
-            MoveToCapture(capPose);
-            var laserAndWorkPoses = GetVisionResultsLaserAndWork(capPose);
-            //int index = 0;
-            //MoveToCapture(laserAndWorkPoses[index]);
-            //laserAndWorkPoses[index+4].Z = GetWorkPointHeight();
-
-            //index++;
-            //MoveToCapture(laserAndWorkPoses[index]);
-            //laserAndWorkPoses[index + 4].Z = GetWorkPointHeight();
-
-            //index++;
-            //MoveToCapture(laserAndWorkPoses[index]);
-            //laserAndWorkPoses[index + 4].Z = GetWorkPointHeight();
-
-            //index++;
-            //MoveToCapture(laserAndWorkPoses[index]);
-            //laserAndWorkPoses[index + 4].Z = GetWorkPointHeight();
-
-            Pose[] poses = new Pose[4];
-            poses[0] = laserAndWorkPoses[0];
-            poses[1] = laserAndWorkPoses[1];
-            poses[2] = laserAndWorkPoses[2];
-            poses[3] = laserAndWorkPoses[3];
-
-            return poses;
-        }
-
-        public double GetWorkPointHeight()
-        {
-            var laserHeight = _laserSensor.GetLaserHeight();
-            var userOffset = GetCapturePositionOffset(CaptureId.GlueLineBeforeGlue);
-            var workHeight = laserHeight - LaserToNeedleHeightOffset +
-                GlueRadius + userOffset.ZPosition;
-            return workHeight;
+            try
+            {
+                return _laserSensor.GetLaserHeight();
+            }
+            catch (Exception)
+            {
+                throw new LaserException("Laser sensor not readable or value out of range.");
+            }
         }
 
         public void MoveToCapture(Pose target)
@@ -136,39 +107,24 @@ namespace Sorter
             MoveToTarget(target);
         }
 
-        /// <summary>
-        /// Encoder factor is 1000, so synVel will just = motor.Velocity
-        /// </summary>
-        /// <param name="coordinateId"></param>
-        /// <param name="xPos"></param>
-        /// <param name="yPos"></param>
-        /// <param name="synVel"></param>
-        /// <param name="synAcc"></param>
-        /// <param name="endVel"></param>
-        /// <param name="core"></param>
-        /// <param name="fifo"></param>
-        public void AddPoint(int xPos, int yPos, int zPos,
-            double synVel, double synAcc, double endVel = 0.0, short core = 2, short fifo = 0)
+        public PointInfoPulse ConvertToPulse(PointInfo point)
         {
-            _mc.AddTargetPoint(core, (short)_coordinateId, xPos, yPos, zPos,
-                MotorX.Velocity, MotorX.Acceleration, endVel, fifo);
-        }
-
-        public PointPulse ConverToPulsePoint(GluePosition point)
-        {
-            return new PointPulse()
+            return new PointInfoPulse()
             {
                 X = (int)(MotorX.EncoderFactor * point.X * MotorX.Direction),
                 Y = (int)(MotorY.EncoderFactor * point.Y * MotorY.Direction),
                 Z = (int)(MotorY.EncoderFactor * point.Z * MotorZ.Direction),
+
+                Velocity = MotorX.Velocity,
+                Acceleration = MotorX.Acceleration,
             };
         }
 
-        public void AddPoint(GluePosition point, short core = 2)
+        public void AddPoint(PointInfo point)
         {
-            var target = ConverToPulsePoint(point);
-            _mc.AddTargetPoint(core, (short)_coordinateId, target.X, target.Y, target.Z,
-                MotorX.Velocity, MotorX.Acceleration, 0, 0);
+            var target = ConvertToPulse(point);
+            _mc.AddTargetPoint(2, (short)_coordinateId, target.X, target.Y, target.Z,
+                target.Velocity, target.Acceleration, 0, 0);
         }
 
         public void AddDigitalOutput(OutputState state)
@@ -179,6 +135,11 @@ namespace Sorter
         public void AddDelay(ushort delayMs)
         {
             _mc.AddDelay((short)_coordinateId, delayMs);
+        }
+
+        public void AddDelay(int delayMs)
+        {
+            _mc.AddDelay((short)_coordinateId, (ushort)delayMs);
         }
 
         public void Delay(int millisecondsTimeout)
@@ -240,7 +201,12 @@ namespace Sorter
             MotorX = _mc.MotorGluePointX;
             MotorY = _mc.MotorGluePointY;
             MotorZ = _mc.MotorGluePointZ;
+
             NeedleOutput = Output.GluePoint;
+            NeedleCleanPool = Output.GluePointClean;
+
+            Preparation = Helper.DummyAsyncTask();
+            LaserRefereceZHeight = Properties.Settings.Default.LaserReferenceGluePoint;
         }
 
         public Pose GetVisionResult(CapturePosition pos)
@@ -256,96 +222,36 @@ namespace Sorter
             };
         }
 
-        /// <summary>
-        /// Todo get eight points.
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <returns></returns>
-        public Pose[] GetVisionResultsLaserAndWork(CapturePosition pos)
-        {
-            var visionOffset = GetRawVisionResult(pos);
-            var userOffset = GetCapturePositionOffset(pos.CaptureId);
-            //GetCapturePositionOffsets
-            Pose[] poses = new Pose[4];
-            int index = 0;
-            poses[index] = new Pose()
-            {
-                //X = visionOffset.XGluePoint1 + userOffset.XPosition,
-                //Y = visionOffset.YGluePoint1 + userOffset.YPosition,
-                //Z = GetZHeight(pos.CaptureId) + userOffset.ZPosition,
-                X = visionOffset.PointX[index],
-                Y = visionOffset.PointY[index],
-                Z = -23.347,
-            };
-
-            index++;
-            poses[index] = new Pose()
-            {
-                X = visionOffset.PointX[index],
-                Y = visionOffset.PointY[index],
-                Z = -23.347,
-            };
-
-            index++;
-            poses[index] = new Pose()
-            {
-                X = visionOffset.PointX[index],
-                Y = visionOffset.PointY[index],
-                Z = -23.347,
-            };
-
-            index++;
-            poses[index] = new Pose()
-            {
-                X = visionOffset.PointX[index],
-                Y = visionOffset.PointY[index],
-                Z = -23.347,
-            };
-
-            //index++;
-            //poses[index] = new Pose()
-            //{
-            //    X = visionOffset.PointX[index],
-            //    Y = visionOffset.PointY[index],
-            //    Z = -23.347,
-            //};
-
-            //index++;
-            //poses[index] = new Pose()
-            //{
-            //    X = visionOffset.PointX[index],
-            //    Y = visionOffset.PointY[index],
-            //    Z = -23.347,
-            //};
-
-            //index++;
-            //poses[index] = new Pose()
-            //{
-            //    X = visionOffset.PointX[index],
-            //    Y = visionOffset.PointY[index],
-            //    Z = -23.347,
-            //};
-
-            //index++;
-            //poses[index] = new Pose()
-            //{
-            //    X = visionOffset.PointX[index],
-            //    Y = visionOffset.PointY[index],
-            //    Z = -23.347,
-            //};
-
-            return poses;
-        }
-
         public CapturePosition GetCapturePosition(CaptureId id)
         {
             return Helper.GetCapturePosition(_capturePositions, id);
         }
 
+        public CapturePosition GetCapturePositionWithUserOffset(CaptureId id)
+        {
+            var capPos = GetCapturePosition(id);
+            var userOffset = GetCapturePositionOffset(id);
+
+            return new CapturePosition()
+            {
+                CaptureId = id,
+                XPosition = capPos.XPosition + userOffset.XPosition,
+                YPosition = capPos.YPosition + userOffset.YPosition,
+                ZPosition = capPos.ZPosition + userOffset.ZPosition,
+                Angle = capPos.Angle + userOffset.Angle,
+            };
+        }
+
         public CapturePosition GetCapturePositionOffset(CaptureId id)
         {
-            return new CapturePosition();
-            //Todo
+            try
+            {
+                return Helper.GetCapturePosition(_capturePositionsOffsets, id);
+            }
+            catch (Exception)
+            {
+                return new CapturePosition();
+            }
         }
 
         public void MoveToSafeHeight()
@@ -367,25 +273,29 @@ namespace Sorter
             {
                 return new AxisOffset()
                 {
-                    XOffset = capturePosition.XPosition + 65, //Camera to sucker distance.
+                    XOffset = capturePosition.XPosition + 0,
                     YOffset = capturePosition.YPosition,
                 };
             }
             else
             {
-                //Todo fail check.
                 return _vision.RequestVisionCalibration(capturePosition);
             }
         }
 
-        public AxisOffset GetVisionResult(CapturePosition capturePosition, int retryTimes)
-        {
-            throw new NotImplementedException();
-        }
-
         public double GetZHeight(CaptureId id)
         {
-            throw new NotImplementedException();
+            switch (id)
+            {
+                case CaptureId.GluePointBeforeGlue:
+                    return LaserAboveFixtureHeight;
+                case CaptureId.GluePointAfterGlue:
+                    return CameraAboveFixtureHeight;
+                case CaptureId.GluePointChina:
+                    return CameraAboveChinaHeight;
+                default:
+                    throw new NotImplementedException("No such Z height in Glue staion:" + id);
+            }
         }
 
         public void StartInterpolation()
@@ -408,19 +318,44 @@ namespace Sorter
             throw new NotImplementedException();
         }
 
-        public Task<WaitBlock> WorkAsync()
+        public Pose GetVisionResult(CapturePosition capturePosition, int retryTimes)
         {
-            throw new NotImplementedException();
+            int retryCount = 0;
+            do
+            {
+                try
+                {
+                    return GetVisionResult(capturePosition);
+                }
+                catch (Exception)
+                {
+                    retryCount++;
+                }
+            } while (retryCount < 3);
+
+            throw new VisionException("Vision fail three times.");
         }
 
-        Pose IRobot.GetVisionResult(CapturePosition capturePosition, int retryTimes)
+        public async Task<WaitBlock> ShotGlueAsync(ushort delayMs = 600)
         {
-            throw new NotImplementedException();
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    ShotGlue(delayMs);
+                    return new WaitBlock() { Message = "ShotGlueAsync Successful." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "ShotGlueAsync fail: " + ex.Message };
+                }
+            });
         }
 
         public void ShotGlue(ushort delayMs = 600)
         {
             ClearInterpolationBuffer();
+
             AddDigitalOutput(OutputState.On);
             AddDelay(delayMs);
             AddDigitalOutput(OutputState.Off);
@@ -437,23 +372,706 @@ namespace Sorter
 
         public void ClearInterpolationBuffer()
         {
-            throw new NotImplementedException();
+            _mc.Stop(MotorX);
+            _mc.SetCoordinateSystem(_coordinateId);
+            _mc.ClearInterpolationBuffer(2, _coordinateId);
         }
 
-        public void GetLaserRefereceHeight()
+        public double FindLaserRefereceHeight()
         {
-            throw new NotImplementedException();
+            var laserCapture = GetCapturePositionWithUserOffset(CaptureId.GluePointLaserOnPressureSensor);
+            MoveToCapture(laserCapture);
+            Delay(500);
+            var currentZHeight = GetPosition(MotorZ);
+            var LaserToNeedleHeightOffset = currentZHeight - NeedleOnZHeight;
+            return GetLaserHeightValue() - LaserToNeedleHeightOffset;
         }
 
-        public double GetLaserHeight()
+        public void CalibrateNeedle()
         {
-            throw new NotImplementedException();
+            CleanNeedle(10);
+            NeedleOnZHeight = FindNeedleHeight();
+            LaserRefereceZHeight = FindLaserRefereceHeight();
+            Properties.Settings.Default.LaserReferenceGluePoint = LaserRefereceZHeight;
+            Properties.Settings.Default.Save();
+            NeedleOffset = FindNeedleOffset();
         }
+
+        /// <summary>
+        /// Detect needle height by touching pressure sensor.
+        /// Saved needle to sensor height error less than 2 mm.
+        /// </summary>
+        /// <returns></returns>
+        public double FindNeedleHeight()
+        {
+            if (GetPressureValue() >= 0.005)
+            {
+                throw new Exception("Pressure sensor has zero offset when powerup, please reset it.");
+            }
+
+            double needleSafeHeight = 1.0;
+
+            var needleCapture =
+                GetCapturePositionWithUserOffset(CaptureId.GluePointNeedleOnPressureSensor);
+            needleCapture.ZPosition += needleSafeHeight;
+            MoveToCapture(needleCapture);
+
+            var tempSpeed = MotorX.Velocity;
+            SetSpeed(DetectNeedleHeightSpeed);
+
+            var needleHeight = TouchAndFindPressureSensor(needleCapture.ZPosition - needleSafeHeight);
+
+            //Restore speed.
+            SetSpeed(tempSpeed);
+            MoveToSafeHeight();
+
+            return needleHeight;
+        }
+
+        private double TouchAndFindPressureSensor(double touchPointHeight, int timeoutSec = 120)
+        {
+            double needleHeight = 0;
+
+            //Max down 0.5mm
+            touchPointHeight -= 0.5;
+            _mc.MoveToTarget(MotorZ, touchPointHeight);
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+
+            do
+            {
+                //if (_mc.IsMoving(MotorZ) == false)
+                //{
+                //    _mc.MoveToTargetRelative(MotorZ, -0.1);
+                //    if (GetPosition(MotorZ)<=touchPointHeight)
+                //    {
+                //        throw new Exception("Find needle height timeout, maybe need to lower sensor: " + _coordinateId);
+                //    }
+                //}
+
+                if (GetPressureValue() > NeedleTouchPressure)
+                {
+                    _mc.Stop(MotorZ);
+                    Delay(800);
+                    needleHeight = _mc.GetPosition(MotorZ) + NeedleOnZHeightCompensation;
+                    SetSpeed(1);
+                    _mc.MoveToTargetRelativeTillEnd(MotorZ, 2);
+                    return needleHeight;
+                }
+
+                if (stopwatch.ElapsedMilliseconds > timeoutSec * 1000)
+                {
+                    throw new Exception("Find needle height timeout, maybe need to lower sensor: " + _coordinateId);
+                }
+
+            } while (true);
+        }
+
 
         public double GetPressureValue()
         {
+            return _pressureSensor.GetPressureValue();
+        }
+
+        public GlueTargets GetVisionResultsForLaserAndWork()
+        {
+            var id = CaptureId.GluePointBeforeGlue;
+            var offset = GetRawVisionResult(GetCapturePosition(id), 3);
+
+            #region Laser targets.
+            var laserTargets = new Pose[4];
+            int indexL = 0;
+            laserTargets[indexL] = new Pose()
+            {
+                X = offset.LaserX[indexL],
+                Y = offset.LaserY[indexL],
+                Z = GetZHeight(id),
+            };
+
+            indexL++;
+            laserTargets[indexL] = new Pose()
+            {
+                X = offset.LaserX[indexL],
+                Y = offset.LaserY[indexL],
+                Z = GetZHeight(id),
+            };
+
+            indexL++;
+            laserTargets[indexL] = new Pose()
+            {
+                X = offset.LaserX[indexL],
+                Y = offset.LaserY[indexL],
+                Z = GetZHeight(id),
+            };
+
+            indexL++;
+            laserTargets[indexL] = new Pose()
+            {
+                X = offset.LaserX[indexL],
+                Y = offset.LaserY[indexL],
+                Z = GetZHeight(id),
+            };
+
+            #endregion
+
+            #region point infos
+            var glueTargets = new PointInfo[4];
+            int indexG = 0;
+            glueTargets[indexG] = new PointInfo()
+            {
+                X = offset.StartPointX[indexG],
+                Y = offset.StartPointY[indexG],
+            };
+
+            indexG++;
+            glueTargets[indexG] = new PointInfo()
+            {
+                X = offset.StartPointX[indexG],
+                Y = offset.StartPointY[indexG],
+            };
+
+            indexG++;
+            glueTargets[indexG] = new PointInfo()
+            {
+                X = offset.StartPointX[indexG],
+                Y = offset.StartPointY[indexG],
+            };
+
+            indexG++;
+            glueTargets[indexG] = new PointInfo()
+            {
+                X = offset.StartPointX[indexG],
+                Y = offset.StartPointY[indexG],
+            };
+            #endregion
+
+            return new GlueTargets()
+            {
+                LaserTargets = laserTargets,
+                PointTargets = glueTargets,
+            };
+        }
+
+        public async Task<WaitBlock> PrepareAsync()
+        {
+            return await Task.Run(() =>
+            {
+                string remarks = string.Empty;
+
+                try
+                {
+                    CleanNeedle();
+                    return new WaitBlock()
+                    {
+                        Message = "Glue point Preparation Finished."
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "Glue point Preparation fail: " + ex.Message
+                    };
+                }
+            });
+        }
+
+        public void Reset()
+        {
             throw new NotImplementedException();
         }
+
+        public void AddPoint(PointInfo point, double speed)
+        {
+            var target = ConvertToPulse(point);
+            _mc.AddTargetPoint(2, (short)_coordinateId, target.X, target.Y, target.Z,
+                speed, target.Acceleration, 0, 0);
+        }
+
+        public async Task<WaitBlock> CalibrateNeedleAsync()
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    CalibrateNeedle();
+                    return new WaitBlock()
+                    {
+                        Message = "CalibrateNeedleAsync Successful.",
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "CalibrateNeedleAsync fail: " + ex.Message
+                    };
+                }
+            });
+        }
+
+        public void CleanNeedle(int shotSec = 5)
+        {
+            if (NeedleCleaningStopWatch.ElapsedMilliseconds < NeedleCleaningIntervalSec * 1000)
+            {
+                return;
+            }
+
+            MoveToCapture(GetCapturePositionWithUserOffset(CaptureId.GluePointCleanNeedleShot));
+            ShotGlueOutput(shotSec);
+            RiseZALittleAndDown();
+            Delay(2000);
+            RiseZALittleAndDown();
+            Delay(2000);
+
+            MoveToCapture(GetCapturePositionWithUserOffset(CaptureId.GluePointCleanNeedleSuck));
+            _mc.SetOutput(NeedleCleanPool, OutputState.On);
+            Delay(2000);
+            _mc.SetOutput(NeedleCleanPool, OutputState.Off);
+            MoveToSafeHeight();
+        }
+
+        public void RiseZALittleAndDown()
+        {
+            _mc.MoveToTargetRelativeTillEnd(MotorZ, 3);
+            _mc.MoveToTargetRelativeTillEnd(MotorZ, -3);
+        }
+
+        public async Task<WaitBlock> CleanNeedleAsync(int delaySec = 30)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    CleanNeedle(delaySec);
+                    return new WaitBlock() { Message = "CleanNeedle Successful." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "CleanNeedle fail: " + ex.Message
+                    };
+                }
+            });
+        }
+
+        public ArcInfoPulse ConvertToPulse(ArcInfo arcInfo)
+        {
+            arcInfo.CalculateCenterOffset();
+
+            return new ArcInfoPulse()
+            {
+                X = (int)(MotorX.EncoderFactor * arcInfo.XEnd * MotorX.Direction),
+                Y = (int)(MotorY.EncoderFactor * arcInfo.YEnd * MotorY.Direction),
+                Z = (int)(MotorZ.EncoderFactor * arcInfo.Z * MotorZ.Direction),
+
+                ArcCenterToXStartOffset =
+                    (int)(MotorX.EncoderFactor * arcInfo.CenterToStartXOffset * MotorX.Direction),
+                ArcCenterToYStartOffset =
+                    (int)(MotorY.EncoderFactor * arcInfo.CenterToStartYOffset * MotorY.Direction),
+
+                Velocity = MotorX.Velocity,
+                Acceleration = MotorX.Acceleration,
+            };
+        }
+
+        public async Task<WaitBlock> FindLaserRefereceHeightAsync()
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    LaserRefereceZHeight = FindLaserRefereceHeight();
+                    return new WaitBlock() { Message = "GetLaserRefereceHeight Successful." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "GetLaserRefereceHeight fail: " + ex.Message };
+                }
+            });
+        }
+
+        public async Task<WaitBlock> FindNeedleHeightAsync()
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    NeedleOnZHeight = FindNeedleHeight();
+                    return new WaitBlock() { Message = "CaptureNeedleHeight Successful." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "CaptureNeedleHeight fail: " + ex.Message
+                    };
+                }
+            });
+        }
+
+        /// <summary>
+        /// User laser to find china plane height, shot some glue on it, 
+        /// and then find x and y offset on it.
+        /// </summary>
+        /// <returns></returns>
+        public Offset FindNeedleOffset()
+        {
+            var findHeightCapture =
+                GetCapturePositionWithUserOffset(CaptureId.GluePointLaserOnCalibrationChina);
+            MoveToCapture(findHeightCapture);
+
+            var height = GetNeedleToWorkSurfaceHeight();
+
+            var shotCapture =
+                GetCapturePositionWithUserOffset(CaptureId.GluePointNeedleOnCalibrationChina);
+            shotCapture.ZPosition = findHeightCapture.ZPosition - height;
+
+            MoveToCapture(shotCapture);
+
+            ShotGlue(1000);
+
+            var calCapture = GetCapturePosition(CaptureId.GluePointChina);
+
+            MoveToCapture(calCapture);
+
+            var result = GetVisionResult(calCapture, 3);
+
+            return new Offset()
+            {
+                XOffset = result.X,
+                YOffset = result.Y,
+            };
+        }
+
+
+        public double GetNeedleToWorkSurfaceHeight()
+        {
+            return GetLaserHeightValue() - LaserRefereceZHeight;
+        }
+
+        public AxisOffset GetRawVisionResult(CapturePosition capturePosition, int retryTimes)
+        {
+            int retryCount = 0;
+            do
+            {
+                try
+                {
+                    return GetRawVisionResult(capturePosition);
+                }
+                catch (Exception)
+                {
+                    retryCount++;
+                }
+            } while (retryCount < 3);
+
+            throw new VisionException("Vision fail three times.");
+        }
+
+        public double[] GetSurfaceDistance(GlueTargets targets)
+        {
+            //First neck surface height, second spring surface height.
+            double[] result = new double[2];
+
+            double[] laserHeight = new double[4];
+
+            int index = 0;
+            MoveToTarget(targets.LaserTargets[index]);
+            Delay(100);
+            laserHeight[index] = GetNeedleToWorkSurfaceHeight();
+
+            index++;
+            MoveToTarget(targets.LaserTargets[index]);
+            Delay(100);
+            laserHeight[index] = GetNeedleToWorkSurfaceHeight();
+
+            index++;
+            MoveToTarget(targets.LaserTargets[index]);
+            Delay(100);
+            laserHeight[index] = GetNeedleToWorkSurfaceHeight();
+
+            index++;
+            MoveToTarget(targets.LaserTargets[index]);
+            Delay(100);
+            laserHeight[index] = GetNeedleToWorkSurfaceHeight();
+
+            //check data reliablity.
+            double[] errors = new double[laserHeight.Length - 1];
+            for (int i = 0; i < laserHeight.Length - 1; i++)
+            {
+                errors[i] = laserHeight[i + 1] - laserHeight[i];
+            }
+
+            foreach (var err in errors)
+            {
+                if (err > 0.1)
+                {
+                    throw new LaserException("Laser height not reliable" + Helper.ConvertToJsonString(laserHeight));
+                }
+            }
+
+            return laserHeight;
+        }
+
+        public async Task<WaitBlock> GetVisionResultsForLaserAndWorkAsync()
+        {
+            return await Task.Run(() => {
+                try
+                {
+                    GetVisionResultsForLaserAndWork();
+
+                    return new WaitBlock() { Message = "GetVisionResultsForLaserAndWorkAsync OK" };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "GetVisionResultsForLaserAndWorkAsync fail:" + ex.Message
+                    };
+                }
+            });
+        }
+
+        public void Glue(GlueTargets glueTargets, GlueParameters gluePara)
+        {
+            ClearInterpolationBuffer();
+
+            #region First point.
+            int index = 0;
+            var firstPoint = new PointInfo()
+            {
+                X = glueTargets.PointTargets[index].X,
+                Y = glueTargets.PointTargets[index].Y,
+                Z = glueTargets.PointTargets[index].Z + GlueRadius,
+            };
+            AddPoint(firstPoint);
+            AddDigitalOutput(OutputState.On);
+            AddDelay(gluePara.PreShotTime);
+            AddDelay(gluePara.GluePeriod);
+            AddDigitalOutput(OutputState.Off);
+
+            var firstRise = new PointInfo()
+            {
+                X = glueTargets.PointTargets[index].X,
+                Y = glueTargets.PointTargets[index].Y,
+                Z = glueTargets.PointTargets[index].Z + gluePara.RiseGlueHeight,
+            };
+            AddPoint(firstRise, gluePara.RiseGlueSpeed);
+            AddDelay(gluePara.CloseGlueDelay);
+            #endregion
+
+            #region second point.
+            index++;
+            var secondPoint = new PointInfo()
+            {
+                X = glueTargets.PointTargets[index].X,
+                Y = glueTargets.PointTargets[index].Y,
+                Z = glueTargets.PointTargets[index].Z + GlueRadius,
+            };
+            AddPoint(secondPoint);
+            AddDigitalOutput(OutputState.On);
+            AddDelay(gluePara.PreShotTime - gluePara.SecondLineLessPreShot);
+            AddDelay(gluePara.GluePeriod);
+            AddDigitalOutput(OutputState.Off);
+
+            var secondRise = new PointInfo()
+            {
+                X = glueTargets.PointTargets[index].X,
+                Y = glueTargets.PointTargets[index].Y,
+                Z = glueTargets.PointTargets[index].Z + gluePara.RiseGlueHeight,
+            };
+            AddPoint(secondRise, gluePara.RiseGlueSpeed);
+            AddDelay(gluePara.CloseGlueDelay);
+            #endregion
+
+            #region third point.
+            index++;
+            var thirdPoint = new PointInfo()
+            {
+                X = glueTargets.PointTargets[index].X,
+                Y = glueTargets.PointTargets[index].Y,
+                Z = glueTargets.PointTargets[index].Z + GlueRadius,
+            };
+            AddPoint(thirdPoint);
+            AddDigitalOutput(OutputState.On);
+            AddDelay(gluePara.PreShotTime - gluePara.SecondLineLessPreShot);
+            AddDelay(gluePara.GluePeriod);
+            AddDigitalOutput(OutputState.Off);
+
+            var thirdRise = new PointInfo()
+            {
+                X = glueTargets.PointTargets[index].X,
+                Y = glueTargets.PointTargets[index].Y,
+                Z = glueTargets.PointTargets[index].Z + gluePara.RiseGlueHeight,
+            };
+            AddPoint(thirdRise, gluePara.RiseGlueSpeed);
+            AddDelay(gluePara.CloseGlueDelay);
+            #endregion
+
+            #region fourth point.
+            index++;
+            var fourthPoint = new PointInfo()
+            {
+                X = glueTargets.PointTargets[index].X,
+                Y = glueTargets.PointTargets[index].Y,
+                Z = glueTargets.PointTargets[index].Z + GlueRadius,
+            };
+            AddPoint(fourthPoint);
+            AddDigitalOutput(OutputState.On);
+            AddDelay(gluePara.PreShotTime - gluePara.SecondLineLessPreShot);
+            AddDelay(gluePara.GluePeriod);
+            AddDigitalOutput(OutputState.Off);
+
+            var fourthRise = new PointInfo()
+            {
+                X = glueTargets.PointTargets[index].X,
+                Y = glueTargets.PointTargets[index].Y,
+                Z = glueTargets.PointTargets[index].Z + gluePara.RiseGlueHeight,
+            };
+            AddPoint(fourthRise, gluePara.RiseGlueSpeed);
+            AddDelay(gluePara.CloseGlueDelay);
+            #endregion
+
+            var lastRise = new PointInfo()
+            {
+                X = glueTargets.PointTargets[index].X,
+                Y = glueTargets.PointTargets[index].Y,
+                Z = glueTargets.PointTargets[index].Z + 20,
+            };
+            AddPoint(lastRise);
+
+
+            CheckEnoughSpace();
+            StartInterpolation();
+            WaitTillInterpolationEnd();
+        }
+
+        public void ShotGlueOutput(int delaySec = 10)
+        {
+            _mc.SetOutput(NeedleOutput, OutputState.On);
+            Delay(delaySec * 1000);
+            _mc.SetOutput(NeedleOutput, OutputState.Off);
+        }
+
+        public void Work()
+        {
+            GlueParameters gluePara = new GlueParameters()
+            {
+                PreShotTime = 100,
+                GluePeriod = 500,
+                CloseGlueDelay = 200,
+                GlueSpeed = 5,
+                RiseGlueHeight = 2,
+                RiseGlueSpeed = 0.5,
+                SecondLineLessPreShot = 50,
+            };
+
+            MoveToCapture(GetCapturePositionWithUserOffset(CaptureId.GluePointBeforeGlue));
+            var glueTargets = GetVisionResultsForLaserAndWork();
+            var heights = GetSurfaceDistance(glueTargets);
+
+            var workSurfaceHeight = GetPosition(MotorZ) -
+                (Helper.FindEven(heights) - LaserSurfaceToNeckHeightOffset);
+
+            foreach (var tar in glueTargets.PointTargets)
+            {
+                tar.Z = workSurfaceHeight;
+            }
+
+            var approachPoint = new Pose()
+            {
+                X = glueTargets.PointTargets[0].X,
+                Y = glueTargets.PointTargets[0].Y,
+                Z = workSurfaceHeight + 10,
+            };
+
+            MoveToTarget(approachPoint);
+
+            Glue(glueTargets, gluePara);
+
+        }
+
+
+        public async Task<WaitBlock> WorkAsync(int cycleId)
+        {
+            return await Task.Run( async () =>
+            {
+                #region Skip work due to error or empty or wait for other station.
+                if (_table.Fixtures[(int)StationId.GluePoint].NG ||
+                 _table.Fixtures[(int)StationId.GluePoint].IsEmpty || CurrentCycleId >= cycleId)
+                {
+                    CurrentCycleId = cycleId;
+                    return new WaitBlock()
+                    {
+                        Message = "Glue point WorkAsync Skip due to previous station fail " +
+                        "or is empty, or has to wait for other station."
+                    };
+                }
+                #endregion
+
+                string remarks = string.Empty;
+
+                try
+                {
+                    Preparation = PrepareAsync();
+                    await Preparation;
+                    Helper.CheckTaskResult(Preparation);
+
+                    Work();
+                    MoveToSafeHeight();
+                    //NeedleCleaningStopWatch.Restart();
+                    CurrentCycleId++;
+                    return new WaitBlock() { Message = "Glue point Finished Successful." };
+                }
+                catch (VisionException)
+                {
+                    _table.Fixtures[(int)StationId.GluePoint].NG = true;
+                    return new WaitBlock() { Message = "Glue point vision NG, set NG." };
+                }
+                catch (LaserException)
+                {
+                    _table.Fixtures[(int)StationId.GluePoint].NG = true;
+                    return new WaitBlock() { Message = "Glue point laser NG, set NG." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "Glue point Finished fail." + ex.Message
+                    };
+                }
+            });
+        }
+
+        public async Task<WaitBlock> WorkAsync(int cycleId, GlueParameters gluePara)
+        {
+            return await Task.Run(() => {
+                try
+                {
+                    //Work(gluePara);
+                    Work();
+                    return new WaitBlock() { Message = "Glue point Finished Successful." };
+                }
+                catch (Exception ex)
+                {
+                    return new WaitBlock()
+                    {
+                        Code = ErrorCode.TobeCompleted,
+                        Message = "Glue point Finished fail." + ex.Message
+                    };
+                }
+            });
+        }
+
     }
 
 

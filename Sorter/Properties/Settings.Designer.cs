@@ -37,49 +37,49 @@ namespace Sorter.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("UserSetting.config")]
-        public string UserSetting {
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double LaserReferenceGlueLine {
             get {
-                return ((string)(this["UserSetting"]));
+                return ((double)(this["LaserReferenceGlueLine"]));
             }
             set {
-                this["UserSetting"] = value;
+                this["LaserReferenceGlueLine"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PartTray.state")]
-        public string PartTray {
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double LaserReferenceGluePoint {
             get {
-                return ((string)(this["PartTray"]));
+                return ((double)(this["LaserReferenceGluePoint"]));
             }
             set {
-                this["PartTray"] = value;
+                this["LaserReferenceGluePoint"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("EmptyTray.State")]
-        public string EmptyTray {
+        [global::System.Configuration.DefaultSettingValueAttribute("UserSettings.config")]
+        public string UserSettings {
             get {
-                return ((string)(this["EmptyTray"]));
+                return ((string)(this["UserSettings"]));
             }
             set {
-                this["EmptyTray"] = value;
+                this["UserSettings"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("FullTray.State")]
-        public string FullTray {
+        [global::System.Configuration.DefaultSettingValueAttribute("DevelopmentPositions.config")]
+        public string DevelopmentPositions {
             get {
-                return ((string)(this["FullTray"]));
+                return ((string)(this["DevelopmentPositions"]));
             }
             set {
-                this["FullTray"] = value;
+                this["DevelopmentPositions"] = value;
             }
         }
     }

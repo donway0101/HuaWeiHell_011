@@ -10,6 +10,8 @@ namespace Sorter
     {
         public Axis Id { get; set; }
 
+        public bool IsMoving { get; set; }
+
         public string Name { get; set; }
 
         public double FeedbackPosition { get; set; }
@@ -36,7 +38,7 @@ namespace Sorter
 
         public double CriticalErrVel { get; set; }
 
-        public double CriticalErrIdle { get; set; } = 0.1;
+        public double CriticalErrIdle { get; set; } = 0.2;
 
         public double SoftLimitNegative { get; set; }
 

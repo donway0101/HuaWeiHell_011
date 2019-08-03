@@ -17,8 +17,12 @@ namespace Sorter
 
         bool VisionSimulateMode { get; set; }
 
+        int CurrentCycleId { get; set; }
+
         void MoveToSafeHeight();
-        
+
+        void RiseZALittleAndDown();
+
         void MoveTo(Pose target, MoveModeAMotor mode, ActionType type);
         void MoveToTarget(Pose target, MoveModeAMotor mode, ActionType type);
         void MoveToTarget(CapturePosition target, MoveModeAMotor mode, ActionType type);
@@ -26,23 +30,19 @@ namespace Sorter
         void SetSpeed(double speed);
         double GetPosition(Motor motor);
         void Setup();
-        Task<WaitBlock> WorkAsync();
-       
+        void Reset();
+        Task<WaitBlock> WorkAsync(int cycleId);
+        Task<WaitBlock> PrepareAsync();
+        Task<WaitBlock> Preparation { get; set; }
         CapturePosition GetCapturePosition(CaptureId id);
         CapturePosition GetCapturePositionOffset(CaptureId id);
+        CapturePosition GetCapturePositionWithUserOffset(CaptureId id);
         double GetZHeight(CaptureId id);
         Pose GetVisionResult(CapturePosition pos);
         AxisOffset GetRawVisionResult(CapturePosition capturePosition);
         Pose GetVisionResult(CapturePosition capturePosition, int retryTimes);
-        //Task<WaitBlock> PreparationAsync { get; set; }
+        
 
     }
 
-    public enum StationId
-    {
-        V,
-        L,
-        GlueCurve,
-        GluePoint,
-    }
 }

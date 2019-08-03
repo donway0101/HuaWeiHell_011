@@ -13,16 +13,18 @@ namespace Sorter
     {
         private bool _checkVacuum = false;
         
-        private StartupLoadStep _currentStartupStep = StartupLoadStep.Step1;
-       
+        private bool[,] _startupSteps = new bool[10,10];
+
+        private int _currentCycleId { get; set; } = 1;
 
         public List<CapturePosition> CapturePositions;
         public List<CapturePosition> UserOffsets;
         public List<CapturePosition> DevelopPoints;
+        public ConfigManager UserConfigs;
 
-        public PressureSensor PressureSensorGlueCurve;
+        public PressureSensor PressureSensorGlueLine;
         public PressureSensor PressureSensorGluePoint;
-        public LaserSensor LaserSensorGlueCurve;
+        public LaserSensor LaserSensorGlueLine;
         public LaserSensor LaserSensorGluePoint;
 
         public MotionController Mc;
@@ -31,7 +33,7 @@ namespace Sorter
         public LStation LRobot;
         public VStation VRobot;
         public UVLight UVLight;
-        public GlueCurveStation GlueCurveRobot;
+        public GlueLineStation GlueLineRobot;
         public GluePointStation GluePointRobot;
 
         public TrayStation VLoadStation;
@@ -58,23 +60,30 @@ namespace Sorter
 
         public void Setup()
         {
-            LaserSensorGlueCurve = new LaserSensor("COM3", 9600, 2);
-            LaserSensorGluePoint = new LaserSensor("COM4", 9600, 1);
+            LaserSensorGlueLine = new LaserSensor("COM4", 9600, 2);
+            LaserSensorGluePoint = new LaserSensor("COM3", 9600, 1);
 
-            //LaserSensorGluePoint.Start();
-            //LaserSensorGlueCurve.Start();
+            PressureSensorGlueLine = new PressureSensor("COM6", 9600, 2);
+            PressureSensorGluePoint = new PressureSensor("COM5", 9600, 1);
+
+            LaserSensorGluePoint.Start();
+            LaserSensorGlueLine.Start();
+            PressureSensorGluePoint.Start();
+            PressureSensorGlueLine.Start();
 
             Mc = new MotionController();
             Mc.Connect();
             Mc.Setup();
             Mc.ZeroAllPositions();
 
-            UVLight = new UVLight(Mc);
             Vision = new VisionServer(Mc);
 
             WorkTable = new RoundTable(Mc);
             WorkTable.Setup();
 
+            UVLight = new UVLight(Mc, WorkTable);
+
+            UserConfigs = new ConfigManager(this);
             LoadCapturePositions();
             LoadUserOffsets();
             LoadDevelopPoints();
@@ -85,26 +94,25 @@ namespace Sorter
             VRobot = new VStation(Mc, Vision, WorkTable, CapturePositions, UserOffsets);
             VRobot.Setup();
 
-            GlueCurveRobot = new GlueCurveStation(Mc, Vision, CoordinateId.GlueCurve,
+            GlueLineRobot = new GlueLineStation(Mc, Vision, WorkTable, CoordinateId.GlueLine,
                 CapturePositions, UserOffsets,
-                PressureSensorGlueCurve, LaserSensorGlueCurve);
-            GlueCurveRobot.Setup();
+                PressureSensorGlueLine, LaserSensorGlueLine);
+            GlueLineRobot.Setup();
 
-            GluePointRobot = new GluePointStation(Mc, Vision, CoordinateId.GluePoint,
+            GluePointRobot = new GluePointStation(Mc, Vision, WorkTable, CoordinateId.GluePoint,
                 CapturePositions, UserOffsets,
-                PressureSensorGlueCurve, LaserSensorGlueCurve);
+                PressureSensorGluePoint, LaserSensorGluePoint);
             GluePointRobot.Setup();
 
             VRobot.CheckVacuumValue = _checkVacuum;
-            LRobot.CheckVacuumValue = _checkVacuum;
-            
+            LRobot.CheckVacuumValue = _checkVacuum;            
         }
 
         public void SetSpeed(double speed=10)
         {
             LRobot.SetSpeed(speed);
             VRobot.SetSpeed(speed);
-            GlueCurveRobot.SetSpeed(speed);
+            GlueLineRobot.SetSpeed(speed);
             GluePointRobot.SetSpeed(speed);
             WorkTable.SetSpeed(speed);
         }
@@ -114,10 +122,15 @@ namespace Sorter
         /// </summary>
         public void Start(double homeSpeed)
         {
+            PressureSensorGluePoint.Test();
+            PressureSensorGlueLine.Test();
+            LaserSensorGlueLine.Test();
+            LaserSensorGluePoint.Test();
             Mc.ClearAllFault();
-            //Fast home to go near home sensor.
-            Mc.HomeAllMotors(30, true);
+
             Mc.HomeAllMotors(homeSpeed, false);
+
+            Mc.DisableAllLimits();
         }
 
         public CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -139,7 +152,8 @@ namespace Sorter
 
         public void Reset()
         {
-            throw new NotImplementedException();
+            LRobot.Reset();
+            VRobot.Reset();
         }
 
         public void Estop()
@@ -154,19 +168,19 @@ namespace Sorter
 
         public void LoadCapturePositions(string defaultConfigName = "CapturePositions.config")
         {
-            var str = Helper.ReadConfiguration(defaultConfigName);
+            var str = Helper.ReadFile(defaultConfigName);
             CapturePositions = Helper.ConvertToCapturePositions(str);
         }
 
         public void LoadUserOffsets(string defaultConfigName = "UserOffsets.config")
         {
-            var str = Helper.ReadConfiguration(defaultConfigName);
+            var str = Helper.ReadFile(defaultConfigName);
             UserOffsets = Helper.ConvertToCapturePositions(str);
         }
 
         public void LoadDevelopPoints(string defaultConfigName = "Development.config")
         {
-            var str = Helper.ReadConfiguration(defaultConfigName);
+            var str = Helper.ReadFile(defaultConfigName);
             DevelopPoints = Helper.ConvertToCapturePositions(str);
         }
 
@@ -178,7 +192,7 @@ namespace Sorter
         public void SaveCapturePositions(string defaultConfigName = "CapturePositions.config")
         {
             var config = Helper.ConvertToJsonString(CapturePositions);
-            Helper.SaveConfiguration(config, config);
+            Helper.WriteFile(config, config);
         }
     }
 
@@ -188,5 +202,18 @@ namespace Sorter
         Start,
         Stop,
         Pause,
+    }
+
+    /// <summary>
+    /// Used as table fixture index, so do not change enum value.
+    /// </summary>
+    public enum StationId
+    {
+        V = 0,
+        GluePoint = 1,
+        GlueLine = 2,
+        L = 3,
+        Reserved = 4,
+        UV = 5,
     }
 }
