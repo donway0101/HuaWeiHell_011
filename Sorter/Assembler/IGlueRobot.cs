@@ -6,10 +6,7 @@ namespace Sorter
 {
     public interface IGlueRobot
     {
-        /// <summary>
-        /// Equals the distance from needle to surface of work piece.
-        /// </summary>
-        double GlueRadius { get; set; }
+        GlueParameter GlueParas { get; set; }
 
         /// <summary>
         /// From capture position, we know where to approach needle.
@@ -103,7 +100,7 @@ namespace Sorter
         double[] GetSurfaceDistance(GlueTargets targets);
         Pose GetVisionResult(CapturePosition capturePosition, int retryTimes);
         Task<WaitBlock> GetVisionResultsForLaserAndWorkAsync();
-        void Glue(GlueTargets glueTargets, GlueParameters gluePara);
+        void Glue(GlueTargets glueTargets, GlueParameter gluePara);
         void MoveTo(Pose target, MoveModeAMotor mode, ActionType type);
         void MoveToTarget(CapturePosition target, MoveModeAMotor mode, ActionType type);
         void MoveToTarget(Pose target, MoveModeAMotor mode, ActionType type);
@@ -177,8 +174,12 @@ namespace Sorter
         public GroupPointInfo GroupPoints { get; set; }
     }
 
-    public class GlueParameters
+    public class GlueParameter
     {
+        public CoordinateId Id { get; set; }
+
+        public double GlueRadius { get; set; }
+
         public int PreShotTime { get; set; }
 
         public double GlueSpeed { get; set; }

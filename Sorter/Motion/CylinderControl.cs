@@ -71,62 +71,94 @@ namespace Sorter
 
         public void LUnloadTrayCylinder(TrayCylinderState state)
         {
-            switch (state)
+            try
             {
-                case TrayCylinderState.PushOut:
-                    CylinderOut(Output.LUnloadTrayCylinder, Input.LUnloadTrayCylinderOut);
-                    break;
-                case TrayCylinderState.Retract:
-                    CylinderIn(Output.LUnloadTrayCylinder, Input.LUnloadTrayCylinderIn);
-                    break;
-                default:
-                    break;
+                switch (state)
+                {
+                    case TrayCylinderState.PushOut:
+                        CylinderOut(Output.LUnloadTrayCylinder, Input.LUnloadTrayCylinderOut);
+                        break;
+                    case TrayCylinderState.Retract:
+                        CylinderIn(Output.LUnloadTrayCylinder, Input.LUnloadTrayCylinderIn);
+                        break;
+                    default:
+                        break;
+                }
             }
+            catch (Exception)
+            {
+                throw new Exception("Make sure tray cylinder is around it's magnet position.");
+            }
+           
         }
 
         public void LLoadTrayCylinder(TrayCylinderState state)
         {
-            switch (state)
+            try
             {
-                case TrayCylinderState.PushOut:
-                    CylinderOut(Output.LLoadTrayCylinder, Input.LLoadTrayCylinderOut);
-                    break;
-                case TrayCylinderState.Retract:
-                    CylinderIn(Output.LLoadTrayCylinder, Input.LLoadTrayCylinderIn);
-                    break;
-                default:
-                    break;
+                switch (state)
+                {
+                    case TrayCylinderState.PushOut:
+                        CylinderOut(Output.LLoadTrayCylinder, Input.LLoadTrayCylinderOut);
+                        break;
+                    case TrayCylinderState.Retract:
+                        CylinderIn(Output.LLoadTrayCylinder, Input.LLoadTrayCylinderIn);
+                        break;
+                    default:
+                        break;
+                }
             }
+            catch (Exception)
+            {
+                throw new Exception("Make sure tray cylinder is around it's magnet position.");
+            }
+          
         }
 
         public void VUnloadTrayCylinder(TrayCylinderState state)
         {
-            switch (state)
+            try
             {
-                case TrayCylinderState.PushOut:
-                    CylinderOut(Output.VUnloadTrayCylinder, Input.VUnloadTrayCylinderOut);
-                    break;
-                case TrayCylinderState.Retract:
-                    CylinderIn(Output.VUnloadTrayCylinder, Input.VUnloadTrayCylinderIn);
-                    break;
-                default:
-                    break;
+                switch (state)
+                {
+                    case TrayCylinderState.PushOut:
+                        CylinderOut(Output.VUnloadTrayCylinder, Input.VUnloadTrayCylinderOut);
+                        break;
+                    case TrayCylinderState.Retract:
+                        CylinderIn(Output.VUnloadTrayCylinder, Input.VUnloadTrayCylinderIn);
+                        break;
+                    default:
+                        break;
+                }
             }
+            catch (Exception)
+            {
+                throw new Exception("Make sure tray cylinder is around it's magnet position.");
+            }
+    
         }
 
         public void VLoadTrayCylinder(TrayCylinderState state)
         {
-            switch (state)
+            try
             {
-                case TrayCylinderState.PushOut:
-                    CylinderOut(Output.VLoadTrayCylinder, Input.VLoadTrayCylinderOut);
-                    break;
-                case TrayCylinderState.Retract:
-                    CylinderIn(Output.VLoadTrayCylinder, Input.VLoadTrayCylinderIn);
-                    break;
-                default:
-                    break;
+                switch (state)
+                {
+                    case TrayCylinderState.PushOut:
+                        CylinderOut(Output.VLoadTrayCylinder, Input.VLoadTrayCylinderOut);
+                        break;
+                    case TrayCylinderState.Retract:
+                        CylinderIn(Output.VLoadTrayCylinder, Input.VLoadTrayCylinderIn);
+                        break;
+                    default:
+                        break;
+                }
             }
+            catch (Exception)
+            {
+                throw new Exception("Make sure tray cylinder is around it's magnet position.");
+            }
+           
         }
 
         public void VUnloadConveyorLocker(LockState state)

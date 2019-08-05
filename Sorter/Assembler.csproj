@@ -53,6 +53,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assembler\LLoadTrayStation.cs" />
+    <Compile Include="Assembler\LUnloadTrayStation.cs" />
     <Compile Include="Run\BasicFunction.cs" />
     <Compile Include="Assembler\LStation.cs" />
     <Compile Include="Assembler\IAssemblyRobot.cs" />
@@ -66,8 +68,8 @@
     <Compile Include="LaserSensor\SerialCommunicationTemplate.cs" />
     <Compile Include="Motion\IMotionController.cs" />
     <Compile Include="PressureSensor\PressureSensor.cs" />
-    <Compile Include="Run\ConfigManager.cs" />
     <Compile Include="Run\IMachineControl.cs" />
+    <Compile Include="Run\UserSetting.cs" />
     <Compile Include="Vision\CaptureData.cs" />
     <Compile Include="FunctionTest\FunctionTest.cs" />
     <Compile Include="Motion\VacuumControl.cs" />

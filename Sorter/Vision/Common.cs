@@ -1,15 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System;
-using System.ComponentModel;
-using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
 
 namespace Bp.Mes
 {

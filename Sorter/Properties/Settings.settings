@@ -17,5 +17,14 @@
     <Setting Name="DevelopmentPositions" Type="System.String" Scope="User">
       <Value Profile="(Default)">DevelopmentPositions.config</Value>
     </Setting>
+    <Setting Name="CapturePositionOffsets" Type="System.String" Scope="User">
+      <Value Profile="(Default)">CapturePositionOffsets.config</Value>
+    </Setting>
+    <Setting Name="CapturePositions" Type="System.String" Scope="User">
+      <Value Profile="(Default)">CapturePositions.config</Value>
+    </Setting>
+    <Setting Name="GlueParameters" Type="System.String" Scope="User">
+      <Value Profile="(Default)">GlueParameters.config</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

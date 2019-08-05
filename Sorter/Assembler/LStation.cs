@@ -16,6 +16,8 @@ namespace Sorter
         private List<CapturePosition> _capturePositions;
         public List<CapturePosition> _capturePositionsOffsets;
 
+        private static readonly object _motionLocker = new object();
+
         public Motor MotorA { get; set; }
         public Motor MotorX { get; set; }
         public Motor MotorY { get; set; }
@@ -183,38 +185,6 @@ namespace Sorter
             throw new VisionException() { CaptureId = capPos.CaptureId };
         }
 
-        #region For testing.
-        public async Task<WaitBlock> LDoingSomthingForALongTime()
-        {
-            try
-            {
-                //await Task.Delay(1);
-                await SomeBasicTask();
-                return new WaitBlock() { Message = "LDoingSomthingForALongTime OK" };
-            }
-            catch (Exception ex)
-            {
-                return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "LDoingSomthingForALongTime error: " + ex.Message };
-            }
-        }
-
-        private async Task SomeBasicTask()
-        {
-            await SomethingHard();
-        }
-
-        private async Task SomethingHard()
-        {
-            await Task.Run(()=>{
-                Thread.Sleep(1000);
-                Thread.Sleep(1000);
-                Thread.Sleep(1000);
-                Thread.Sleep(1000);
-            });
-           
-        }
-        #endregion
-
         /// <summary>
         /// Suck a part from L tray hole.
         /// </summary>
@@ -304,10 +274,13 @@ namespace Sorter
         /// </summary>
         public void MoveToSafeHeight()
         {
-            if (GetPosition(MotorZ) < SafeZHeight)
+            lock (_motionLocker)
             {
-                _mc.MoveToTargetTillEnd(MotorZ, SafeZHeight);
-            }
+                if (GetPosition(MotorZ) < SafeZHeight)
+                {
+                    _mc.MoveToTargetTillEnd(MotorZ, SafeZHeight);
+                }
+            }         
         }
 
         /// <summary>
@@ -324,48 +297,51 @@ namespace Sorter
         {
             MoveToSafeHeight();
 
-            if (IsMoveToSameArea(target))
+            lock (_motionLocker)
             {
-                _mc.MoveToTarget(MotorY, target.Y);
-                _mc.MoveToTarget(MotorX, target.X);
-                MoveAngleMotor(target.A, mode, ActionType.Load);
-                _mc.WaitTillEnd(MotorA);
-                _mc.WaitTillEnd(MotorX);
-                _mc.WaitTillEnd(MotorY);
-                
-                _mc.MoveToTargetTillEnd(MotorZ, target.Z);
-            }
-            else
-            {
-                //Move from conveyor to table.
-                if (GetPosition(MotorY) < SafeYArea &&
-                   target.Y > SafeYArea)
+                if (IsMoveToSameArea(target))
                 {
+                    _mc.MoveToTarget(MotorY, target.Y);
+                    _mc.MoveToTarget(MotorX, target.X);
                     MoveAngleMotor(target.A, mode, ActionType.Load);
-                    _mc.MoveToTargetTillEnd(MotorX, target.X);
-                    _mc.MoveToTargetTillEnd(MotorY, target.Y);
                     _mc.WaitTillEnd(MotorA);
+                    _mc.WaitTillEnd(MotorX);
+                    _mc.WaitTillEnd(MotorY);
 
                     _mc.MoveToTargetTillEnd(MotorZ, target.Z);
                 }
                 else
                 {
-                    //Move from table to conveyor.
-                    if (GetPosition(MotorX) < SafeXArea &&
-                        target.X > SafeXArea)
+                    //Move from conveyor to table.
+                    if (GetPosition(MotorY) < SafeYArea &&
+                       target.Y > SafeYArea)
                     {
                         MoveAngleMotor(target.A, mode, ActionType.Load);
-                        _mc.MoveToTargetTillEnd(MotorY, target.Y);
                         _mc.MoveToTargetTillEnd(MotorX, target.X);
+                        _mc.MoveToTargetTillEnd(MotorY, target.Y);
                         _mc.WaitTillEnd(MotorA);
 
                         _mc.MoveToTargetTillEnd(MotorZ, target.Z);
                     }
                     else
                     {
-                        throw new Exception("L robot move to target fail, unknow move stratege.");
+                        //Move from table to conveyor.
+                        if (GetPosition(MotorX) < SafeXArea &&
+                            target.X > SafeXArea)
+                        {
+                            MoveAngleMotor(target.A, mode, ActionType.Load);
+                            _mc.MoveToTargetTillEnd(MotorY, target.Y);
+                            _mc.MoveToTargetTillEnd(MotorX, target.X);
+                            _mc.WaitTillEnd(MotorA);
+
+                            _mc.MoveToTargetTillEnd(MotorZ, target.Z);
+                        }
+                        else
+                        {
+                            throw new Exception("L robot move to target fail, unknow move stratege.");
+                        }
                     }
-                }
+                } 
             }
         }
 
@@ -466,7 +442,7 @@ namespace Sorter
                 }
                 catch (Exception)
                 {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "LockTray Finished Successful." };
+                    return new WaitBlock() { Code = ErrorCode.LockTrayFail, Message = "LockTray Finished Successful." };
                 }
             });
         }
@@ -578,12 +554,12 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "L Load fail: " + ex.Message };
+                    return new WaitBlock() { Code = ErrorCode.LStationWorkFail, Message = "L Load fail: " + ex.Message };
                 }
             });
         }
 
-        public async Task<WaitBlock> ChangeLoadTrayAsync()
+        public Task<WaitBlock> ChangeLoadTrayAsync()
         {
             throw new NotImplementedException();
         }
@@ -612,6 +588,7 @@ namespace Sorter
                     try
                     {
                         Prepare();
+
                         return new WaitBlock()
                         {
                             Message = "L Preparation Finished."

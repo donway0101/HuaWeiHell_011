@@ -56,7 +56,7 @@ namespace Sorter
             InitializeComponent();
             //Set tab draw mode to ownerdraw
             tabControlMenu.DrawItem += new DrawItemEventHandler(tabControlMenu_DrawItem);
-            log.Info("System start");
+            //log.Info("System start");
         }
 
         private void tabControlMenu_DrawItem(Object sender, System.Windows.Forms.DrawItemEventArgs e)
@@ -111,7 +111,7 @@ namespace Sorter
                 try
                 {
                     _cc.Setup();
-                   
+
                     return true;
                 }
                 catch (Exception ex)
@@ -169,6 +169,7 @@ namespace Sorter
             _manualMotorRLoad = _cc.LRobot.MotorA;
 
             PositionUpdate();
+            TrayPositionUpdate();
 
             comboBoxSelectCapturePosition.Items.Clear();
             foreach (var pos in Enum.GetValues(typeof(CaptureId)))
@@ -186,10 +187,10 @@ namespace Sorter
 
             GetUserSettings();
 
-            dataGridViewUserOffset.DataSource = _cc.UserOffsets;
             dataGridViewCapturePosition.DataSource = _cc.CapturePositions;
-
-            //dataGridViewUserConfig.DataSource = _cc.UserConfigs.Settings;
+            dataGridViewUserOffset.DataSource = _cc.UserOffsets;
+            dataGridViewGlueParameters.DataSource = _cc.GlueParameters;
+            dataGridViewUserSettings.DataSource = _cc.UserSettings;
         }
 
         private void GetUserSettings()
@@ -279,6 +280,77 @@ namespace Sorter
                     catch (Exception)
                     {
 
+                        Thread.Sleep(1000);
+                    }
+                }
+            });
+        }
+
+        private void TrayPositionUpdate()
+        {
+            //if (_uiStarted == true)
+            //{
+            //    return;
+            //}
+            //_uiStarted = true;
+            Task.Run(() =>
+            {
+                while (true)
+                {
+
+                    try
+                    {
+                        labelVLoadTrayPos.BeginInvoke((MethodInvoker)(() =>
+                        {
+                            try
+                            {
+                                labelVLoadTrayPos.Text = mc.GetPosition(_cc.Mc.MotorVTrayLoad).ToString();
+                            }
+                            catch (Exception)
+                            {
+                            }
+
+                        }));
+                        Thread.Sleep(200);
+                        labelVUnloadTrayPos.BeginInvoke((MethodInvoker)(() =>
+                        {
+                            try
+                            {
+                                labelVUnloadTrayPos.Text = mc.GetPosition(_cc.Mc.MotorVTrayUnload).ToString();
+                            }
+                            catch (Exception)
+                            {
+                            }
+
+                        }));
+                        Thread.Sleep(200);
+                        labeLLoadTrayPos.BeginInvoke((MethodInvoker)(() =>
+                        {
+                            try
+                            {
+                                labeLLoadTrayPos.Text = mc.GetPosition(_cc.Mc.MotorLTrayLoad).ToString();
+                            }
+                            catch (Exception)
+                            {
+
+                            }
+
+                        }));
+                        Thread.Sleep(200);
+                        labeLUnloadTrayPos.BeginInvoke((MethodInvoker)(() =>
+                        {
+                            try
+                            {
+                                labeLUnloadTrayPos.Text = mc.GetPosition(_cc.Mc.MotorLTrayUnload).ToString();
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }));
+                        Thread.Sleep(200);                        
+                    }
+                    catch (Exception)
+                    {
                         Thread.Sleep(1000);
                     }
                 }
@@ -902,7 +974,7 @@ namespace Sorter
                 foreach (var mtr in _cc.Mc.Motors)
                 {
                     _cc.Mc.Enable(mtr);
-                    _cc.Mc.ClearFault(mtr);                   
+                    _cc.Mc.ClearFault(mtr);
                 }
             }
             catch (Exception ex)
@@ -1332,16 +1404,16 @@ namespace Sorter
                         case CaptureId.LTrayPickTop:
                         case CaptureId.LLoadCompensationBottom:
                         case CaptureId.LLoadHolderTop:
-                            _cc.LRobot.MoveToTarget(_visionResult, 
+                            _cc.LRobot.MoveToTarget(_visionResult,
                                 MoveModeAMotor.Relative, ActionType.Load);
                             break;
                         case CaptureId.VTrayPickTop:
                         case CaptureId.VLoadCompensationBottom:
-                        case CaptureId.VLoadHolderTop:         
+                        case CaptureId.VLoadHolderTop:
                         case CaptureId.VUnloadHolderTop:
                         case CaptureId.VUnloadCompensationBottom:
                         case CaptureId.VTrayPlaceTop:
-                            _cc.VRobot.MoveToTarget(_visionResult, 
+                            _cc.VRobot.MoveToTarget(_visionResult,
                                 MoveModeAMotor.Relative, _selectedSuckerVacuum);
                             break;
                         default:
@@ -1378,13 +1450,13 @@ namespace Sorter
             {
                 var temp = _cc.LRobot.CurrentCycleId;
                 _cc.LRobot.SetForTest();
-                var task = _cc.LRobot.WorkAsync(temp+1);
+                var task = _cc.LRobot.WorkAsync(temp + 1);
                 await task;
                 ShowTaskResult(task);
                 _cc.LRobot.CurrentCycleId = temp;
 
-                _cc.WorkTable.Sucker(FixtureId.L, VacuumState.Off, VacuumArea.Center);
-                _cc.WorkTable.Sucker(FixtureId.L, VacuumState.Off, VacuumArea.Circle);
+                //_cc.WorkTable.Sucker(FixtureId.L, VacuumState.Off, VacuumArea.Center);
+                //_cc.WorkTable.Sucker(FixtureId.L, VacuumState.Off, VacuumArea.Circle);
 
             }
             catch (Exception ex)
@@ -1496,7 +1568,7 @@ namespace Sorter
             Button button = (Button)sender;
             button.Enabled = false;
             var str = comboBoxReadDevPoints.SelectedItem.ToString();
-           
+
 
             await Task.Run(() =>
             {
@@ -1567,7 +1639,7 @@ namespace Sorter
                 Show(ex);
             }
         }
-   
+
         private void buttonCloseGlue_Click(object sender, EventArgs e)
         {
             Button button = (Button)sender;
@@ -1793,7 +1865,7 @@ namespace Sorter
             {
                 var temp = _cc.VRobot.CurrentCycleId;
                 _cc.VRobot.SetForTest();
-                var task = _cc.VRobot.WorkAsync(temp+1);
+                var task = _cc.VRobot.WorkAsync(temp + 1);
                 await task;
                 ShowTaskResult(task);
                 _cc.VRobot.CurrentCycleId = temp;
@@ -1835,22 +1907,8 @@ namespace Sorter
             try
             {
                 var offsets = Helper.ConvertToJsonString(_cc.UserOffsets);
-                Helper.WriteFile(offsets, "UserOffsets.config");
+                Helper.WriteFile(offsets, Properties.Settings.Default.CapturePositionOffsets);
                 MessageBox.Show("OK");
-            }
-            catch (Exception ex)
-            {
-                Show(ex);
-            }
-        }
-
-        private void buttonHomeStepper_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                _cc.Mc.Home(_cc.Mc.MotorLRotateLoad);
-                _cc.Mc.Home(_cc.Mc.MotorVRotateLoad);
-                _cc.Mc.Home(_cc.Mc.MotorVRotateUnload);
             }
             catch (Exception ex)
             {
@@ -1896,7 +1954,7 @@ namespace Sorter
                 case StationId.L:
                     break;
                 case StationId.GlueLine:
-                    _cc.GlueLineRobot.NeedleOnZHeightCompensation = 
+                    _cc.GlueLineRobot.NeedleOnZHeightCompensation =
                         Convert.ToDouble(textBoxNeedleOnPressureSensorCompensation.Text);
                     var task = _cc.GlueLineRobot.CalibrateNeedleAsync();
                     await task;
@@ -1955,7 +2013,7 @@ namespace Sorter
             try
             {
                 var capPos = Helper.ConvertToJsonString(_cc.CapturePositions);
-                Helper.WriteFile(capPos, "CapturePositions.config");
+                Helper.WriteFile(capPos, Properties.Settings.Default.CapturePositions);
                 MessageBox.Show("OK");
             }
             catch (Exception ex)
@@ -1970,21 +2028,6 @@ namespace Sorter
             button.Enabled = false;
             try
             {
-                var para = new GlueParameters()
-                {
-                    PreShotTime = Convert.ToInt16(textBoxPreShot.Text),
-                    GlueSpeed = Convert.ToDouble(textBoxGlueSpeed.Text),
-                    GluePeriod = Convert.ToInt16(textBoxGluePeriod.Text),
-                    RiseGlueSpeed = Convert.ToDouble(textBoxGlueRiseSpeed.Text),
-                    RiseGlueHeight = Convert.ToDouble(textBoxGlueRiseHeight.Text),
-                    CloseGlueDelay = Convert.ToInt16(textBoxGlueCloseDelay.Text),
-                    PreClosePercentage = Convert.ToInt16(textBoxGluePreClosePercentage.Text),
-                    GlueHeightOffset = new double[4],
-                    SecondLineLessPreShot = Convert.ToInt16(textBoxSecondLineLessPreShot.Text),
-                };
-
-                para.GlueHeightOffset[0] = Convert.ToDouble(textBoxGlueHeightOffset.Text);
-
                 switch (_selectedGlueStation)
                 {
                     case StationId.V:
@@ -1993,20 +2036,24 @@ namespace Sorter
                         break;
                     case StationId.GlueLine:
                         _cc.WorkTable.Sucker(FixtureId.GlueLine, VacuumState.On, VacuumArea.Circle);
-                        
-                        var task = _cc.GlueLineRobot.WorkAsync(1, para);
+                        var cycleId = _cc.GlueLineRobot.CurrentCycleId;
+                        _cc.GlueLineRobot.CurrentCycleId--;
+                        _cc.WorkTable.Fixtures[(int)FixtureId.GlueLine].IsEmpty = false;
+                        var task = _cc.GlueLineRobot.WorkAsync(cycleId);
                         await task;
                         ShowTaskResult(task);
-                        _cc.WorkTable.Sucker(FixtureId.GlueLine, VacuumState.Off, VacuumArea.Circle);
+                        //_cc.WorkTable.Sucker(FixtureId.GlueLine, VacuumState.Off, VacuumArea.Circle);
                         break;
 
                     case StationId.GluePoint:
                         _cc.WorkTable.Sucker(FixtureId.GluePoint, VacuumState.On, VacuumArea.Circle);
-
-                        task = _cc.GluePointRobot.WorkAsync(1, para);
+                        cycleId = _cc.GluePointRobot.CurrentCycleId;
+                        _cc.GluePointRobot.CurrentCycleId--;
+                        _cc.WorkTable.Fixtures[(int)FixtureId.GluePoint].IsEmpty = false;
+                        task = _cc.GluePointRobot.WorkAsync(cycleId);
                         await task;
                         ShowTaskResult(task);
-                        _cc.WorkTable.Sucker(FixtureId.GluePoint, VacuumState.Off, VacuumArea.Circle);
+                        //_cc.WorkTable.Sucker(FixtureId.GluePoint, VacuumState.Off, VacuumArea.Circle);
                         break;
 
                     default:
@@ -2026,7 +2073,7 @@ namespace Sorter
             if (radioButtonGluePoint.Checked)
             {
                 _selectedGlueStation = StationId.GluePoint;
-            }            
+            }
         }
 
         private void radioButtonGlueLine_CheckedChanged(object sender, EventArgs e)
@@ -2035,19 +2082,6 @@ namespace Sorter
             {
                 _selectedGlueStation = StationId.GlueLine;
             }
-        }
-
-        private void button1_Click_1(object sender, EventArgs e)
-        {
-            _cc.UserConfigs = new ConfigManager(_cc);
-            _cc.UserConfigs.SaveSettings();
-
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            _cc.UserConfigs.ReadSettings();
-            dataGridViewUserSettings.DataSource = _cc.UserConfigs.Settings;
         }
 
         private void buttonStopMotion_Click(object sender, EventArgs e)
@@ -2067,5 +2101,434 @@ namespace Sorter
             _cc.KeepThisShitRunning = false;
             MessageBox.Show("Production pause after finish current cycle.");
         }
+
+        private void buttonSaveGlueParameters_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //GlueParameter glueParaPoint = new GlueParameter()
+                //{
+                //    PreShotTime = 100,
+                //    GluePeriod = 500,
+                //    CloseGlueDelay = 200,
+                //    GlueSpeed = 5,
+                //    RiseGlueHeight = 2,
+                //    RiseGlueSpeed = 0.5,
+                //    SecondLineLessPreShot = 50,
+                //};
+
+                //GlueParameter glueParaLine = new GlueParameter()
+                //{
+                //    PreShotTime = 200,
+                //    GlueSpeed = 5,
+                //    RiseGlueSpeed = 0.5,
+                //    RiseGlueHeight = 2,
+                //    CloseGlueDelay = 300,
+                //    SecondLineLessPreShot = 100,
+                //};
+
+                //List<GlueParameter> glues = new List<GlueParameter>();
+                //glues.Add(glueParaPoint);
+                //glues.Add(glueParaLine);
+
+                var glueParas = Helper.ConvertToJsonString(_cc.GlueParameters);
+                Helper.WriteFile(glueParas, Properties.Settings.Default.GlueParameters);
+
+                MessageBox.Show("OK");
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonSaveOtherParas_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var jStr = Helper.ConvertToJsonString(_cc.UserSettings);
+                Helper.WriteFile(jStr, Properties.Settings.Default.UserSettings);
+                _cc.SettingManager.ValidateSettings();
+                MessageBox.Show("OK");
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.LLoadStation.PushIn();
+                _cc.LLoadStation.Home();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+
+            //_cc.VLoadStation.Home();
+        }
+
+        private void buttonVLoadLoadTray_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.VLoadStation.LoadATray();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVLoadUnloadTray_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.VLoadStation.UnloadATray();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVUnloadLoadTray_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.VUnloadStation.LoadATray();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVUnloadUnloadTray_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.VUnloadStation.UnloadATray();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLLoadLoadTray_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.LLoadStation.LoadATray();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLUnloadUnloadTray_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.LUnloadStation.UnloadATray();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+        private void buttonVLoadTrayJogMinus_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _manualMotion.Jog(_cc.Mc.MotorVTrayLoad, _manualSpeed, MoveDirection.Negative);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVUnloadTrayJogMinus_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _manualMotion.Jog(_cc.Mc.MotorVTrayUnload, _manualSpeed, MoveDirection.Negative);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLLoadTrayJogMinus_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _manualMotion.Jog(_cc.Mc.MotorLTrayLoad, _manualSpeed, MoveDirection.Negative);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLUnloadTrayJogMinus_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _manualMotion.Jog(_cc.Mc.MotorLTrayUnload, _manualSpeed, MoveDirection.Negative);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVLoadTrayJogPlus_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _manualMotion.Jog(_cc.Mc.MotorVTrayLoad, _manualSpeed, MoveDirection.Positive);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVUnloadTrayJogPlus_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _manualMotion.Jog(_cc.Mc.MotorVTrayUnload, _manualSpeed, MoveDirection.Positive);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLLoadTrayJogPlus_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _manualMotion.Jog(_cc.Mc.MotorLTrayLoad, _manualSpeed, MoveDirection.Positive);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLUnloadTrayJogPlus_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _manualMotion.Jog(_cc.Mc.MotorLTrayUnload, _manualSpeed, MoveDirection.Positive);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVLoadTrayJogMinus_MouseUp(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _cc.Mc.Stop(_cc.Mc.MotorVTrayLoad);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVLoadTrayJogPlus_MouseUp(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _cc.Mc.Stop(_cc.Mc.MotorVTrayLoad);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVUnloadTrayJogMinus_MouseUp(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _cc.Mc.Stop(_cc.Mc.MotorVTrayUnload);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVUnloadTrayJogPlus_MouseUp(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _cc.Mc.Stop(_cc.Mc.MotorVTrayUnload);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLLoadTrayJogMinus_MouseUp(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _cc.Mc.Stop(_cc.Mc.MotorLTrayLoad);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLLoadTrayJogPlus_MouseUp(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _cc.Mc.Stop(_cc.Mc.MotorLTrayLoad);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLUnloadTrayJogMinus_MouseUp(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _cc.Mc.Stop(_cc.Mc.MotorLTrayUnload);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLUnloadTrayJogPlus_MouseUp(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                _cc.Mc.Stop(_cc.Mc.MotorLTrayUnload);
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVLoadTrayCylinderIn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.VLoadStation.PushIn();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVLoadTrayCylinderOut_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.VLoadStation.PushOut();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVUnloadTrayCylinderOut_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.VUnloadStation.PushOut();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonVUnloadTrayCylinderIn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.VUnloadStation.PushIn();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLLoadTrayCylinderIn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.LLoadStation.PushIn();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLLoadTrayCylinderOut_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.LLoadStation.PushOut();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLUnloadTrayCylinderOut_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.LUnloadStation.PushOut();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
+
+        private void buttonLUnloadTrayCylinderIn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _cc.LUnloadStation.PushIn();
+            }
+            catch (Exception ex)
+            {
+                Show(ex);
+            }
+        }
     }
-}
+ }

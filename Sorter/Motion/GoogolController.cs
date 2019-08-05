@@ -28,33 +28,32 @@ namespace Sorter
 
     public enum Axis
     {
-        VY = 209,
-        VX = 210,
-        VZ = 105,
-        VRotateLoad = 211,
-        VRotateUnload = 212,
         VTrayLoad = 101,
-        VTrayUnload = 104,
+        VConveyorLoad = 102,
+        VConveyorUnload = 103,
+        LY = 104, 
+        LX = 105, 
+        LZ = 106,
 
-        GlueLineY = 202,
+        LRotateLoad = 107,
+        LTrayLoad = 108,
+        LConveyorLoad = 109,
+        LTrayUnload = 110,
+        WorkTable = 111,
+
         GlueLineX = 201,
+        GlueLineY = 202,
         GlueLineZ = 203,
-
         GluePointY = 205,
         GluePointX = 204,
         GluePointZ = 206,
 
-        LY = 207,
-        LX = 208,
-        LZ = 106,
-        LRotateLoad = 107,
-        LTrayLoad = 108,
-        LTrayUnload = 110,
-        WorkTable = 111,
-
-        VConveyorUnload = 103,
-        VConveyorLoad = 102,
-        LConveyorLoad = 109, // 112?
+        VTrayUnload = 207,
+        VZ = 208,
+        VY = 209,
+        VX = 210,      
+        VRotateLoad = 211,
+        VRotateUnload = 212,   
     }
 
     public enum MotorState

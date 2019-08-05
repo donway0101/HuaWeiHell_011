@@ -101,6 +101,19 @@ namespace Sorter
             return JsonConvert.DeserializeObject<List<UserSetting>>(jsonString);
         }
 
+        public static object GetSettingValue(List<UserSetting> settings, UserSettingId id)
+        {
+            foreach (var setting in settings)
+            {
+                if (setting.Id == id)
+                {
+                    return setting.Value;
+                }
+            }
+
+            throw new Exception("Setting not found:" + id);
+        }
+
         /// <summary>
         /// Convert to capture positions.
         /// </summary>
@@ -109,6 +122,11 @@ namespace Sorter
         public static List<CapturePosition> ConvertToCapturePositions(string jsonString)
         {
             return JsonConvert.DeserializeObject<List<CapturePosition>>(jsonString);
+        }
+
+        public static List<GlueParameter> ConvertToGlueParameters(string jsonString)
+        {
+            return JsonConvert.DeserializeObject<List<GlueParameter>>(jsonString);
         }
 
         /// <summary>
@@ -127,6 +145,18 @@ namespace Sorter
                 }
             }
             throw new Exception("FindCapturePosition fail: " + id);
+        }
+
+        public static GlueParameter GetGlueParameter(List<GlueParameter> parameters, CoordinateId id)
+        {
+            foreach (var para in parameters)
+            {
+                if (para.Id == id)
+                {
+                    return para;
+                }
+            }
+            throw new Exception("GetGlueParameter fail: " + id);
         }
 
         /// <summary>

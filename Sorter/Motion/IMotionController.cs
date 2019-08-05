@@ -42,6 +42,5 @@ namespace Sorter
         void Stop(Motor motor);
         void StopAllEmergency();
         void StopAllSoft();
-        void TestLineMove();
     }
 }

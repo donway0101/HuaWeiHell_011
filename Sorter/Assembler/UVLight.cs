@@ -35,7 +35,7 @@ namespace Sorter
                 }
                 catch (Exception)
                 {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "UV Light Finished Successful." };
+                    return new WaitBlock() { Code = ErrorCode.UVFail, Message = "UV Light Finished Successful." };
                 }
             });
         }
@@ -126,7 +126,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.UVFail,
                         Message = "UV WorkAsync fails." + ex.Message,
                     };
                 }  

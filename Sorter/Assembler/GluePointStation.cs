@@ -11,14 +11,20 @@ namespace Sorter
 {
     public class GluePointStation : IRobot, IGlueRobot
     {
+        private static readonly log4net.ILog log =
+         log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         private readonly MotionController _mc;
         private readonly CoordinateId _coordinateId;
         private readonly PressureSensor _pressureSensor;
         private readonly LaserSensor _laserSensor;
         private readonly RoundTable _table;
+        private readonly VisionServer _vision;
         private readonly List<CapturePosition> _capturePositions;
         private readonly List<CapturePosition> _capturePositionsOffsets;
-        private readonly VisionServer _vision;
+        private readonly List<GlueParameter> _glueParameters;
+
+        private static readonly object _motionLocker = new object();
 
         /// <summary>
         /// Avoid conflict between work and needle cleaning.
@@ -54,11 +60,6 @@ namespace Sorter
 
         public Output NeedleCleanPool { get; set; }
 
-        /// <summary>
-        /// For shap changing of pressure sensor.
-        /// </summary>
-        public double GlueRadius { get; set; } = -0.1;
-
         public double LaserRefereceZHeight { get; set; }
 
         public Task<WaitBlock> Preparation { get; set; }
@@ -74,9 +75,10 @@ namespace Sorter
 
         public Stopwatch NeedleCleaningStopWatch { get; set; } = new Stopwatch();
         public int NeedleCleaningIntervalSec { get; set; } = 120;
+        public GlueParameter GlueParas { get; set; }
 
         public GluePointStation(MotionController controller, VisionServer vision,
-            RoundTable table, CoordinateId id,
+            RoundTable table, CoordinateId id, List<GlueParameter> glueParameters,
             List<CapturePosition> positions, List<CapturePosition> offsets,
             PressureSensor pressureSensor, LaserSensor laserSensor)
         {
@@ -88,6 +90,7 @@ namespace Sorter
             _pressureSensor = pressureSensor;
             _laserSensor = laserSensor;
             _vision = vision;
+            _glueParameters = glueParameters;
         }
 
         public double GetLaserHeightValue()
@@ -134,12 +137,12 @@ namespace Sorter
 
         public void AddDelay(ushort delayMs)
         {
-            _mc.AddDelay((short)_coordinateId, delayMs);
+            _mc.AddDelay(_coordinateId, delayMs);
         }
 
         public void AddDelay(int delayMs)
         {
-            _mc.AddDelay((short)_coordinateId, (ushort)delayMs);
+            _mc.AddDelay(_coordinateId, (ushort)delayMs);
         }
 
         public void Delay(int millisecondsTimeout)
@@ -149,12 +152,14 @@ namespace Sorter
 
         public void WaitTillInterpolationEnd()
         {
-            _mc.WaitTillInterpolationEnd(_coordinateId);
+            _mc.WaitTillInterpolationEnd(_coordinateId);           
+            Delay(200);
+            _mc.Stop(MotorX);
         }
 
         public void CheckEnoughSpace()
         {
-            if (_mc.IsCrdSpaceEnough((short)_coordinateId) == false)
+            if (_mc.IsCrdSpaceEnough(_coordinateId) == false)
             {
                 throw new Exception("Not enough space in the coordinate system.");
             }
@@ -177,12 +182,15 @@ namespace Sorter
         {
             MoveToSafeHeight();
 
-            _mc.MoveToTarget(MotorY, target.Y);
-            _mc.MoveToTarget(MotorX, target.X);
-            _mc.WaitTillEnd(MotorX);
-            _mc.WaitTillEnd(MotorY);
+            lock (_motionLocker)
+            {
+                _mc.MoveToTarget(MotorY, target.Y);
+                _mc.MoveToTarget(MotorX, target.X);
+                _mc.WaitTillEnd(MotorX);
+                _mc.WaitTillEnd(MotorY);
 
-            _mc.MoveToTargetTillEnd(MotorZ, target.Z);
+                _mc.MoveToTargetTillEnd(MotorZ, target.Z);
+            }           
         }
 
         public void MoveToCapture(CapturePosition target)
@@ -207,6 +215,7 @@ namespace Sorter
 
             Preparation = Helper.DummyAsyncTask();
             LaserRefereceZHeight = Properties.Settings.Default.LaserReferenceGluePoint;
+            GlueParas = Helper.GetGlueParameter(_glueParameters, _coordinateId);
         }
 
         public Pose GetVisionResult(CapturePosition pos)
@@ -256,9 +265,12 @@ namespace Sorter
 
         public void MoveToSafeHeight()
         {
-            if (GetPosition(MotorZ) < SafeZHeight)
+            lock (_motionLocker)
             {
-                _mc.MoveToTargetTillEnd(MotorZ, SafeZHeight);
+                if (GetPosition(MotorZ) < SafeZHeight)
+                {
+                    _mc.MoveToTargetTillEnd(MotorZ, SafeZHeight);
+                }
             }
         }
 
@@ -347,22 +359,25 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "ShotGlueAsync fail: " + ex.Message };
+                    return new WaitBlock() { Code = ErrorCode.ShotGlueFail, Message = "ShotGlueAsync fail: " + ex.Message };
                 }
             });
         }
 
         public void ShotGlue(ushort delayMs = 600)
         {
-            ClearInterpolationBuffer();
+            lock (_motionLocker)
+            {
+                ClearInterpolationBuffer();
 
-            AddDigitalOutput(OutputState.On);
-            AddDelay(delayMs);
-            AddDigitalOutput(OutputState.Off);
+                AddDigitalOutput(OutputState.On);
+                AddDelay(delayMs);
+                AddDigitalOutput(OutputState.Off);
 
-            CheckEnoughSpace();
-            StartInterpolation();
-            WaitTillInterpolationEnd();
+                CheckEnoughSpace();
+                StartInterpolation();
+                WaitTillInterpolationEnd();
+            }            
         }
 
         public void CloseGlue()
@@ -372,7 +387,6 @@ namespace Sorter
 
         public void ClearInterpolationBuffer()
         {
-            _mc.Stop(MotorX);
             _mc.SetCoordinateSystem(_coordinateId);
             _mc.ClearInterpolationBuffer(2, _coordinateId);
         }
@@ -572,7 +586,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.GluePointPrepareFail,
                         Message = "Glue point Preparation fail: " + ex.Message
                     };
                 }
@@ -607,7 +621,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.NeedleCalibrationFail,
                         Message = "CalibrateNeedleAsync fail: " + ex.Message
                     };
                 }
@@ -654,7 +668,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.CleanNeedleFail,
                         Message = "CleanNeedle fail: " + ex.Message
                     };
                 }
@@ -692,7 +706,7 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "GetLaserRefereceHeight fail: " + ex.Message };
+                    return new WaitBlock() { Code = ErrorCode.FindNeedleHeightFail, Message = "GetLaserRefereceHeight fail: " + ex.Message };
                 }
             });
         }
@@ -710,7 +724,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.FindNeedleHeightFail,
                         Message = "CaptureNeedleHeight fail: " + ex.Message
                     };
                 }
@@ -833,125 +847,65 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.VisionFail,
                         Message = "GetVisionResultsForLaserAndWorkAsync fail:" + ex.Message
                     };
                 }
             });
         }
 
-        public void Glue(GlueTargets glueTargets, GlueParameters gluePara)
+        public void Glue(GlueTargets glueTargets, GlueParameter gluePara)
         {
-            ClearInterpolationBuffer();
-
-            #region First point.
-            int index = 0;
-            var firstPoint = new PointInfo()
+            lock (_motionLocker)
             {
-                X = glueTargets.PointTargets[index].X,
-                Y = glueTargets.PointTargets[index].Y,
-                Z = glueTargets.PointTargets[index].Z + GlueRadius,
-            };
-            AddPoint(firstPoint);
-            AddDigitalOutput(OutputState.On);
-            AddDelay(gluePara.PreShotTime);
-            AddDelay(gluePara.GluePeriod);
-            AddDigitalOutput(OutputState.Off);
+                ClearInterpolationBuffer();
 
-            var firstRise = new PointInfo()
-            {
-                X = glueTargets.PointTargets[index].X,
-                Y = glueTargets.PointTargets[index].Y,
-                Z = glueTargets.PointTargets[index].Z + gluePara.RiseGlueHeight,
-            };
-            AddPoint(firstRise, gluePara.RiseGlueSpeed);
-            AddDelay(gluePara.CloseGlueDelay);
-            #endregion
+                PointInfo gluePoint;
+                PointInfo risePoint;
 
-            #region second point.
-            index++;
-            var secondPoint = new PointInfo()
-            {
-                X = glueTargets.PointTargets[index].X,
-                Y = glueTargets.PointTargets[index].Y,
-                Z = glueTargets.PointTargets[index].Z + GlueRadius,
-            };
-            AddPoint(secondPoint);
-            AddDigitalOutput(OutputState.On);
-            AddDelay(gluePara.PreShotTime - gluePara.SecondLineLessPreShot);
-            AddDelay(gluePara.GluePeriod);
-            AddDigitalOutput(OutputState.Off);
+                for (int i = 0; i < 4; i++)
+                {
+                    gluePoint = new PointInfo()
+                    {
+                        X = glueTargets.PointTargets[i].X,
+                        Y = glueTargets.PointTargets[i].Y,
+                        Z = glueTargets.PointTargets[i].Z + gluePara.GlueRadius,
+                    };
+                    AddPoint(gluePoint);
+                    AddDigitalOutput(OutputState.On);
+                    if (i == 0)
+                    {
+                        AddDelay(gluePara.PreShotTime);
+                    }
+                    else
+                    {
+                        AddDelay(gluePara.PreShotTime - gluePara.SecondLineLessPreShot);
+                    }
+                    AddDelay(gluePara.GluePeriod);
+                    AddDigitalOutput(OutputState.Off);
 
-            var secondRise = new PointInfo()
-            {
-                X = glueTargets.PointTargets[index].X,
-                Y = glueTargets.PointTargets[index].Y,
-                Z = glueTargets.PointTargets[index].Z + gluePara.RiseGlueHeight,
-            };
-            AddPoint(secondRise, gluePara.RiseGlueSpeed);
-            AddDelay(gluePara.CloseGlueDelay);
-            #endregion
+                    risePoint = new PointInfo()
+                    {
+                        X = glueTargets.PointTargets[i].X,
+                        Y = glueTargets.PointTargets[i].Y,
+                        Z = glueTargets.PointTargets[i].Z + gluePara.RiseGlueHeight,
+                    };
+                    AddPoint(risePoint, gluePara.RiseGlueSpeed);
+                    AddDelay(gluePara.CloseGlueDelay);
+                }
 
-            #region third point.
-            index++;
-            var thirdPoint = new PointInfo()
-            {
-                X = glueTargets.PointTargets[index].X,
-                Y = glueTargets.PointTargets[index].Y,
-                Z = glueTargets.PointTargets[index].Z + GlueRadius,
-            };
-            AddPoint(thirdPoint);
-            AddDigitalOutput(OutputState.On);
-            AddDelay(gluePara.PreShotTime - gluePara.SecondLineLessPreShot);
-            AddDelay(gluePara.GluePeriod);
-            AddDigitalOutput(OutputState.Off);
+                var lastRise = new PointInfo()
+                {
+                    X = glueTargets.PointTargets[3].X,
+                    Y = glueTargets.PointTargets[3].Y,
+                    Z = glueTargets.PointTargets[3].Z + 20,
+                };
+                AddPoint(lastRise);
 
-            var thirdRise = new PointInfo()
-            {
-                X = glueTargets.PointTargets[index].X,
-                Y = glueTargets.PointTargets[index].Y,
-                Z = glueTargets.PointTargets[index].Z + gluePara.RiseGlueHeight,
-            };
-            AddPoint(thirdRise, gluePara.RiseGlueSpeed);
-            AddDelay(gluePara.CloseGlueDelay);
-            #endregion
-
-            #region fourth point.
-            index++;
-            var fourthPoint = new PointInfo()
-            {
-                X = glueTargets.PointTargets[index].X,
-                Y = glueTargets.PointTargets[index].Y,
-                Z = glueTargets.PointTargets[index].Z + GlueRadius,
-            };
-            AddPoint(fourthPoint);
-            AddDigitalOutput(OutputState.On);
-            AddDelay(gluePara.PreShotTime - gluePara.SecondLineLessPreShot);
-            AddDelay(gluePara.GluePeriod);
-            AddDigitalOutput(OutputState.Off);
-
-            var fourthRise = new PointInfo()
-            {
-                X = glueTargets.PointTargets[index].X,
-                Y = glueTargets.PointTargets[index].Y,
-                Z = glueTargets.PointTargets[index].Z + gluePara.RiseGlueHeight,
-            };
-            AddPoint(fourthRise, gluePara.RiseGlueSpeed);
-            AddDelay(gluePara.CloseGlueDelay);
-            #endregion
-
-            var lastRise = new PointInfo()
-            {
-                X = glueTargets.PointTargets[index].X,
-                Y = glueTargets.PointTargets[index].Y,
-                Z = glueTargets.PointTargets[index].Z + 20,
-            };
-            AddPoint(lastRise);
-
-
-            CheckEnoughSpace();
-            StartInterpolation();
-            WaitTillInterpolationEnd();
+                CheckEnoughSpace();
+                StartInterpolation();
+                WaitTillInterpolationEnd();
+            }            
         }
 
         public void ShotGlueOutput(int delaySec = 10)
@@ -963,17 +917,6 @@ namespace Sorter
 
         public void Work()
         {
-            GlueParameters gluePara = new GlueParameters()
-            {
-                PreShotTime = 100,
-                GluePeriod = 500,
-                CloseGlueDelay = 200,
-                GlueSpeed = 5,
-                RiseGlueHeight = 2,
-                RiseGlueSpeed = 0.5,
-                SecondLineLessPreShot = 50,
-            };
-
             MoveToCapture(GetCapturePositionWithUserOffset(CaptureId.GluePointBeforeGlue));
             var glueTargets = GetVisionResultsForLaserAndWork();
             var heights = GetSurfaceDistance(glueTargets);
@@ -995,8 +938,10 @@ namespace Sorter
 
             MoveToTarget(approachPoint);
 
-            Glue(glueTargets, gluePara);
+            string jstr = Helper.ConvertToJsonString(glueTargets);
+            log.Info("Glue point target is " + Environment.NewLine +  jstr);
 
+            Glue(glueTargets, GlueParas);
         }
 
 
@@ -1008,6 +953,7 @@ namespace Sorter
                 if (_table.Fixtures[(int)StationId.GluePoint].NG ||
                  _table.Fixtures[(int)StationId.GluePoint].IsEmpty || CurrentCycleId >= cycleId)
                 {
+
                     CurrentCycleId = cycleId;
                     return new WaitBlock()
                     {
@@ -1045,27 +991,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
-                        Message = "Glue point Finished fail." + ex.Message
-                    };
-                }
-            });
-        }
-
-        public async Task<WaitBlock> WorkAsync(int cycleId, GlueParameters gluePara)
-        {
-            return await Task.Run(() => {
-                try
-                {
-                    //Work(gluePara);
-                    Work();
-                    return new WaitBlock() { Message = "Glue point Finished Successful." };
-                }
-                catch (Exception ex)
-                {
-                    return new WaitBlock()
-                    {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.GluePointFail,
                         Message = "Glue point Finished fail." + ex.Message
                     };
                 }

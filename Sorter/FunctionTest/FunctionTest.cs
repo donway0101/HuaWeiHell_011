@@ -28,8 +28,24 @@ namespace Sorter
                         _currentCycleId = 1;
                     }
 
+                    //if (VLoadStation.GetInsideOpticalSensor()==false)
+                    //{
+                    //    VLoadStation.LoadATray();
+                    //}
+                    //if (VUnloadStation.GetInsideOpticalSensor() == false)
+                    //{
+                    //    VUnloadStation.LoadATray();
+                    //}
+                    //if (LLoadStation.GetInsideOpticalSensor()==false)
+                    //{
+                    //    LLoadStation.LoadATray();
+                    //}
+
                     do
                     {
+                        //WorkTable.Fixtures[(int)FixtureId.V].IsEmpty = false;
+                        //WorkTable.Fixtures[(int)FixtureId.V].NG = false;
+
                         log = string.Empty;
                         //Stop production.
                         if (VRobot.StopProduction)
@@ -73,25 +89,25 @@ namespace Sorter
                         var vTask = VRobot.WorkAsync(_currentCycleId);
                         var gpTask = GluePointRobot.WorkAsync(_currentCycleId);
                         var glTask = GlueLineRobot.WorkAsync(_currentCycleId);
-                        //var lTask = LRobot.WorkAsync(_currentCycleId);
-                        //var uVTask = UVLight.WorkAsync(_currentCycleId);
+                        var lTask = LRobot.WorkAsync(_currentCycleId);
+                        var uVTask = UVLight.WorkAsync(_currentCycleId);
 
                         await vTask;
                         await gpTask;
                         await glTask;
-                        //await lTask;
-                        //await uVTask;
+                        await lTask;
+                        await uVTask;
 
                         log += vTask.Result.Message + Environment.NewLine;
                         log += gpTask.Result.Message + Environment.NewLine;
                         log += glTask.Result.Message + Environment.NewLine;
-                        //log += lTask.Result.Message + Environment.NewLine;
+                        log += lTask.Result.Message + Environment.NewLine;
 
                         Helper.CheckTaskResult(vTask);
                         Helper.CheckTaskResult(gpTask);
                         Helper.CheckTaskResult(glTask);
-                        //Helper.CheckTaskResult(lTask);
-                        //Helper.CheckTaskResult(uVTask);
+                        Helper.CheckTaskResult(lTask);
+                        Helper.CheckTaskResult(uVTask);
 
                         var tableTask = WorkTable.TurnsAsync();
                         await tableTask;
@@ -107,7 +123,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.ProductionFail,
                         Message = "Production interruptted due to: " + ex.Message + " " + log,
                     };
                 }

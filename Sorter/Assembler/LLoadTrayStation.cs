@@ -8,31 +8,33 @@ using System.Threading.Tasks;
 
 namespace Sorter
 {
-    public class VUnloadTrayStation : IMachineControl, ITrayStation
+    public class LLoadTrayStation : IMachineControl, ITrayStation
     {
         private readonly MotionController _mc;
 
         public int TrayLayerNumber { get; set; }
         public int CurrentTrayLayerIndex { get; set; }
-        public double TrayLayerHeight { get; set; } = 24.0;
+        public double TrayLayerHeight { get; set; } = 10.0;
         public Motor MotorTray { get; set; }
         public Motor MotorConveyor { get; set; }
-
-        public double BottomFirstLayerHeight { get; set; } = 114.73;
+        public double BottomFirstLayerHeight { get; set; } = 113.0;
 
         public double TraySpeed { get; set; } = 30;
         public double ConveyorSpeed { get; set; } = 30;
 
-        public VUnloadTrayStation(MotionController controller)
+        public LLoadTrayStation(MotionController controller)
         {
             _mc = controller;
         }
 
         public void LoadATray(int timeoutSec = 30)
         {
+            _mc.LLoadConveyorBlock(LockState.On);
             PushIn();
             ConveyorIn(timeoutSec);
+            //Todo move sensor           
             LockTray();
+            DescendOneLayer();
         }
 
         public void UnloadATray(int timeoutSec = 30)
@@ -60,7 +62,6 @@ namespace Sorter
                 state = GetInsideOpticalSensor();
 
             } while (state == false);
-
             Delay(3000);
             _mc.Stop(MotorConveyor);
         }
@@ -83,7 +84,6 @@ namespace Sorter
 
             } while (state == false);
 
-            Delay(3000);
             _mc.Stop(MotorConveyor);
         }
 
@@ -119,18 +119,18 @@ namespace Sorter
 
         public bool GetInsideOpticalSensor()
         {
-            return _mc.GetOpticalSensor(Input.VUnloadConveyorInsideOpticalSensor);
+            return _mc.GetOpticalSensor(Input.LLoadConveyorInsideOpticalSensor);
         }
 
         public bool GetOutsideOpticalSensor()
         {
-            return _mc.GetOpticalSensor(Input.VUnloadConveyorOutsideOpticalSensor);
+            return _mc.GetOpticalSensor(Input.LLoadConveyorOutsideOpticalSensor);
         }
 
         public void Home()
         {
             _mc.ZeroPosition(MotorTray);
-            _mc.VUnloadTrayCylinder(TrayCylinderState.Retract);
+            _mc.LLoadTrayCylinder(TrayCylinderState.Retract);
             MotorTray.HomeLimitSpeed = TraySpeed;
             _mc.Home(MotorTray);
         }
@@ -143,7 +143,7 @@ namespace Sorter
 
         public void LockTray()
         {
-            _mc.VUnloadConveyorLocker(LockState.On);
+            _mc.LLoadConveyorLocker(LockState.On);
         }
 
         public void Pause()
@@ -156,12 +156,12 @@ namespace Sorter
         /// </summary>
         public void PushIn()
         {
-            _mc.VUnloadTrayCylinder(TrayCylinderState.PushOut);
-            _mc.VUnloadTrayCylinder(TrayCylinderState.Retract);
+            _mc.LLoadTrayCylinder(TrayCylinderState.PushOut);
+            _mc.LLoadTrayCylinder(TrayCylinderState.Retract);
             if (GetOutsideOpticalSensor() == false)
             {
                 throw new Exception("Tray stuck on conveyor");
-            }           
+            }          
         }
 
         /// <summary>
@@ -169,12 +169,13 @@ namespace Sorter
         /// </summary>
         public void PushOut()
         {
-            _mc.VUnloadConveyorCylinder(TrayCylinderState.PushOut);
-            _mc.VUnloadConveyorCylinder(TrayCylinderState.Retract);
-            if (GetOutsideOpticalSensor() == true)
-            {
-                throw new Exception("Tray stuck on conveyor");
-            }            
+            //_mc.LLoadConveyorCylinder(TrayCylinderState.PushOut);
+            //if (GetOutsideOpticalSensor() == true)
+            //{
+            //    throw new Exception("Tray stuck on conveyor");
+            //}
+            //_mc.LLoadConveyorCylinder(TrayCylinderState.Retract);     
+            throw new NotImplementedException();
         }
 
         public void Reset()
@@ -200,8 +201,8 @@ namespace Sorter
 
         public void Setup()
         {
-            MotorTray = _mc.MotorVTrayUnload;
-            MotorConveyor = _mc.MotorVConveyorUnload;
+            MotorTray = _mc.MotorLTrayLoad;
+            MotorConveyor = _mc.MotorLConveyorLoad;
         }
 
         public void Start()
@@ -216,7 +217,7 @@ namespace Sorter
 
         public void UnlockTray()
         {
-            _mc.VUnloadConveyorLocker(LockState.Off);
+            _mc.LLoadConveyorLocker(LockState.Off);
         }
     }
 }

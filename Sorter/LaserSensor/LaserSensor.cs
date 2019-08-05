@@ -50,7 +50,7 @@ namespace Sorter
             {
                 _serial = new SerialPort(
                     _portName, _baudRate, _parity, _dataBit, _stopBits)
-                { ReadTimeout = 1000 };
+                { ReadTimeout = 2000 };
             }
 
             if (_serial.IsOpen == false)
@@ -84,8 +84,15 @@ namespace Sorter
         private void _serial_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             //_response += _serial.ReadExisting();
-            _serial.Read(response, 0, 20);
-            _sensorResponsed = true;
+            try
+            {
+                _serial.Read(response, 0, 20);
+                _sensorResponsed = true;
+            }
+            catch (Exception)
+            {
+                //
+            }          
         }
 
         public void Stop()

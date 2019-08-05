@@ -5,6 +5,10 @@
         int TrayLayerNumber { get; set; }
         int CurrentTrayLayerIndex { get; set; }
         double TrayLayerHeight { get; set; }
+        double BottomFirstLayerHeight { get; set; }
+        double TraySpeed { get; set; }
+        double ConveyorSpeed { get; set; }
+
         Motor MotorTray { get; set; }
         Motor MotorConveyor { get; set; }
 
@@ -21,6 +25,8 @@
         void DescendOneLayer();
         void RiseToTopLayer();
         void DescendToBottomLayer();
+        void Ready();
+        void WaitTillReady();
         void PushIn();
         void PushOut();
     }

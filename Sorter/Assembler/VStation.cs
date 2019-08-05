@@ -23,6 +23,8 @@ namespace Sorter
         private List<CapturePosition> _capturePositions;
         private List<CapturePosition> _capturePositionsOffsets;
 
+        private static readonly object _motionLocker = new object();
+
         /// <summary>
         /// Unload stepper motor
         /// </summary>
@@ -92,7 +94,7 @@ namespace Sorter
                 }
                 catch (Exception ex)
                 {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, Message = "Find tray position fail:" + ex.Message };
+                    return new WaitBlock() { Code = ErrorCode.FindUnloadTrayFail, Message = "Find tray position fail:" + ex.Message };
                 }
             });
         }
@@ -157,7 +159,7 @@ namespace Sorter
             MotorY.Velocity = speed;
             MotorZ.Velocity = speed;
             MotorA.Velocity = speed;
-            MotorAUnload.Velocity = speed;
+            MotorAUnload.Velocity = speed;           
         }
 
         /// <summary>
@@ -306,6 +308,11 @@ namespace Sorter
         /// <param name="part"></param>
         private void UnloadPlace(Part part)
         {
+            if (UnloadTrayCaptured == false)
+            {
+                FindBaseUnloadPosition();
+            }
+
             MoveToTarget(part.TargetPose, MoveModeAMotor.None, ActionType.Unload);
             Sucker(VacuumState.Off, ActionType.Unload);
             MoveToSafeHeight();
@@ -498,11 +505,14 @@ namespace Sorter
 
         public void MoveToSafeHeight()
         {
-            if (GetPosition(MotorZ) < SafeZHeight)
+            lock (_motionLocker)
             {
-                CylinderHead(HeadCylinderState.Up, ActionType.Load);
-                CylinderHead(HeadCylinderState.Up, ActionType.Unload);
-                _mc.MoveToTargetTillEnd(MotorZ, SafeZHeight);
+                if (GetPosition(MotorZ) < SafeZHeight)
+                {
+                    CylinderHead(HeadCylinderState.Up, ActionType.Load);
+                    CylinderHead(HeadCylinderState.Up, ActionType.Unload);
+                    _mc.MoveToTargetTillEnd(MotorZ, SafeZHeight);
+                }
             }
         }
 
@@ -515,7 +525,7 @@ namespace Sorter
         {
             return (GetPosition(MotorY) >= SafeYArea && target.Y >= SafeYArea) ||
                        (GetPosition(MotorX) <= SafeXArea && target.X <= SafeXArea);
-        }  
+        }
 
         /// <summary>
         /// Move robot to target.
@@ -528,28 +538,16 @@ namespace Sorter
         {
             MoveToSafeHeight();
 
-            if (IsMoveToSameArea(target))
-            {
-                _mc.MoveToTarget(MotorY, target.Y);
-                _mc.MoveToTarget(MotorX, target.X);
-                MoveAngleMotor(target.A, mode, procedure);
-
-                _mc.WaitTillEnd(MotorX);
-                _mc.WaitTillEnd(MotorY);
-                WaitTillEndAngleMotor();
-
-                CylinderHead(HeadCylinderState.Down, procedure);
-                _mc.MoveToTargetTillEnd(MotorZ, target.Z);
-            }
-            else
-            {
-                //Move from conveyor to table.
-                if (GetPosition(MotorY) > SafeYArea &&
-                   target.Y < SafeYArea)
+            lock (_motionLocker)
+            {               
+                if (IsMoveToSameArea(target))
                 {
+                    _mc.MoveToTarget(MotorY, target.Y);
+                    _mc.MoveToTarget(MotorX, target.X);
                     MoveAngleMotor(target.A, mode, procedure);
-                    _mc.MoveToTargetTillEnd(MotorX, target.X);
-                    _mc.MoveToTargetTillEnd(MotorY, target.Y);
+
+                    _mc.WaitTillEnd(MotorX);
+                    _mc.WaitTillEnd(MotorY);
                     WaitTillEndAngleMotor();
 
                     CylinderHead(HeadCylinderState.Down, procedure);
@@ -557,13 +555,13 @@ namespace Sorter
                 }
                 else
                 {
-                    //Move from table to conveyor.
-                    if (GetPosition(MotorX) < SafeXArea &&
-                        target.X > SafeXArea)
+                    //Move from conveyor to table.
+                    if (GetPosition(MotorY) > SafeYArea &&
+                       target.Y < SafeYArea)
                     {
                         MoveAngleMotor(target.A, mode, procedure);
-                        _mc.MoveToTargetTillEnd(MotorY, target.Y);
                         _mc.MoveToTargetTillEnd(MotorX, target.X);
+                        _mc.MoveToTargetTillEnd(MotorY, target.Y);
                         WaitTillEndAngleMotor();
 
                         CylinderHead(HeadCylinderState.Down, procedure);
@@ -571,9 +569,24 @@ namespace Sorter
                     }
                     else
                     {
-                        throw new Exception("V robot move to routine goes into bug6516516498513.");
+                        //Move from table to conveyor.
+                        if (GetPosition(MotorX) < SafeXArea &&
+                            target.X > SafeXArea)
+                        {
+                            MoveAngleMotor(target.A, mode, procedure);
+                            _mc.MoveToTargetTillEnd(MotorY, target.Y);
+                            _mc.MoveToTargetTillEnd(MotorX, target.X);
+                            WaitTillEndAngleMotor();
+
+                            CylinderHead(HeadCylinderState.Down, procedure);
+                            _mc.MoveToTargetTillEnd(MotorZ, target.Z);
+                        }
+                        else
+                        {
+                            throw new Exception("V robot move to routine goes into bug6516516498513.");
+                        }
                     }
-                }
+                } 
             }
         }
 
@@ -748,7 +761,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.LockTrayFail,
                         Message = "LockTray Finished Successful."
                     };
                 }
@@ -846,7 +859,7 @@ namespace Sorter
         /// <returns></returns>
         public async Task<WaitBlock> PrepareAsync()
         {
-            return await Task.Run(async() =>
+            return await Task.Run(() =>
             {
                 int failCount = 0;
                 string remarks = string.Empty;
@@ -855,13 +868,14 @@ namespace Sorter
                 {
                     try
                     {
-                        await ChangeLoadTray;
-                        Helper.CheckTaskResult(ChangeLoadTray);
+                        //await ChangeLoadTray;
+                        //Helper.CheckTaskResult(ChangeLoadTray);
 
-                        await ChangeUnloadTray;
-                        Helper.CheckTaskResult(ChangeUnloadTray);
+                        //await ChangeUnloadTray;
+                        //Helper.CheckTaskResult(ChangeUnloadTray);
 
                         Prepare();
+
                         return new WaitBlock()
                         {
                             Message = "V Preparation Finished."
@@ -930,7 +944,7 @@ namespace Sorter
                     {
                         return new WaitBlock()
                         {
-                            Code = ErrorCode.TobeCompleted,
+                            Code = ErrorCode.VStationPrepareFail,
                             Message = "V Preparation fail: " + ex.Message
                         };
                     }
@@ -957,7 +971,7 @@ namespace Sorter
         /// <returns></returns>
         public async Task<WaitBlock> WorkAsync(int cycleId)
         {
-            return await Task.Run( async() =>
+            return await Task.Run(async() =>
             {
                 #region Skip work,wait for other station.
                 if (CurrentCycleId >= cycleId)
@@ -1085,7 +1099,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.LoadTrayFail,
                         Message = "ChangeLoadTray fail: " + ex.Message
                     };
                 }
@@ -1100,11 +1114,13 @@ namespace Sorter
 
                 try
                 {
-                    _loadTrayStation.UnloadATray();
-                    _loadTrayStation.LoadATray();
+                    _unloadTrayStation.UnloadATray();
+                    _unloadTrayStation.LoadATray();
 
-                    LoadTray.CurrentPart.XIndex = 0;
-                    LoadTray.CurrentPart.YIndex = 0;
+                    UnloadTray.CurrentPart.XIndex = 0;
+                    UnloadTray.CurrentPart.YIndex = 0;
+
+                    UnloadTrayCaptured = false;
 
                     return new WaitBlock()
                     {
@@ -1115,7 +1131,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.UnloadTrayFail,
                         Message = "ChangeUnloadTray fail: " + ex.Message
                     };
                 }

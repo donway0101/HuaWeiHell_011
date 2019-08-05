@@ -82,5 +82,41 @@ namespace Sorter.Properties {
                 this["DevelopmentPositions"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("CapturePositionOffsets.config")]
+        public string CapturePositionOffsets {
+            get {
+                return ((string)(this["CapturePositionOffsets"]));
+            }
+            set {
+                this["CapturePositionOffsets"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("CapturePositions.config")]
+        public string CapturePositions {
+            get {
+                return ((string)(this["CapturePositions"]));
+            }
+            set {
+                this["CapturePositions"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("GlueParameters.config")]
+        public string GlueParameters {
+            get {
+                return ((string)(this["GlueParameters"]));
+            }
+            set {
+                this["GlueParameters"] = value;
+            }
+        }
     }
 }

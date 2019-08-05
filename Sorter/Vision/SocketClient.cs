@@ -113,8 +113,8 @@ namespace Sorter
                 throw new Exception("Vision server not connected.");
             }
 
-            log.Info("Sending to server:" + Environment.NewLine +
-                Helper.ConvertToJsonString(capturePosition));
+            //log.Info("Sending to server:" + Environment.NewLine +
+            //    Helper.ConvertToJsonString(capturePosition));
 
             //Clean the last unhandled vision response.
             while(ResultFound(capturePosition.CaptureId, out AxisOffset offsetResultDump))
@@ -143,16 +143,16 @@ namespace Sorter
 
             if (offsetResult.ResultOK == false)
             {
-                log.Info("No Recieved to server of :" + Environment.NewLine +
-                Helper.ConvertToJsonString(capturePosition));
+                //log.Info("No Recieved to server of :" + Environment.NewLine +
+                //Helper.ConvertToJsonString(capturePosition));
                 throw new VisionException("Vision NG")
                 {
                     CaptureId = capturePosition.CaptureId,
                 };
             }
 
-            log.Info("Recieved to server:" + Environment.NewLine +
-                Helper.ConvertToJsonString(offsetResult));
+            //log.Info("Recieved to server:" + Environment.NewLine +
+            //    Helper.ConvertToJsonString(offsetResult));
             return offsetResult;
         }
 
@@ -222,10 +222,11 @@ namespace Sorter
                         //break;
                         case CaptureId.LLoadHolderTop:
                             pose.CaptureId = id;
-                            pose.X = _mc.GetPosition(_mc.MotorLX);
-                            pose.Y = _mc.GetPosition(_mc.MotorLY);
-                            pose.Z = _mc.GetPosition(_mc.MotorLZ);
-                            log.Info("X:" + pose.X + "Y: " + pose.Y +  "Z: " + pose.Z);
+                            //pose.X = _mc.GetPosition(_mc.MotorLX);
+                            //pose.Y = _mc.GetPosition(_mc.MotorLY);
+                            //pose.Z = _mc.GetPosition(_mc.MotorLZ);
+                            //Todo
+                            //log.Info("X:" + pose.X + "Y: " + pose.Y +  "Z: " + pose.Z);
                             break;
 
                         case CaptureId.VTrayPickTop:
@@ -239,9 +240,9 @@ namespace Sorter
                         case CaptureId.VUnloadCompensationBottom:
                         //break;
                         case CaptureId.VTrayPlaceTop:
-                            pose.CaptureId = id;
-                            pose.X = _mc.GetPosition(_mc.MotorVX);
-                            pose.Y = _mc.GetPosition(_mc.MotorVY);
+                            //pose.CaptureId = id;
+                            //pose.X = _mc.GetPosition(_mc.MotorVX);
+                            //pose.Y = _mc.GetPosition(_mc.MotorVY);
                             break;
                         default:
                             break;
@@ -286,7 +287,8 @@ namespace Sorter
                 }
                 catch (Exception)
                 {
-                    Task.Delay(_reConnectInterval);
+                    Thread.Sleep(_reConnectInterval);
+                    //Task.Delay(_reConnectInterval);
                 }
             }
         }
@@ -327,7 +329,7 @@ namespace Sorter
                 byte[] buffer = Encoding.Default.GetBytes(cmd);
                 _clientSocket.Send(buffer, 0, buffer.Length, 0);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Connected = false;
                 _receiveManualResetEvent.Reset();

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Bp.Mes;
-using System.IO.Ports;
 
 namespace Sorter
 {
@@ -20,7 +16,10 @@ namespace Sorter
         public List<CapturePosition> CapturePositions;
         public List<CapturePosition> UserOffsets;
         public List<CapturePosition> DevelopPoints;
-        public ConfigManager UserConfigs;
+        public List<GlueParameter> GlueParameters;
+        public List<UserSetting> UserSettings;
+
+        public SettingManager SettingManager;
 
         public PressureSensor PressureSensorGlueLine;
         public PressureSensor PressureSensorGluePoint;
@@ -38,8 +37,8 @@ namespace Sorter
 
         public VLoadTrayStation VLoadStation;
         public VUnloadTrayStation VUnloadStation;
-        //public TrayStation LLoadStation;
-        //public TrayStation LUnloadStation;
+        public LLoadTrayStation LLoadStation;
+        public LUnloadTrayStation LUnloadStation;
 
         public VisionServer Vision;
 
@@ -83,25 +82,37 @@ namespace Sorter
 
             UVLight = new UVLight(Mc, WorkTable);
 
-            UserConfigs = new ConfigManager(this);
             LoadCapturePositions();
             LoadUserOffsets();
             LoadDevelopPoints();
+            LoadGlueParameters();
+          
+            LoadUserSettings();
+            SettingManager = new SettingManager(this);
 
             LRobot = new LStation(Mc, Vision, WorkTable, CapturePositions, UserOffsets);
             LRobot.Setup();
+
+            VLoadStation = new VLoadTrayStation(Mc);
+            VLoadStation.Setup();         
+            VUnloadStation = new VUnloadTrayStation(Mc);
+            VUnloadStation.Setup();
+            LLoadStation = new LLoadTrayStation(Mc);
+            LLoadStation.Setup();
+            LUnloadStation = new LUnloadTrayStation(Mc);
+            LUnloadStation.Setup();
 
             VRobot = new VStation(Mc, Vision, WorkTable, VLoadStation, VUnloadStation, 
                 CapturePositions, UserOffsets);
             VRobot.Setup();
 
             GlueLineRobot = new GlueLineStation(Mc, Vision, WorkTable, CoordinateId.GlueLine,
-                CapturePositions, UserOffsets,
+                GlueParameters, CapturePositions, UserOffsets,
                 PressureSensorGlueLine, LaserSensorGlueLine);
             GlueLineRobot.Setup();
 
             GluePointRobot = new GluePointStation(Mc, Vision, WorkTable, CoordinateId.GluePoint,
-                CapturePositions, UserOffsets,
+                GlueParameters, CapturePositions, UserOffsets,
                 PressureSensorGluePoint, LaserSensorGluePoint);
             GluePointRobot.Setup();
 
@@ -116,6 +127,11 @@ namespace Sorter
             GlueLineRobot.SetSpeed(speed);
             GluePointRobot.SetSpeed(speed);
             WorkTable.SetSpeed(speed);
+
+            VLoadStation.SetSpeed(speed);
+            VUnloadStation.SetSpeed(speed);
+            LLoadStation.SetSpeed(speed);
+            LUnloadStation.SetSpeed(speed);
         }
 
         /// <summary>
@@ -127,11 +143,44 @@ namespace Sorter
             PressureSensorGlueLine.Test();
             LaserSensorGlueLine.Test();
             LaserSensorGluePoint.Test();
+
+            HomeTrayMotors();
+            ReadTrayStations();
+
             Mc.ClearAllFault();
-
             Mc.HomeAllMotors(homeSpeed);
-
             Mc.DisableAllLimits();
+        }
+
+        public void HomeTrayMotors()
+        {
+            VLoadStation.SetSpeed();
+            VUnloadStation.SetSpeed();
+            LLoadStation.SetSpeed();
+            LUnloadStation.SetSpeed();
+
+            VLoadStation.Home();
+            VUnloadStation.Home();
+            LLoadStation.Home();
+            LUnloadStation.Home();
+
+            VLoadStation.WaitTillHomeEnd();
+            VUnloadStation.WaitTillHomeEnd();
+            LLoadStation.WaitTillHomeEnd();
+            LUnloadStation.WaitTillHomeEnd();         
+        }
+
+        public void ReadTrayStations()
+        {
+            LLoadStation.Ready();
+            LUnloadStation.Ready();
+            VLoadStation.Ready();
+            VUnloadStation.Ready();
+
+            LLoadStation.WaitTillReady();
+            LUnloadStation.WaitTillReady();
+            VLoadStation.WaitTillReady();
+            VUnloadStation.WaitTillReady();
         }
 
         public CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -167,33 +216,39 @@ namespace Sorter
             throw new NotImplementedException();
         }
 
-        public void LoadCapturePositions(string defaultConfigName = "CapturePositions.config")
+        public void LoadCapturePositions()
         {
-            var str = Helper.ReadFile(defaultConfigName);
+            var str = Helper.ReadFile(Properties.Settings.Default.CapturePositions);
             CapturePositions = Helper.ConvertToCapturePositions(str);
         }
 
-        public void LoadUserOffsets(string defaultConfigName = "UserOffsets.config")
+        public void LoadUserOffsets()
         {
-            var str = Helper.ReadFile(defaultConfigName);
+            var str = Helper.ReadFile(Properties.Settings.Default.CapturePositionOffsets);
             UserOffsets = Helper.ConvertToCapturePositions(str);
         }
 
-        public void LoadDevelopPoints(string defaultConfigName = "Development.config")
+        public void LoadDevelopPoints()
         {
-            var str = Helper.ReadFile(defaultConfigName);
+            var str = Helper.ReadFile(Properties.Settings.Default.DevelopmentPositions);
             DevelopPoints = Helper.ConvertToCapturePositions(str);
+        }
+
+        public void LoadGlueParameters()
+        {
+            var str = Helper.ReadFile(Properties.Settings.Default.GlueParameters);
+            GlueParameters = Helper.ConvertToGlueParameters(str);
+        }
+
+        public void LoadUserSettings()
+        {
+            string jStr = Helper.ReadFile(Properties.Settings.Default.UserSettings);
+            UserSettings = Helper.ConvertToUserSettings(jStr);
         }
 
         public CapturePosition GetDevelopPoints(string tag)
         {
             return Helper.GetDevelopmentPoints(DevelopPoints, tag);
-        }
-
-        public void SaveCapturePositions(string defaultConfigName = "CapturePositions.config")
-        {
-            var config = Helper.ConvertToJsonString(CapturePositions);
-            Helper.WriteFile(config, config);
         }
     }
 

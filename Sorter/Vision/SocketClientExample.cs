@@ -137,7 +137,7 @@ namespace Sorter
                 byte[] buffer = Encoding.Default.GetBytes(cmd);
                 _clientSocket.Send(buffer, 0, buffer.Length, 0);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Connected = false;
                 _receiveManualResetEvent.Reset();

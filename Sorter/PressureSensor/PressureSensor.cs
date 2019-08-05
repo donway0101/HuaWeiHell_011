@@ -204,7 +204,7 @@ namespace Sorter
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //Todo debug.
                 //throw new Exception("Pressure sensor data error:" + ex.Message);

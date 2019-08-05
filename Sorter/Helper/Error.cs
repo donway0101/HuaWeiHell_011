@@ -24,6 +24,22 @@ namespace Sorter
         LStationPrepareFail = 40004,
         VStationWorkFail = 40005,
         VStationPrepareFail = 40006,
+        RoundTableFail = 40007,
+        UVFail = 40008,
+        ShotGlueFail=40009,
+        LockTrayFail=40010,
+        CleanNeedleFail,
+        GluePointPrepareFail,
+        GlueLinePrepareFail,
+        NeedleCalibrationFail,
+        FindNeedleHeightFail,
+        ProductionFail,
+        LoadTrayFail,
+        UnloadTrayFail,
+        VisionFail,
+        GluePointFail,
+        GlueLineFail,
+        FindUnloadTrayFail,
     }
 
 }

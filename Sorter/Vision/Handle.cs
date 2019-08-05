@@ -58,7 +58,7 @@ namespace Bp.Mes
                 }
                 head.Json = json;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             return head;

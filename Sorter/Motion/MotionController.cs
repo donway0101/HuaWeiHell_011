@@ -17,6 +17,11 @@ namespace Sorter
     /// </summary>
     public partial class MotionController : IMotionController
     {
+        private static readonly log4net.ILog log =
+          log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        private static readonly object _motionLocker = new object();
+
         #region Motor
         public Motor MotorVX = new Motor();
         public Motor MotorVY = new Motor();
@@ -42,6 +47,7 @@ namespace Sorter
         public Motor MotorVConveyorUnload = new Motor();
         public Motor MotorVConveyorLoad = new Motor();
         public Motor MotorLConveyorLoad = new Motor();
+        //public Motor MotorLConveyorUnload = new Motor();       
 
 
         public List<Motor> Motors { get; set; } = new List<Motor>();
@@ -62,14 +68,6 @@ namespace Sorter
         {
             ControllerSetup();
             AxisSetup();
-        }
-
-        public void SetSpeed(double speed)
-        {
-            foreach (var mtr in Motors)
-            {
-                mtr.Velocity = speed;
-            }
         }
 
         public void AxisSetup(double homeSpeed = 5.0)
@@ -145,10 +143,10 @@ namespace Sorter
             MotorLZ.HomeIndexSpeed = defaultFindHomeSpeed;
             #endregion
 
-            #region LTray
+            #region LTrayLoad
             MotorLTrayLoad.Id = Axis.LTrayLoad;
             MotorLTrayLoad.EncCtsPerRound = 10000.0;
-            MotorLTrayLoad.BallScrewLead = 5.0;
+            MotorLTrayLoad.BallScrewLead = 10.0;
             MotorLTrayLoad.EncoderFactor =
             MotorLTrayLoad.EncCtsPerRound /
             MotorLTrayLoad.BallScrewLead;
@@ -169,7 +167,7 @@ namespace Sorter
             #region LTrayUnload
             MotorLTrayUnload.Id = Axis.LTrayUnload;
             MotorLTrayUnload.EncCtsPerRound = 10000.0;
-            MotorLTrayUnload.BallScrewLead = 5.0;
+            MotorLTrayUnload.BallScrewLead = 10.0;
             MotorLTrayUnload.EncoderFactor =
             MotorLTrayUnload.EncCtsPerRound /
             MotorLTrayUnload.BallScrewLead;
@@ -294,10 +292,10 @@ namespace Sorter
             MotorVRotateUnload.CloseLoop = false;
             #endregion
 
-            #region VTrayL
+            #region VTrayLoad
             MotorVTrayLoad.Id = Axis.VTrayLoad;
             MotorVTrayLoad.EncCtsPerRound = 10000.0;
-            MotorVTrayLoad.BallScrewLead = 5.0;
+            MotorVTrayLoad.BallScrewLead = 10.0;
             MotorVTrayLoad.EncoderFactor =
             MotorVTrayLoad.EncCtsPerRound /
             MotorVTrayLoad.BallScrewLead;
@@ -315,10 +313,10 @@ namespace Sorter
             MotorVTrayLoad.HomeIndexSpeed = defaultFindHomeSpeed;
             #endregion
 
-            #region VTrayU
+            #region VTrayUnload
             MotorVTrayUnload.Id = Axis.VTrayUnload;
             MotorVTrayUnload.EncCtsPerRound = 10000.0;
-            MotorVTrayUnload.BallScrewLead = 5.0;
+            MotorVTrayUnload.BallScrewLead = 10.0;
             MotorVTrayUnload.EncoderFactor =
             MotorVTrayUnload.EncCtsPerRound /
             MotorVTrayUnload.BallScrewLead;
@@ -571,16 +569,16 @@ namespace Sorter
             Motors.Add(MotorLY);
             Motors.Add(MotorLZ);
             Motors.Add(MotorLRotateLoad);
-            //Motors.Add(MotorLTrayLoad);
-            //Motors.Add(MotorLTrayUnload);
+            Motors.Add(MotorLTrayLoad);
+            Motors.Add(MotorLTrayUnload);
 
             Motors.Add(MotorVX);
             Motors.Add(MotorVY);
             Motors.Add(MotorVZ);
             Motors.Add(MotorVRotateLoad);
             Motors.Add(MotorVRotateUnload);
-            //Motors.Add(MotorVTrayLoad);
-            //Motors.Add(MotorVTrayUnload);
+            Motors.Add(MotorVTrayLoad);
+            Motors.Add(MotorVTrayUnload);
 
             Motors.Add(MotorGlueLineX);
             Motors.Add(MotorGlueLineY);
@@ -591,6 +589,8 @@ namespace Sorter
             Motors.Add(MotorGluePointZ);
 
             Motors.Add(MotorVConveyorUnload);
+            Motors.Add(MotorVConveyorLoad);
+            Motors.Add(MotorLConveyorLoad);
 
             Motors.Add(MotorWorkTable); 
             #endregion
@@ -977,6 +977,19 @@ namespace Sorter
             }                     
         }
 
+        /// <summary>
+        /// Get target position
+        /// </summary>
+        /// <param name="motor"></param>
+        /// <returns></returns>
+        public double GetReferencePosition(Motor motor)
+        {
+            var ca = ConvertToAxis(motor);
+            Run(mc.GTN_GetPos(ca.Core, ca.Axis, out int encPos),
+              "Get target position exception: " + motor.Id);
+            return motor.Direction * Convert.ToDouble(encPos) / motor.EncoderFactor;
+        }
+
         public double GetError(Motor motor)
         {
             if (motor.CloseLoop == false)
@@ -1000,56 +1013,13 @@ namespace Sorter
         }
 
         /// <summary>
-        /// Get encoder position.
-        /// </summary>
-        /// <param name="motor"></param>
-        /// <returns></returns>
-        public double[] GetPosition(Motor motor, short motorCount = 12)
-        {
-            var ca = ConvertToAxis(motor);
-            double[] posValue = new double[motorCount];
-            Run(mc.GTN_GetEncPos(ca.Core, ca.Axis, out posValue[0], motorCount, out uint innerClock),
-                "Get position exception: " + motor.Id);
-
-            double[] userPos = new double[motorCount];
-            for (int i = 0; i < posValue.Length; i++)
-            {
-                userPos[i] = motor.Direction * posValue[i] / motor.EncoderFactor;
-            }
-
-            return userPos;
-        }
-
-        /// <summary>
-        /// Get reference position.
-        /// </summary>
-        /// <param name="motor"></param>
-        /// <returns></returns>
-        public double GetReferencePosition(Motor motor)
-        {
-            var ca = ConvertToAxis(motor);
-            Run(mc.GTN_GetPos(ca.Core, ca.Axis, out int posValue),
-                "Get reference position exception: " + motor.Id);
-            return motor.Direction * Convert.ToDouble(posValue) / motor.EncoderFactor;
-        }
-
-        /// <summary>
-        /// Set reference position.
+        /// Set reference position. Danger
         /// </summary>
         /// <param name="motor"></param>
         /// <param name="referencePos"></param>
         public void SetReferencePosition(Motor motor, double referencePos)
         {
-            if (GetState(motor, MotorState.Moving))
-            {
-                throw new Exception("Can not set position when motor is moving.");
-            }
-
-            //Todo ball screw.
-            //var ca = ConvertToAxis(motor);
-            //Run(mc.GTN_SetPrfPos(ca.Core, ca.Axis, 
-            //    (int)(motor.Direction * referencePos * motor.EncoderFactor )),
-            //    "Get position exception: " + motor.Id);
+            throw new NotImplementedException();
         }
 
         public void Enable(Motor motor)
@@ -1181,52 +1151,84 @@ namespace Sorter
 
         public void Jog(Motor motor, double speed, MoveDirection direction)
         {
-            var dire = (double)direction;
-            CheckEnabledAndNotMoving(motor);
-            var exceptionInfo = "Jog exception: " + motor.Id;
-            var ca = ConvertToAxis(motor);
+            lock (_motionLocker)
+            {
+                var dire = (double)direction;
+                CheckEnabledAndNotMoving(motor);
+                var exceptionInfo = "Jog exception: " + motor.Id;
+                var ca = ConvertToAxis(motor);
 
-            mc.TJogPrm jogParam;
-            Run(mc.GTN_PrfJog(ca.Core, ca.Axis), exceptionInfo);
-            Run(mc.GTN_GetJogPrm(ca.Core, ca.Axis, out jogParam), exceptionInfo);
+                mc.TJogPrm jogParam;
+                Run(mc.GTN_PrfJog(ca.Core, ca.Axis), exceptionInfo);
+                Run(mc.GTN_GetJogPrm(ca.Core, ca.Axis, out jogParam), exceptionInfo);
 
-            jogParam.acc = 0.5;//ConvertToPulseAcc(motor.EncoderFactor, motor.Acceleration); 
-            jogParam.dec = 0.5;// ConvertToPulseAcc(motor.EncoderFactor, motor.Acceleration);
-            jogParam.smooth = 0.99; //A factor, [0,1], biger, more smooth.
+                jogParam.acc = 0.5;//ConvertToPulseAcc(motor.EncoderFactor, motor.Acceleration); 
+                jogParam.dec = 0.5;// ConvertToPulseAcc(motor.EncoderFactor, motor.Acceleration);
+                jogParam.smooth = 0.99; //A factor, [0,1], biger, more smooth.
 
-            Run(mc.GTN_SetJogPrm(ca.Core, ca.Axis, ref jogParam), exceptionInfo);
-            Run(mc.GTN_SetVel(ca.Core, ca.Axis,
-                dire * motor.Direction * ConvertToPulseVel(motor, speed)), 
-                exceptionInfo);
-            Run(mc.GTN_Update(ca.Core, ConvertToAxisMask(ca.Axis)), exceptionInfo);
-        }
+                Run(mc.GTN_SetJogPrm(ca.Core, ca.Axis, ref jogParam), exceptionInfo);
+                Run(mc.GTN_SetVel(ca.Core, ca.Axis,
+                    dire * motor.Direction * ConvertToPulseVel(motor, speed)),
+                    exceptionInfo);
+                Run(mc.GTN_Update(ca.Core, ConvertToAxisMask(ca.Axis)), exceptionInfo);
+            }            
+        }      
 
         public void MoveToTarget(Motor motor, double target)
         {
-            Delay(20);
-            CheckEnabledAndNotMoving(motor);
-            //motor.TargetPosition = target;
-            var exceptionInfo = "Move To Target exception:" + motor.Id;
-            var ca = ConvertToAxis(motor);
+            lock (_motionLocker)
+            {
+                if (motor.IsMoving)
+                {
+                    throw new Exception("Motor is moving, can not start a new move: " + motor.Id);
+                }
 
-            //Set point to point mode.
-            Run(mc.GTN_PrfTrap(ca.Core, ca.Axis), exceptionInfo);
+                Delay(20);
+                CheckEnabledAndNotMoving(motor);
+                //motor.TargetPosition = target;
+                var exceptionInfo = "Move To Target exception:" + motor.Id;
+                var ca = ConvertToAxis(motor);
 
-            Run(mc.GTN_GetTrapPrm(ca.Core, ca.Axis, out mc.TTrapPrm trapParam), exceptionInfo);
-            trapParam.acc = 0.5;//ConvertToPulseAcc(motor.EncoderFactor, motor.Acceleration);
-            trapParam.dec = 0.5;// ConvertToPulseAcc(motor.EncoderFactor, motor.Acceleration);
-            trapParam.smoothTime = motor.SmoothTime;
-            Run(mc.GTN_SetTrapPrm(ca.Core, ca.Axis, ref trapParam), exceptionInfo);
+                Stop(motor);
 
-            var vel = ConvertToPulseVel(motor, motor.Velocity);
-            Run(mc.GTN_SetVel(ca.Core, ca.Axis, vel), exceptionInfo);
-            Run(mc.GTN_SetPos(ca.Core, ca.Axis, ConvertToPulseDistance(motor,target)), exceptionInfo);
-            Delay(30);
-            Run(mc.GTN_SetPos(ca.Core, ca.Axis, ConvertToPulseDistance(motor, target)), exceptionInfo);
-            motor.TargetPosition = target;
-            Run(mc.GTN_Update(ca.Core, ConvertToAxisMask(ca.Axis)), exceptionInfo);
-            Delay(50);
+                //Clear profile position
+                Run(mc.GTN_SetPrfPos(ca.Core, ca.Axis, 0), "Clear profile position fail: " + motor.Id);
+
+                //Set point to point mode.
+                Run(mc.GTN_PrfTrap(ca.Core, ca.Axis), exceptionInfo);
+
+                Run(mc.GTN_GetTrapPrm(ca.Core, ca.Axis, out mc.TTrapPrm trapParam), exceptionInfo);
+                trapParam.acc = 0.5;//ConvertToPulseAcc(motor.EncoderFactor, motor.Acceleration);
+                trapParam.dec = 0.5;// ConvertToPulseAcc(motor.EncoderFactor, motor.Acceleration);
+                trapParam.smoothTime = motor.SmoothTime;
+                Run(mc.GTN_SetTrapPrm(ca.Core, ca.Axis, ref trapParam), exceptionInfo);
+
+                var vel = ConvertToPulseVel(motor, motor.Velocity);
+                Run(mc.GTN_SetVel(ca.Core, ca.Axis, vel), exceptionInfo);
+
+                var tarPulse = ConvertToPulseDistance(motor, target);
+
+                motor.MovementId++;
+                log.Info("Start movement of " + motor.Id + " to target " + tarPulse + ", ID: " + motor.MovementId);
+
+                motor.TargetPosition = target;
+                Run(mc.GTN_SetPos(ca.Core, ca.Axis, tarPulse), exceptionInfo);
+
+                var targetPos = GetReferencePosition(motor);
+
+                if (Math.Abs(target - targetPos) > 0.01)
+                {
+                    throw new Exception("GTN_SetPos fail for " + motor.Id);
+                }
+
+                Run(mc.GTN_Update(ca.Core, ConvertToAxisMask(ca.Axis)), exceptionInfo);
+
+                motor.IsMoving = true;                
+                Delay(20);
+            }
+            
         }
+
 
         public void MoveToTargetTillEnd(Motor motor, double target)
         {
@@ -1241,7 +1243,6 @@ namespace Sorter
         /// <param name="target"></param>
         public void MoveToTargetRelative(Motor motor, double target)
         {
-            Delay(20);
             CheckEnabledAndNotMoving(motor);
 
             double currentPos = GetPosition(motor);
@@ -1264,72 +1265,83 @@ namespace Sorter
         /// <seealso cref="SetErrorBand(Motor)"/>
         public void WaitTillEnd(Motor motor, int timeout = 30)
         {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-
-            bool inpos = false;
-            bool enabled = false;
-            bool driverFault = true;
-            double error = 10;
-            bool isMoving = true;
-            bool negativeLimitTriggered = false;
-            bool positiveLimitTriggered = false;
-
-            while (inpos==false || enabled==false || driverFault==true || isMoving==true
-                || error > motor.CriticalErrIdle )
+            try
             {
-                if (stopwatch.ElapsedMilliseconds > timeout * 1000)
+                if (motor.IsMoving==false)
                 {
-                    if (inpos == false)
-                    {
-                        throw new Exception("WaitTillEnd inpos false: " + motor.Id + "Following Error:" + error);
-                    }
-                    if (enabled == false)
-                    {
-                        throw new Exception("WaitTillEnd motor disabled: " + motor.Id);
-                    }
-                    if (driverFault == true)
-                    {
-                        throw new Exception("WaitTillEnd driver fault: " + motor.Id);
-                    }
-                    if (error > motor.CriticalErrIdle)
-                    {
-                        throw new Exception("WaitTillEnd critical following error: " + 
-                            motor.Id + " Error:" + error);
-                    }
+                    throw new Exception("Can not wait till end for a motor that is not moving: " + motor.Id);
                 }
 
-                if (positiveLimitTriggered)
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+
+                bool inpos = false;
+                bool enabled = false;
+                bool driverFault = true;
+                bool isMoving = true;
+                bool negativeLimitTriggered = false;
+                bool positiveLimitTriggered = false;
+
+                while (inpos == false || enabled == false || driverFault == true || isMoving == true)
                 {
-                    throw new Exception("Positive limit triggered: " + motor);
-                }
-                if (negativeLimitTriggered)
-                {
-                    throw new Exception("Negative limit triggered: " + motor);
+                    if (stopwatch.ElapsedMilliseconds > timeout * 1000)
+                    {
+                        if (inpos == false)
+                        {
+                            throw new Exception("WaitTillEnd inpos false: " + motor.Id);
+                        }
+                        if (enabled == false)
+                        {
+                            throw new Exception("WaitTillEnd motor disabled: " + motor.Id);
+                        }
+                        if (driverFault == true)
+                        {
+                            throw new Exception("WaitTillEnd driver fault: " + motor.Id);
+                        }
+                    }
+
+                    if (positiveLimitTriggered)
+                    {
+                        throw new Exception("Positive limit triggered: " + motor.Id);
+                    }
+                    if (negativeLimitTriggered)
+                    {
+                        throw new Exception("Negative limit triggered: " + motor.Id);
+                    }
+
+                    inpos = GetState(motor, MotorState.InPosition);
+                    enabled = GetState(motor, MotorState.Enabled);
+                    driverFault = GetState(motor, MotorState.ServoAlarm);
+                    isMoving = GetState(motor, MotorState.Moving);
+                    negativeLimitTriggered = GetState(motor, MotorState.NegativeLimit);
+                    positiveLimitTriggered = GetState(motor, MotorState.PositiveLimit);
                 }
 
-                //Todo after Zero, Encoder not exact zero?
-                error = Math.Abs(GetError(motor));
-                inpos = GetState(motor, MotorState.InPosition);
-                enabled = GetState(motor, MotorState.Enabled);
-                driverFault = GetState(motor, MotorState.ServoAlarm);
-                isMoving = GetState(motor, MotorState.Moving);
-                negativeLimitTriggered = GetState(motor, MotorState.NegativeLimit);
-                positiveLimitTriggered = GetState(motor, MotorState.PositiveLimit);
+                Delay(50);
+                var target = motor.TargetPosition;
+                var current = GetPosition(motor);
+                var fe = Math.Abs(target - current);
+                log.Info("End of movement of " + motor.Id + ", ID " + motor.MovementId + ", following error is " + fe);
 
-                Delay(20);
+                if (fe > motor.CriticalErrIdle)
+                {
+                    string waitTillEndException = string.Empty;
+                    waitTillEndException = motor.Id + " fatal following error: " + fe +
+                        ", Programed target is " + target + ", GTN_GetPos is " + GetReferencePosition(motor) +
+                        ", GTN_GetEncPos is " + current;
+
+                    log.Info(waitTillEndException);
+                    throw new Exception(waitTillEndException);
+                }
             }
-
-            Delay(300);
-
-            var target = motor.TargetPosition;
-            var current = GetPosition(motor);
-            var fe = Math.Abs(target - current);
-            if ( fe > motor.CriticalErrIdle)
+            catch (Exception)
             {
-                throw new Exception("Motor fatal flowing error: " + motor.Id + " " + fe + 
-                    "Target is " + target + " ActualPos is " + current);
+                throw;
             }
+            finally
+            {
+                motor.IsMoving = false;
+            }            
         }
 
         public bool GetState(Motor motor, MotorState state)
@@ -1340,9 +1352,15 @@ namespace Sorter
             return Helper.GetBit(stateValue, (int)state);
         }
 
+        /// <summary>
+        /// Big bug, should have not stop all axis.
+        /// </summary>
+        /// <param name="core"></param>
+        /// <param name="coordinateId"></param>
+        /// <param name="fifo"></param>
         public void ClearInterpolationBuffer(short core, CoordinateId coordinateId, short fifo = 0)
         {
-            Run(mc.GTN_Stop(2, 0xff, 0), "Stop all interpolation fail");
+            //Run(mc.GTN_Stop(2, 0xff, 0), "Stop all interpolation fail");
             Run(mc.GTN_CrdClear(core, (short)coordinateId, fifo), 
                 "ClearInterpolationBuffer exception");
         }
@@ -1393,16 +1411,16 @@ namespace Sorter
             
         }
 
-        public void AddDelay(short coordinateId,
+        public void AddDelay(CoordinateId id,
           ushort delayMs, short core = 2, short fifo = 0)
         {
-            Run(mc.GTN_BufDelay(core, coordinateId, delayMs, fifo),
+            Run(mc.GTN_BufDelay(core, (short)id, delayMs, fifo),
                 "Add digital output exception");
         }
 
-        public bool IsCrdSpaceEnough(short coordinateId, short core = 2, short fifo = 0)
+        public bool IsCrdSpaceEnough(CoordinateId id, short core = 2, short fifo = 0)
         {
-            Run(mc.GTN_CrdSpace(core, coordinateId, out int pSpace, fifo), "No space for buffer");
+            Run(mc.GTN_CrdSpace(core, (short)id, out int pSpace, fifo), "No space for buffer");
             //Todo Right?
             return pSpace > 10;
         }
@@ -1440,7 +1458,6 @@ namespace Sorter
                 end = IsInterpolationFinished(id);
             }
         }
-
 
         /// <summary>
         /// Set max vel and acc and smooth time.
@@ -1509,61 +1526,6 @@ namespace Sorter
             }
 
             Run(mc.GTN_SetCrdPrm(2, (short)coordinate, ref crdprm), "Set coordinate system error.");
-        }
-
-        public void TestLineMove()
-        {
-            int space;
-            short rtn = mc.GTN_CrdClear(1, 1, 0);
-            // 向缓存区写入第一段插补数据
-            rtn = mc.GTN_LnXY(
-            1,
-            1, // 该插补段的坐标系是坐标系1
-            100000, 100000, // 该插补段的终点坐标(200000, 0)
-            100, // 该插补段的目标速度：100pulse/ms
-            0.1, // 插补段的加速度：0.1pulse/ms^2
-            0, // 终点速度为0
-            0); // 向坐标系1的FIFO0缓存区传递该直线插补数据
-            // 向缓存区写入第二段插补数据
-            //rtn = mc.GTN_LnXY(1, 1, 100000, 173205, 100, 0.1, 0, 0);
-            // 缓存区数字量输出
-            //rtn = mc.GTN_BufIO(1, 1, mc.MC_GPO, 0xffff, 0x55, 0);
-            //// 第三段插补数据
-            //rtn = mc.GTN_LnXY(1, 1, -100000, 173205, 100, 0.1, 0, 0);
-            //// 缓存区数字量输出
-            //rtn = mc.GTN_BufIO(1, 1, mc.MC_GPO, 0xffff, 0xaa, 0);
-            //// 第四段插补数据
-            //rtn = mc.GTN_LnXY(1, 1, -200000, 0, 100, 0.1, 0, 0);
-            // 缓存区延时指令
-            rtn = mc.GTN_BufDelay(
-            1,
-            1, // 坐标系是坐标系1
-            400, // 延时400ms
-            0); // 向坐标系1的FIFO0缓存区传递该延时
-            //// 第五段插补数据
-            //rtn = mc.GTN_LnXY(1, 1, -100000, -173205, 100, 0.1, 0, 0);
-            //// 缓存区数字量输出
-            //rtn = mc.GTN_BufIO(1, 1, mc.MC_GPO, 0xffff, 0x55, 0);
-            //// 缓存区延时指令
-            //rtn = mc.GTN_BufDelay(1, 1, 100, 0);
-            //// 第六段插补数据
-            //rtn = mc.GTN_LnXY(1, 1, 100000, -173205, 100, 0.1, 0, 0);
-            //// 第七段插补数据
-            //rtn = mc.GTN_LnXY(1, 1, 200000, 0, 100, 0.1, 0, 0);
-
-            rtn = mc.GTN_LnXY(
-            1,
-            1, // 该插补段的坐标系是坐标系1
-            0, 0, // 该插补段的终点坐标(200000, 0)
-            100, // 该插补段的目标速度：100pulse/ms
-            0.1, // 插补段的加速度：0.1pulse/ms^2
-            0, // 终点速度为0
-            0); // 向坐标系1的FIFO0缓存区传递该直线插补数据
-
-            // 查询坐标系1的FIFO0所剩余的空间
-            rtn = mc.GTN_CrdSpace(1, 1, out space, 0);
-            // 启动坐标系1的FIFO0的插补运动
-            rtn = mc.GTN_CrdStart(1, 1, 0);
         }
 
         public void SetCoordinateSystem()

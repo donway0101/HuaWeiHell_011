@@ -17,14 +17,14 @@ namespace Sorter
         {
             return Task.Run(async () =>
             {
-                int code = 0;
+                
                 //try
                 //{
                     await Task.Delay(10000, cancellationTokenSource.Token);
                     cancellationTokenSource.Token.ThrowIfCancellationRequested();
-                    code = 1;
+                    //code = 1;
                     await Task.Delay(10000, cancellationTokenSource.Token);
-                    code = 2;
+                    //code = 2;
                     return new WaitBlock() { };
                 //}
                 //catch (Exception)
@@ -47,7 +47,7 @@ namespace Sorter
                 }
                 catch (Exception)
                 {
-                    return new WaitBlock() { Code = ErrorCode.TobeCompleted, };
+                    return new WaitBlock() { };
                 }
             }, cancellationTokenSource.Token);
         }

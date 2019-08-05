@@ -8,7 +8,7 @@ namespace Bp.Mes
 
     /// <summary>
     /// In file "CapturePosition.config ", these points are fix points,
-    /// in "UserOffsets.config", it's some data use both by operator and program.
+    /// in "capture position offset", it's some data use both by operator and program.
     /// </summary>
     public enum CaptureId
     {   

@@ -126,7 +126,7 @@ namespace Sorter
                 {
                     return new WaitBlock()
                     {
-                        Code = ErrorCode.TobeCompleted,
+                        Code = ErrorCode.RoundTableFail,
                         Message = "Table turns fail: " + ex.Message
                     };
                 }

@@ -14,9 +14,13 @@ namespace Sorter
 
         public int TrayLayerNumber { get; set; }
         public int CurrentTrayLayerIndex { get; set; }
-        public double TrayLayerHeight { get; set; }
+        public double TrayLayerHeight { get; set; } = 24.0;
         public Motor MotorTray { get; set; }
         public Motor MotorConveyor { get; set; }
+        public double BottomFirstLayerHeight { get; set; } = 112.634;
+
+        public double TraySpeed { get; set; } = 30;
+        public double ConveyorSpeed { get; set; } = 30;
 
         public VLoadTrayStation(MotionController controller)
         {
@@ -27,6 +31,7 @@ namespace Sorter
         {
             PushIn();
             ConveyorIn(timeoutSec);
+            //Todo move sensor           
             LockTray();
         }
 
@@ -35,6 +40,7 @@ namespace Sorter
             UnlockTray();
             ConveyorOut(timeoutSec);
             PushOut();
+            DescendOneLayer();
         }
 
         public void ConveyorIn(int timeoutSec = 30)
@@ -53,8 +59,8 @@ namespace Sorter
                 }
                 state = GetInsideOpticalSensor();
 
-            } while (state != false);
-
+            } while (state == false);
+            Delay(3000);
             _mc.Stop(MotorConveyor);
         }
 
@@ -74,7 +80,7 @@ namespace Sorter
                 }
                 state = GetOutsideOpticalSensor();
 
-            } while (state != false);
+            } while (state == false);
 
             _mc.Stop(MotorConveyor);
         }
@@ -91,7 +97,17 @@ namespace Sorter
 
         public void DescendToBottomLayer()
         {
-            _mc.MoveToTargetTillEnd(MotorTray, 0);
+            _mc.MoveToTargetTillEnd(MotorTray, BottomFirstLayerHeight);
+        }
+
+        public void Ready()
+        {
+            _mc.MoveToTarget(MotorTray, BottomFirstLayerHeight);
+        }
+
+        public void WaitTillReady()
+        {
+            _mc.WaitTillEnd(MotorTray);
         }
 
         public void Estop()
@@ -111,9 +127,16 @@ namespace Sorter
 
         public void Home()
         {
+            _mc.ZeroPosition(MotorTray);
             _mc.VLoadTrayCylinder(TrayCylinderState.Retract);
-            _mc.Home(MotorTray);
+            MotorTray.HomeLimitSpeed = TraySpeed;
+            _mc.Home(MotorTray);            
+        }
+
+        public void WaitTillHomeEnd()
+        {
             _mc.WaitTillHomeEnd(MotorTray);
+            _mc.ZeroPosition(MotorTray);
         }
 
         public void LockTray()
@@ -131,12 +154,12 @@ namespace Sorter
         /// </summary>
         public void PushIn()
         {
-            _mc.VLoadConveyorCylinder(TrayCylinderState.PushOut);
-            if (GetOutsideOpticalSensor()==true)
+            _mc.VLoadTrayCylinder(TrayCylinderState.PushOut);
+            _mc.VLoadTrayCylinder(TrayCylinderState.Retract);
+            if (GetOutsideOpticalSensor() == false)
             {
                 throw new Exception("Tray stuck on conveyor");
-            }
-            _mc.VLoadConveyorCylinder(TrayCylinderState.Retract);
+            }           
         }
 
         /// <summary>
@@ -144,12 +167,12 @@ namespace Sorter
         /// </summary>
         public void PushOut()
         {
-            _mc.VLoadTrayCylinder(TrayCylinderState.PushOut);
-            if (GetOutsideOpticalSensor() == false)
+            _mc.VLoadConveyorCylinder(TrayCylinderState.PushOut);
+            _mc.VLoadConveyorCylinder(TrayCylinderState.Retract);
+            if (GetOutsideOpticalSensor() == true)
             {
                 throw new Exception("Tray stuck on conveyor");
-            }
-            _mc.VLoadTrayCylinder(TrayCylinderState.Retract);
+            }                   
         }
 
         public void Reset()
@@ -167,16 +190,16 @@ namespace Sorter
             _mc.MoveToTargetTillEnd(MotorTray, (TrayLayerNumber - 1) * TrayLayerHeight);
         }
 
-        public void SetSpeed(double speed = 1)
+        public void SetSpeed(double speed = 10)
         {
-            MotorTray.Velocity = speed;
-            MotorConveyor.Velocity = speed;
+            MotorTray.Velocity = TraySpeed;
+            MotorConveyor.Velocity = ConveyorSpeed;
         }
 
         public void Setup()
         {
             MotorTray = _mc.MotorVTrayLoad;
-            MotorConveyor = _mc.MotorVConveyorUnload;
+            MotorConveyor = _mc.MotorVConveyorLoad;
         }
 
         public void Start()
